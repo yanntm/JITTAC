@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="net.sourceforge.actool.jdt.build.ImplementationModelBuilder"
+         name="Architectural Model Builder [ACT]"
+         point="org.eclipse.core.resources.builders">
+      <builder
+            hasNature="true">
+         <run
+               class="net.sourceforge.actool.jdt.build.ImplementationModelBuilder">
+         </run>
+      </builder>
+   </extension>
+   <extension
+         id="net.sourceforge.actool.jdt.ACNatureJDT"
+         name="Architecture Consistency Nature [JDT]"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="net.sourceforge.actool.jdt.ACNatureJDT">
+         </run>
+      </runtime>
+      <builder
+            id="net.sourceforge.actool.jdt.build.ImplementationModelBuilder">
+      </builder>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="net.sourceforge.actool.jdt.project"
+            nameFilter="*"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="net.sourceforge.actool.jdt.ui.ToggleACCheckingAction"
+               id="net.sourceforge.actool.jdt.actions.acCheckingToggle"
+               label="Toggle Consistency checking"
+               menubarPath="net.sourceforge.actool/default">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="net.sourceforge.actool.model.ia">
+      <model
+            class="net.sourceforge.actool.jdt.model.JavaModelFactory"
+            id="net.sourceforge.actool.model.ia.jdt">
+      </model>
+   </extension>
+
+</plugin>
