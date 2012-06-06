@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Architecture Consistency Tool for C [NCC]
+Bundle-SymbolicName: net.sourceforge.actool.ncc;singleton:=true
+Bundle-Version: 0.0.0.20100509
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Require-Bundle: org.eclipse.cdt.core,
+ org.eclipse.core.resources,
+ org.eclipse.core.runtime,
+ org.eclipse.jface.text,
+ org.eclipse.ui.editors,
+ org.eclipse.ui.views,
+ org.eclipse.ui,
+ net.sourceforge.actool
+Bundle-Activator: net.sourceforge.actool.ncc.ACToolNCC
+Bundle-ActivationPolicy: lazy
