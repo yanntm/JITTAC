@@ -5,9 +5,10 @@ import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
+
 
 import net.sourceforge.actool.model.ResourceMap;
 import net.sourceforge.actool.model.ResourceMapping;
@@ -43,7 +44,7 @@ public class ArchitectureModel extends ArchitectureElement
     };
     
 	private Map<String, Component> components = new HashMap<String, Component>();
-	private Vector<IXReference> _unresolved = new Vector<IXReference>(); //replace duble linked list
+	private LinkedList<IXReference> _unresolved = new LinkedList<IXReference>(); //replace duble linked list
 	private ResourceMap map = new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
 	
 	private Map<String, Connector> xrefs = new HashMap<String, Connector>();
@@ -52,6 +53,7 @@ public class ArchitectureModel extends ArchitectureElement
 	
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
+		
 		this.properties = new ModelProperties(resource);
 	}
 	
@@ -325,7 +327,7 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
 	public List<Component> getComponents() {
-		return new Vector<Component>(components.values());
+		return new LinkedList<Component>(components.values());
 	}
 	
 	public Connector connect(String sourceId, String targetId) {
@@ -354,7 +356,7 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
 	public Collection<Connector> getConnectors() {
-	    Vector<Connector> connectors = new Vector<Connector>();
+		LinkedList<Connector> connectors = new LinkedList<Connector>();
 	    
 	    Iterator<Component> iter = components.values().iterator();
 	    while (iter.hasNext())

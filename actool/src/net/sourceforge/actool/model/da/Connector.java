@@ -1,7 +1,7 @@
 package net.sourceforge.actool.model.da;
 
 import java.util.Collection;
-import java.util.Vector;
+import java.util.LinkedList;
 
 import net.sourceforge.actool.model.ia.IXReference;
 
@@ -36,7 +36,7 @@ public class Connector extends ArchitectureElement {
     private boolean envisaged = true, connected = false;
     private String comment = "";
 
-    private Vector<IXReference> xrefs = new Vector<IXReference>();
+    private LinkedList<IXReference> xrefs = new LinkedList<IXReference>();
     
     protected Connector(Component source, Component target) {
     	if (source == null || target == null || target.equals(source))
@@ -148,7 +148,7 @@ public class Connector extends ArchitectureElement {
     }
     
     public Collection<IXReference> getXReferences() {
-        return new Vector<IXReference>(xrefs);
+        return new LinkedList<IXReference>(xrefs);
     }
    
     public void accept(IArchitectureModelVisitor visitor) {
