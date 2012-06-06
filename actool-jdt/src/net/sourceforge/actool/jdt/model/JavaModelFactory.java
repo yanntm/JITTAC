@@ -13,7 +13,7 @@ public class JavaModelFactory implements
 	public ImplementationModel createImplementationModel(IProject project) {
 		try {
 			if (project.hasNature(ACNatureJDT.NATURE_ID))
-				return new JavaModel();
+				return new JavaModelDb();
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
