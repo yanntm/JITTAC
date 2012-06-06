@@ -10,14 +10,8 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
-		<buildCommand>
-			<name>net.sourceforge.actool.jdt.build.ImplementationModelBuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.pde.FeatureNature</nature>
-		<nature>net.sourceforge.actool.jdt.ACNatureJDT</nature>
 	</natures>
 </projectDescription>
