@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="net.sourceforge.actool.model.ia" name="Implementation Model" schema="schema/net.sourceforge.actool.model.ia.exsd"/>
+   <extension
+         id="net.sourceforge.actool.PreferencesInitializer"
+         name="ACT Preferences"
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="net.sourceforge.actool.PreferenceInitializer">
+      </initializer>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="net.sourceforge.actool.ui.editor.ArchitectureEditor"
+            contributorClass="net.sourceforge.actool.ui.editor.ArchitectureEditorActionBarContributor"
+            default="false"
+            extensions="xam"
+            icon="icons/act-icon.gif"
+            id="net.sourceforge.actool.ui.ArchitectureEditor"
+            name="Architecture Editor">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="net.sourceforge.actool.ui.views.Category"
+            class="net.sourceforge.actool.ui.views.XReferenceView"
+            id="net.sourceforge.actool.ui.views.XReferenceView"
+            name="Architectural Relations"
+            restorable="true">
+      </view>
+      <category
+            id="net.sourceforge.actool.ui.views.Category"
+            name="Architectural Views">
+      </category>
+   </extension>
+   <extension
+         id="net.sourceforge.actool.markers.Problem"
+         name="Architectural Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.textmarker"/>
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <persistent
+            value="false">
+      </persistent>
+   </extension>
+   <extension
+         id="net.sourceforge.actool.markers._Problem"
+         name="Architectural Problem (old)"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.textmarker">
+      </super>
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+   <extension
+         id="net.sourceforge.actool.markers.Unmapped"
+         name="Architectural Problem"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.textmarker">
+      </super>
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <persistent
+            value="false">
+      </persistent>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="net.sourceforge.actool"
+            name="Architecture Consistency">
+      </category>
+      <wizard
+            category="net.sourceforge.actool"
+            class="net.sourceforge.actool.ui.wizards.NewArchitectureModelWizard"
+            icon="icons/act-icon.gif"
+            id="net.sourceforge.actool.ui.wizards.NewArchitectureModelWizard"
+            name="Architecture Model file">
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="net.sourceforge.actool.menu"
+            objectClass="org.eclipse.core.resources.IResource">
+         <menu
+               id="net.sourceforge.actool"
+               label="Architecture Consistency"
+               path="additions">
+            <groupMarker
+                  name="default">
+            </groupMarker>
+         </menu>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            adaptable="true"
+            class="net.sourceforge.actool.ui.ModelPropertyPage"
+            id="net.sourceforge.actool.model.properties"
+            name="Architecture Consistency"
+            nameFilter="*.xam"
+            objectClass="org.eclipse.core.resources.IFile">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="net.sourceforge.actool.ui.PreferencePage"
+            id="net.sourceforge.actool.ui.PreferencePage"
+            name="Archiecture Consistency">
+      </page>
+   </extension>
+
+</plugin>

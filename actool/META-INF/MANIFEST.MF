@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Architecture Consistency Tool for Eclipse
+Bundle-SymbolicName: net.sourceforge.actool;singleton:=true
+Bundle-Version: 0.1.2.1
+Bundle-Activator: net.sourceforge.actool.ACTool
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.4.0",
+ org.eclipse.core.resources,
+ org.eclipse.gef;bundle-version="3.4.0",
+ org.eclipse.jface.text,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ui,
+ org.eclipse.ui,
+ org.eclipse.ui.editors,
+ org.eclipse.ui.ide,
+ org.eclipse.ui.views
+Bundle-ActivationPolicy: lazy
+Export-Package: net.sourceforge.actool,
+ net.sourceforge.actool.logging,
+ net.sourceforge.actool.model,
+ net.sourceforge.actool.model.da,
+ net.sourceforge.actool.model.ia
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
