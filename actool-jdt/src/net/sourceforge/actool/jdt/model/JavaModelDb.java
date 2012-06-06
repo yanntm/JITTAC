@@ -36,17 +36,13 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 	}
 
-	@Override
-	public IXReference createXReference(String xref) {
-		return JavaXReference.fromString(xref);
-	}
-
+	
 	@Override
 	public void _restore(IPath path) {
 		try {
-//			tableName=path.removeLastSegments(2).lastSegment().replace("-", "_");
-//			if(conn==null||conn.isClosed())connect();
-			if(conn==null||conn.isClosed())connect(path); 
+			tableName=path.removeLastSegments(2).lastSegment().replace("-", "_");
+			if(conn==null||conn.isClosed())connect();
+//			if(conn==null||conn.isClosed())connect(path); 
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
