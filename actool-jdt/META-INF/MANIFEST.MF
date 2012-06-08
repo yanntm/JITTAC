@@ -11,8 +11,6 @@ Require-Bundle: org.eclipse.core.resources,
  net.sourceforge.actool;bundle-version="[0.1.0,0.2.0)"
 Bundle-Activator: net.sourceforge.actool.jdt.ACToolJDT
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: hsqldb.jar,
- .
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: net.sourceforge.actool.jdt,
  net.sourceforge.actool.jdt.build,

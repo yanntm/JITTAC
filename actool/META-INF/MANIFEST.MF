@@ -16,8 +16,12 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.4.0",
  org.eclipse.ui.views
 Bundle-ActivationPolicy: lazy
 Export-Package: net.sourceforge.actool,
+ net.sourceforge.actool.db,
  net.sourceforge.actool.logging,
  net.sourceforge.actool.model,
  net.sourceforge.actool.model.da,
  net.sourceforge.actool.model.ia
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ClassPath: hsqldb.jar,
+ .
+Import-Package: net.sourceforge.actool.jdt.model

@@ -74,7 +74,7 @@ public class Component extends ArchitectureElement
 		return id;
 	}
 	
-	public void setID(String value) {
+	private void setID(String value) {
 	    if (value == null || value.isEmpty() || id == value)
 	        throw new IllegalArgumentException();
 	    // Components ID must be unique within one model.

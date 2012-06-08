@@ -26,10 +26,21 @@ import net.sourceforge.actool.model.ia.IXReference;
 import net.sourceforge.actool.model.ia.IXReferenceFactory;
 import net.sourceforge.actool.model.ia.ImplementationChangeDelta;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
+import net.sourceforge.actool.db.*;
+import net.sourceforge.actool.db.DBManager.IResutlSetDelegate;
 
 
 public class JavaModelDb extends AbstractJavaModel{
-	private String tableName = "sample_table";
+	private String rootTableName = "compilationUnit_xrefs";
+	
+	private String removedTableName = rootTableName+"_removed";
+	private String commonTableName = rootTableName+"_common";
+	private String addedTableName = rootTableName+"_added";
+//	
+//	private String removedTableName = "removed";
+//	private String commonTableName = "common";
+//	private String addedTableName = "added";
+	
 	private Connection conn= null;
 	private ICompilationUnit currentUnit;			/// Current compilation unit
 	public JavaModelDb() {
@@ -40,9 +51,10 @@ public class JavaModelDb extends AbstractJavaModel{
 	@Override
 	public void _restore(IPath path) {
 		try {
-			tableName=path.removeLastSegments(2).lastSegment().replace("-", "_");
-			if(conn==null||conn.isClosed())connect();
-//			if(conn==null||conn.isClosed())connect(path); 
+//			rootTableName=path.removeLastSegments(2).lastSegment().replace("-", "_");
+			if(conn==null||conn.isClosed())conn=DBManager.connect();
+//			if(conn==null||conn.isClosed())conn=DBManager.connect(path);
+			initDb();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -59,37 +71,25 @@ public class JavaModelDb extends AbstractJavaModel{
 //			}
 	}
 
-	@SuppressWarnings("unused")
-	private void connect() {
-		    IWorkspace workspace = ResourcesPlugin.getWorkspace();
-		    IWorkspaceRoot workspaceRoot = workspace.getRoot();
-		    IPath workspacedir = new Path(Platform.getLocation().toString()+"/"+workspaceRoot.getName()+"/JavaModleDb_file");
-		    connect(workspacedir);
-	}
 	
-	private void connect(IPath workspacedir) {
-		try {
-			
-			
-			connect("jdbc:hsqldb:"+workspacedir.toString()+"; shutdown=true", "sa", "");
-		}
-		catch(Exception e) {
-		    System.out.println(e.toString());
-		}
-	}
 	
-	private void connect(String connectionString, String user, String password) {
-		try {
-		    Class.forName("org.hsqldb.jdbcDriver");
-		    conn = DriverManager.getConnection(connectionString, user, password);
-		    update("CREATE TABLE if not exists "+tableName+" ( id INTEGER IDENTITY, CompilationUnitKey VARCHAR(1024), xref VARCHAR(1024))",  conn);
-		    clearCommon();
-			clearAdded();
-			clearRemoved();
-		}
-		catch(Exception e) {
-		    System.out.println(e.toString());
-		}
+	
+//	private void connect(String connectionString, String user, String password) {
+//		try {
+//		    conn = DBManager.connect(connectionString, user, password);
+//		    initDb();
+//		}
+//		catch(Exception e) {
+//		    System.out.println(e.toString());
+//		}
+//	}
+
+
+	private void initDb() throws SQLException {
+		DBManager.update("CREATE TABLE if not exists "+rootTableName+" ( id INTEGER IDENTITY, CompilationUnitKey VARCHAR(1024), xref VARCHAR(1024))",  conn);
+		clearCommon();
+		clearAdded();
+		clearRemoved();
 	}
 
 	
@@ -99,7 +99,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 		try {
 				
-			query("SELECT CompilationUnitKey, xref FROM "+tableName+" order by CompilationUnitKey " , conn, new IResutlSetDelegate() {
+			DBManager.query("SELECT CompilationUnitKey, xref FROM "+rootTableName+" order by CompilationUnitKey " , conn, new IResutlSetDelegate() {
 			    @Override
 			    public int invoke(ResultSet rs,Object... args) throws SQLException{
 			    	LinkedList<String> added = new LinkedList<String>();
@@ -146,7 +146,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 		try {
 			boolean common = false;
-			query("select xref from removed where xref = '"+xref+"'" , conn, new IResutlSetDelegate(){
+			DBManager.query("select xref from "+ removedTableName+" where xref = '"+xref+"'" , conn, new IResutlSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args)
@@ -157,13 +157,13 @@ public class JavaModelDb extends AbstractJavaModel{
 				}
 				
 			},common);
-			if(common)update("insert into common values ('"+xref+"')",conn);
+			if(common)DBManager.update("insert into "+ commonTableName+" values ('"+xref+"')",conn);
 			else {	
-				update("insert into added values ('"+xref+"')",conn);
-				update("Insert into "+tableName+" ( CompilationUnitKey, xref) values ('"+currentUnit.getHandleIdentifier()+"' , '"+xref+"')",  conn);
+				DBManager.update("insert into "+ addedTableName+" values ('"+xref+"')",conn);
+				DBManager.update("Insert into "+rootTableName+" ( CompilationUnitKey, xref) values ('"+currentUnit.getHandleIdentifier()+"' , '"+xref+"')",  conn);
 			}
 
-			update("Delete from removed where xref = '"+xref+"'",  conn);
+			DBManager.update("Delete from "+ removedTableName+" where xref = '"+xref+"'",  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -189,13 +189,13 @@ public class JavaModelDb extends AbstractJavaModel{
 	public void endUnit() {
 		// Fire the property change signal.
 		fireModelChange(new ImplementationChangeDelta(this,
-				  getXrefs("common"),
-				  getXrefs("added"),
-				  getXrefs("removed")));
+				  getXrefs(commonTableName),
+				  getXrefs(addedTableName),
+				  getXrefs(removedTableName)));
 		
 		// Removed all references and put the new ones.
 		try {
-			update("Delete from "+tableName+"  where CompilationUnitKey='"+currentUnit.getHandleIdentifier()+"' AND xref in (select xref from removed)",  conn);				
+			DBManager.update("Delete from "+rootTableName+"  where CompilationUnitKey='"+currentUnit.getHandleIdentifier()+"' AND xref in (select xref from "+ removedTableName+")",  conn);				
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -213,8 +213,8 @@ public class JavaModelDb extends AbstractJavaModel{
 
 	private void clearAdded(){
 		try {
-			update("DROP TABLE if exists added",  conn);
-			update("CREATE TABLE if not exists added (xref VARCHAR(1024))",  conn);
+			DBManager.update("DROP TABLE if exists "+ addedTableName,  conn);
+			DBManager.update("CREATE TABLE if not exists "+ addedTableName+" (xref VARCHAR(1024))",  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -224,8 +224,8 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 	private void clearRemoved(){
 		try {
-			update("DROP TABLE if exists removed",  conn);
-			update("CREATE TABLE if not exists removed (xref VARCHAR(1024))",  conn);
+			DBManager.update("DROP TABLE if exists "+ removedTableName,  conn);
+			DBManager.update("CREATE TABLE if not exists "+ removedTableName+" (xref VARCHAR(1024))",  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -238,7 +238,7 @@ public class JavaModelDb extends AbstractJavaModel{
 	private void createRemovedforUnit(ICompilationUnit unit){
 		try {
 			clearRemoved();
-			update("insert into removed ( SELECT xref FROM "+tableName+" where CompilationUnitKey = '" +unit.getHandleIdentifier()+"'"+" )",  conn);
+			DBManager.update("insert into "+ removedTableName+" ( SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey = '" +unit.getHandleIdentifier()+"'"+" )",  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -248,8 +248,8 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 	private void clearCommon(){
 		try {
-			update("DROP TABLE if exists common",  conn);
-			update("CREATE TABLE if not exists common (xref VARCHAR(1024))",  conn);
+			DBManager.update("DROP TABLE if exists "+ commonTableName,  conn);
+			DBManager.update("CREATE TABLE if not exists "+ commonTableName+" (xref VARCHAR(1024))",  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -261,7 +261,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		LinkedList<String> result = new LinkedList<String>();
 		try {
 			
-			query("SELECT xref FROM "+table+" " , conn, new IResutlSetDelegate() {
+			DBManager.query("SELECT distinct xref FROM "+table+" " , conn, new IResutlSetDelegate() {
 			    @SuppressWarnings("unchecked")
 				@Override
 			    public int invoke(ResultSet rs,Object... args) throws SQLException{
@@ -286,37 +286,5 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 	
 	
-	//--------------------------------------------------db helper functions-----------------------------------------------------------------
 	
-	public static interface IResutlSetDelegate{
-        public int invoke(ResultSet rs,Object... args)throws SQLException;
-    }
-	
-	//use for SQL command SELECT
-    public static synchronized int query(String expression, Connection conn,IResutlSetDelegate delegate,Object... args ) throws SQLException {
-        Statement st = conn.createStatement();
-        int result = delegate.invoke(st.executeQuery(expression),args);
-        st.close();     // also closes ResultSet rs
-        return result;
-    }
-
-//use for SQL commands CREATE, DROP, INSERT and UPDATE
-    public static synchronized void update(String expression, Connection conn) throws SQLException {
-
-        Statement st = conn.createStatement();
-        int i = st.executeUpdate(expression);    // run the query
-        if (i == -1) {
-            System.out.println("db error : " + expression);
-        }
-
-        st.close();
-    } // void update()
-
-    public static void shutdown(Connection conn) throws SQLException {
-
-        Statement st = conn.createStatement();
-        st.execute("SHUTDOWN");
-        conn.close();    // if there are no other open connection
-    }
-
 }

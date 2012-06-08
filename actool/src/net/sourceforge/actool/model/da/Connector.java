@@ -1,9 +1,15 @@
 package net.sourceforge.actool.model.da;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import net.sourceforge.actool.db.DBManager;
+import net.sourceforge.actool.db.DBManager.IResutlSetDelegate;
 import net.sourceforge.actool.model.ia.IXReference;
+import net.sourceforge.actool.jdt.model.JavaXReference;
 
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.PropertyDescriptor;
@@ -23,7 +29,9 @@ public class Connector extends ArchitectureElement {
     public static final String TARGET       = "TARGET";
     public static final String COMMENT      = "COMMENT";
     public static final String XREFERENCES  = "XREFERENCES";
+    public static final String TABLE_NAME = "connector_xref_mapping";
     
+    private static Connection dbConn;  
     public static final IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[]  {
         new PropertyDescriptor(STATE, "Type"),
         new PropertyDescriptor(SOURCE, "Source"),
@@ -36,7 +44,8 @@ public class Connector extends ArchitectureElement {
     private boolean envisaged = true, connected = false;
     private String comment = "";
 
-    private LinkedList<IXReference> xrefs = new LinkedList<IXReference>();
+//    private LinkedList<IXReference> xrefs = new LinkedList<IXReference>();
+    
     
     protected Connector(Component source, Component target) {
     	if (source == null || target == null || target.equals(source))
@@ -51,7 +60,13 @@ public class Connector extends ArchitectureElement {
     }
 
     private void construct(Component source, Component target, boolean connect) {   	
-        this.source = source;
+    	try {
+			initDb();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	this.source = source;
         this.target = target;
         if (connect)
             connect();
@@ -103,7 +118,7 @@ public class Connector extends ArchitectureElement {
     
     public int getState() {
         if (isEnvisaged()) {
-            if (xrefs.isEmpty())
+            if (getXrefcount()==0)
                 return ABSENT;
             else
                 return CONVERGENT;
@@ -111,7 +126,9 @@ public class Connector extends ArchitectureElement {
             return DIVERGENT;
     }
     
-    public boolean inState(int state) {
+   
+
+	public boolean inState(int state) {
         if (state < ABSENT || state > DIVERGENT)
             throw new IllegalArgumentException();
         return getState() == state;
@@ -124,34 +141,35 @@ public class Connector extends ArchitectureElement {
     }
     
     public boolean hasXReferences() {
-        return !xrefs.isEmpty();
+        return getXrefcount()>0;
     }
 
     public int getNumXReferences() {
-        return xrefs.size();
+        return getXrefcount();
     }
   
     public void addXReference(IXReference xref) {
-        xrefs.add(xref);       
+    	storeXref(xref);     
         firePropertyChange(XREFERENCES,  null, xref);
     }
 
-    public void addXReferences(Collection<IXReference> xrefs) {
-    	this.xrefs.addAll(xrefs);
+	public void addXReferences(Collection<IXReference> xrefs) {
     	for (IXReference xref: xrefs)
-    		firePropertyChange(XREFERENCES, null, xref);
+    		addXReference(xref);
     }
     
     public void removeXReference(IXReference xref) {
-        xrefs.remove(xref);
+        deleteXref(xref);
         firePropertyChange(XREFERENCES, xref, null);
     }
-    
-    public Collection<IXReference> getXReferences() {
-        return new LinkedList<IXReference>(xrefs);
+
+	public Collection<IXReference> getXReferences() {
+		return retriveXrefs();
     }
    
-    public void accept(IArchitectureModelVisitor visitor) {
+   
+
+	public void accept(IArchitectureModelVisitor visitor) {
     	visitor.visit(this);
     }
     
@@ -207,4 +225,113 @@ public class Connector extends ArchitectureElement {
     public String toString() {
         return source.toString() + "->" + target.toString();
     }
+    
+    private int getXrefcount() {
+    	
+    	int[] result= new int[]{0};
+    	try {
+			DBManager.query("select count(xref) from "+TABLE_NAME+" where connector_id= '" + this.toString()+"'" , dbConn, new IResutlSetDelegate(){
+
+				@Override
+				public int invoke(ResultSet rs, Object... args) throws SQLException {
+					if(args.length!=1) return -1;
+					if(rs.next())
+					((int[])args[0])[0]=rs.getInt(1);
+					return 0;
+				}
+				
+			},result);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return result[0];
+    	
+    	
+    	
+		
+	}
+    private void deleteXref(IXReference xref) {
+    	if(xref instanceof JavaXReference) deleteXref((JavaXReference)xref);
+	    else throw new RuntimeException("deleting xrefs for this language is not implimented");	
+	}
+    
+    private void deleteXref(JavaXReference xref) {
+    	try {
+			DBManager.update("delete from "+TABLE_NAME+" where xref='"+xref.toString()+"' and connector_id='"+this.toString()+"'",dbConn);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+    private void storeXref(IXReference xref) {
+    	    if(xref instanceof JavaXReference) storeXref((JavaXReference)xref);
+    	    else throw new RuntimeException("storeing xrefs for this language is not implimented");	
+	}
+    
+    private void storeXref(JavaXReference xref) {
+    	try {
+			DBManager.update("insert into "+TABLE_NAME+" values ('"+xref.toString()+"' , '"+this.toString()+"' , '"+ JavaXReference.class.getName()+"' )",dbConn);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+    
+    private Collection<IXReference> retriveXrefs() {
+		LinkedList<IXReference> result= new LinkedList<IXReference>();
+		try {
+			DBManager.query("select distinct xref , type_name from "+TABLE_NAME+" where connector_id= '" + this.toString()+"'" , dbConn, new IResutlSetDelegate(){
+
+				@Override
+				public int invoke(ResultSet rs, Object... args) throws SQLException {
+					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
+					LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
+					while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+					return 0;
+				}
+				
+				private IXReference createXref(String xref,String typeName){
+					if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
+					return null;
+				}
+				
+			},result);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+    
+    public boolean containsXref(IXReference xref)
+    { 
+    	boolean[] result= new boolean[]{ false};
+    	if(xref instanceof JavaXReference){
+	    	try {
+				DBManager.query("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= '" + this.toString()+"' and xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResutlSetDelegate(){
+	
+					@Override
+					public int invoke(ResultSet rs, Object... args) throws SQLException {
+						if(args.length!=1) return -1;
+						if(rs.next())
+						((boolean[])args[0])[0]=rs.getBoolean("found");
+						return 0;
+					}
+					
+				},result);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	
+    	return result[0]; 
+    }
+    private void initDb() throws SQLException {
+    	dbConn = DBManager.connect();
+//		DBManager.update("CREATE TABLE if not exists "+TABLE_NAME+" ( xref_id INTEGER NOT NULL, connector_id VARCHAR(128) NOT NULL, FOREIGN KEY (xref_id) REFERENCES compilationUnit_xrefs(id)) ",  dbConn);
+    	DBManager.update("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL,type_name VARCHAR(128) NOT NULL )",  dbConn);
+	}
 }

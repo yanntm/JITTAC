@@ -33,4 +33,5 @@ public abstract class AbstractXReference implements IXReference {
 	public int getLine() {
 		return line;
 	}
+
 }

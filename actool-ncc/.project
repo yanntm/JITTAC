@@ -3,6 +3,7 @@
 	<name>actool-ncc</name>
 	<comment></comment>
 	<projects>
+		<project>actool</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

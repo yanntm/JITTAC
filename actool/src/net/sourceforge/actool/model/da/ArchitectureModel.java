@@ -2,6 +2,9 @@ package net.sourceforge.actool.model.da;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,7 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-
+import net.sourceforge.actool.db.DBManager;
+import net.sourceforge.actool.db.DBManager.IResutlSetDelegate;
+import net.sourceforge.actool.jdt.model.JavaXReference;
 import net.sourceforge.actool.model.ResourceMap;
 import net.sourceforge.actool.model.ResourceMapping;
 import net.sourceforge.actool.model.ia.IElement;
@@ -42,19 +47,21 @@ public class ArchitectureModel extends ArchitectureElement
     public static final IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[]  {
         new PropertyDescriptor("name", "Name")
     };
-    
+    private static Connection dbConn;  
 	private Map<String, Component> components = new HashMap<String, Component>();
-	private LinkedList<IXReference> _unresolved = new LinkedList<IXReference>(); //replace duble linked list
+//	private LinkedList<IXReference> _unresolved = new LinkedList<IXReference>(); //replace duble linked list
 	private ResourceMap map = new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
 	
-	private Map<String, Connector> xrefs = new HashMap<String, Connector>();
+	private Map<String, Connector> xrefs = new HashMap<String, Connector>(); //replace with list of connectors
 	private final IResource resource;
 	private final ModelProperties properties;
-	
+	private final String unresolvedTableName;
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
 		
 		this.properties = new ModelProperties(resource);
+		unresolvedTableName = "unresolved_"+this.resource.getName().replace(".", "_");
+		initDb();
 	}
 	
 	public IResource getResource() {
@@ -436,7 +443,7 @@ public class ArchitectureModel extends ArchitectureElement
 	    
 	    // Get connection between the components, if none exists, create one.
        Connector conn = getConnector(source, target, true);
-       if(!conn.getXReferences().contains(xref)){// check if connection already exits before adding.
+       if(!conn.containsXref(xref)){// check if connection already exits before adding.
        conn.addXReference(xref);
        xrefs.put(xref.toString(), conn);
        }
@@ -464,7 +471,16 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
 	protected void addUnresolvedXReference(IXReference xref) {
-		_unresolved.add(xref);
+//		_unresolved.add(xref);
+		if(xref instanceof JavaXReference){
+			try {
+				DBManager.update("insert into "+unresolvedTableName+" values ('"+((JavaXReference)xref).toString()+"' , '"+ JavaXReference.class.getName()+"')" ,dbConn);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		/*if (source == null) {
 			ITypeRoot key = (ITypeRoot) xref.getSource().getOpenable();
 			Integer refCount = _unmapped.get(key);
@@ -487,11 +503,41 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
 	protected boolean hasUnresolveddXReference(IXReference xref) {
-		return _unresolved.contains(xref);
+		boolean[] result= new boolean[]{ false};
+    	if(xref instanceof JavaXReference){
+	    	try {
+				DBManager.query("select count(xref)>0 as found from "+unresolvedTableName , dbConn, new IResutlSetDelegate(){
+	
+					@Override
+					public int invoke(ResultSet rs, Object... args) throws SQLException {
+						if(args.length!=1) return -1;
+						if(rs.next())
+						((boolean[])args[0])[0]=rs.getBoolean("found");
+						return 0;
+					}
+					
+				},result);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	
+    	return result[0]; 
+		
+//		return _unresolved.contains(xref);
 	}
 	
 	protected void removeUnresolvedXReference(IXReference xref) {
-		_unresolved.remove(xref);
+//		_unresolved.remove(xref);
+		if(xref instanceof JavaXReference){
+			try {
+				DBManager.update("delete from "+unresolvedTableName+"  where xref='"+((JavaXReference)xref).toString()+"'",dbConn);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		/*Integer refCount;
 		
 		ITypeRoot source = (ITypeRoot) xref.getSource().getOpenable();
@@ -516,7 +562,7 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
     protected void reprocessUnresolvedXReferences() {
-        Iterator<IXReference> iter = _unresolved.iterator();
+        Iterator<IXReference> iter = retriveUnresolvedXrefs().iterator();
         
         while (iter.hasNext()) {
             IXReference xref = iter.next();
@@ -526,7 +572,7 @@ public class ArchitectureModel extends ArchitectureElement
                 continue;
 
             addXReference(xref, source, target);
-            iter.remove();
+            removeUnresolvedXReference(xref);
         }
     }
 
@@ -614,6 +660,43 @@ public class ArchitectureModel extends ArchitectureElement
 		// If some resources have been removed we may need to refresh the mappings.
 		if (visitor.removed) {
 			firePropertyChange(_DELETION, null, null);
+		}
+	}
+	
+	private Collection<IXReference> retriveUnresolvedXrefs() {
+		LinkedList<IXReference> result= new LinkedList<IXReference>();
+		try {
+			DBManager.query("select distinct xref , type_name from "+unresolvedTableName , dbConn, new IResutlSetDelegate(){
+
+				@Override
+				public int invoke(ResultSet rs, Object... args) throws SQLException {
+					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
+					LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
+					while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+					return 0;
+				}
+				
+				private IXReference createXref(String xref,String typeName){
+					if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
+					return null;
+				}
+				
+			},result);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
+	
+	private void initDb()  {
+    	dbConn = DBManager.connect();
+		try {
+			DBManager.update("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL ,type_name VARCHAR(128) NOT NULL)",  dbConn);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

@@ -109,12 +109,12 @@ public class XReferenceView extends ViewPart
 class XReferenceContentProvider implements IStructuredContentProvider {
 
 
-    public Object[] getElements(Object inputElement) {
+    public Object[] getElements(Object inputElement) {//not used
         if (inputElement != null && !(inputElement instanceof Connector))
             throw new IllegalArgumentException();
         
-        if (inputElement != null)
-            return ((Connector) inputElement).getXReferences().toArray();
+//        if (inputElement != null)
+//            return ((Connector) inputElement).getXReferences().toArray();
         
         return null;
     }
