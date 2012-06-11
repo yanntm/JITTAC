@@ -407,6 +407,8 @@ public class ArchitectureModel extends ArchitectureElement
                 connector.removeXReference(xref);
                 addXReference(xref);
             }
+           
+           
         }
         
         // Then we need to process target connections.
@@ -421,7 +423,10 @@ public class ArchitectureModel extends ArchitectureElement
                 connector.removeXReference(xref);
                 addXReference(xref);
             }
+            
+            
         }
+        System.gc();
     }
     
 
@@ -574,6 +579,8 @@ public class ArchitectureModel extends ArchitectureElement
             addXReference(xref, source, target);
             removeUnresolvedXReference(xref);
         }
+        iter=null;
+        System.gc();
     }
 
 	protected Component resolveMapping(IElement element) {

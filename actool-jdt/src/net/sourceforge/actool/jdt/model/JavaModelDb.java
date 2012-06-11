@@ -96,6 +96,14 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 	@Override
 	public void _updateListener(ImplementationChangeListener listener) {
+//		final ImplementationChangeListener templistener = listener;
+//		final JavaModelDb tempRef = this;
+//		Thread thread = new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				// TODO Auto-generated method stub
+				
 		
 		try {
 				
@@ -111,6 +119,10 @@ public class JavaModelDb extends AbstractJavaModel{
 			        			
 							String currentKey = rs.getString("CompilationUnitKey");
 							if(!key.equals(currentKey)){
+								if(added.size()!=0){
+									listener.implementationChangeEvent(new ImplementationChangeDelta(jModelDb, new String[0], added.toArray(new String[added.size()]), new String[0]));
+									added.clear();
+								}
 								key=currentKey;
 								try {
 									JavaCore.create(key).getResource().deleteMarkers(defaults.MARKER_TYPE_OLD, true, IResource.DEPTH_INFINITE);
@@ -119,15 +131,20 @@ public class JavaModelDb extends AbstractJavaModel{
 							added.add(rs.getString("xref"));
 			        }
 			            
-			            listener.implementationChangeEvent(new ImplementationChangeDelta(jModelDb, new String[0], added.toArray(new String[added.size()]), new String[0]));
-			        
+			            if(added.size()!=0)listener.implementationChangeEvent(new ImplementationChangeDelta(jModelDb, new String[0], added.toArray(new String[added.size()]), new String[0]));
+//			            System.gc();
 			        return 0;  //To change body of implemented methods use File | Settings | File Templates.
 			    }
+//			},templistener,tempRef);
 			},listener,this);
+			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+//			}
+//		});
+//		thread.start();
 		
 	}
 	
@@ -192,7 +209,8 @@ public class JavaModelDb extends AbstractJavaModel{
 				  getXrefs(commonTableName),
 				  getXrefs(addedTableName),
 				  getXrefs(removedTableName)));
-		
+			
+	
 		// Removed all references and put the new ones.
 		try {
 			DBManager.update("Delete from "+rootTableName+"  where CompilationUnitKey='"+currentUnit.getHandleIdentifier()+"' AND xref in (select xref from "+ removedTableName+")",  conn);				
@@ -209,6 +227,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		clearCommon();
 		clearRemoved();
 		currentUnit = null;
+//		System.gc();
 	}
 
 	private void clearAdded(){
