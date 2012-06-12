@@ -2,6 +2,7 @@ package net.sourceforge.actool.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -21,7 +22,7 @@ import org.eclipse.core.runtime.Platform;
 public class DBManager {
 
 		private static Map<String, Connection> connections = new HashMap<String, Connection>();
-	
+		private static Map<String,PreparedStatement> statements= new HashMap<String, PreparedStatement>();
 	
 	//--------------------------------------------------db helper functions-----------------------------------------------------------------
 		
@@ -61,9 +62,24 @@ public class DBManager {
 	    }
 		
 		//use for SQL command SELECT
-	    public static synchronized int query(String expression, Connection conn,IResultSetDelegate delegate,Object... args ) throws SQLException {
+	    public static int query(String expression, Connection conn,IResultSetDelegate delegate,Object... args ) throws SQLException {
 	        Statement st = conn.createStatement();
 	        int result = delegate.invoke(st.executeQuery(expression),args);
+	        st.close();     // also closes ResultSet rs
+	        return result;
+	    }
+	    
+	    public static int preparedQuery(String expression, Object[] values,Connection conn,IResultSetDelegate delegate,Object... args ) throws SQLException {
+	        PreparedStatement st=conn.prepareStatement(expression);
+	        for(int i=0; i<values.length;i++)
+	        st.setObject(1+i, values[i]);
+	        int result = delegate.invoke(st.executeQuery(),args);
+	        st.close();     // also closes ResultSet rs
+	        return result;
+	    }
+	    public static int preparedQuery(String expression,Connection conn,IResultSetDelegate delegate,Object... args ) throws SQLException {
+	        PreparedStatement st=conn.prepareStatement(expression);
+	        int result = delegate.invoke(st.executeQuery(),args);
 	        st.close();     // also closes ResultSet rs
 	        return result;
 	    }
@@ -79,6 +95,22 @@ public class DBManager {
 
 	        st.close();
 	    } // void update()
+	    
+	    public static synchronized void preparedUpdate(String expression, Connection conn) throws SQLException {
+	    	preparedUpdate(expression,new Object[0], conn);
+	        
+	    }
+	    public static synchronized void preparedUpdate(String expression,Object[] values, Connection conn) throws SQLException {
+
+	        PreparedStatement st = conn.prepareStatement(expression);
+	        for(int i=0; i<values.length;i++)
+		        st.setObject(1+i, values[i]);
+	        int i = st.executeUpdate();    // run the query
+	        if (i == -1) {
+	            System.out.println("db error : " + expression);
+	        }
+	        st.close();
+	    }
 
 	    public static void shutdown(Connection conn) throws SQLException {
 

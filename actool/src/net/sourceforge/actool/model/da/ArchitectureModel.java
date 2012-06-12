@@ -202,7 +202,7 @@ public class ArchitectureModel extends ArchitectureElement
 //				@Override
 //				public void run() {
 					// TODO Auto-generated method stub
-			if(implementation instanceof IXReferenceStringFactory) xrefStringFactory=(IXReferenceStringFactory) implementation;
+			
 					reconnectAll();
 //				}
 //			});
@@ -450,7 +450,7 @@ public class ArchitectureModel extends ArchitectureElement
     	LinkedList<IXReference> result= new LinkedList<IXReference>();
     	LinkedList<String> connectors = new LinkedList<String>();
 		try {
-			DBManager.query("select distinct connector_id from "+Connector.TABLE_NAME, dbConn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select distinct connector_id from "+Connector.TABLE_NAME, dbConn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -465,7 +465,8 @@ public class ArchitectureModel extends ArchitectureElement
 			for(String connectorID: connectors){
 				
 				try {
-					DBManager.query("select TOP 1 xref , type_name from "+Connector.TABLE_NAME+" where connector_id= '" + connectorID+"'" , dbConn, new IResultSetDelegate(){
+//					DBManager.query("select TOP 1 xref , type_name from "+Connector.TABLE_NAME+" where connector_id= '" + connectorID+"'" , dbConn, new IResultSetDelegate(){
+					DBManager.preparedQuery("select TOP 1 xref , type_name from "+Connector.TABLE_NAME+" where connector_id= ? " , new Object[]{connectorID}, dbConn, new IResultSetDelegate(){
 						@Override
 						public int invoke(ResultSet rs, Object... args) throws SQLException {
 							if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
@@ -601,7 +602,7 @@ public class ArchitectureModel extends ArchitectureElement
 		boolean[] result= new boolean[]{ false};
     	if(xref instanceof JavaXReference){
 	    	try {
-				DBManager.query("select count(xref)>0 as found from "+unresolvedTableName , dbConn, new IResultSetDelegate(){
+				DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName , dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -764,7 +765,7 @@ public class ArchitectureModel extends ArchitectureElement
 	private Collection<IXReference> retriveUnresolvedXrefs() {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-			DBManager.query("select distinct xref , type_name from "+unresolvedTableName , dbConn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select distinct xref , type_name from "+unresolvedTableName ,new Object[0], dbConn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -792,8 +793,8 @@ public class ArchitectureModel extends ArchitectureElement
     	boolean[] result= new boolean[]{ false};
     	if(xref instanceof JavaXReference){
 	    	try {
-				DBManager.query("select count(xref)>0 as found from "+unresolvedTableName +" where xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
-	
+//				DBManager.query("select count(xref)>0 as found from "+unresolvedTableName +" where xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
+	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName +" where xref = ? " , new Object[]{"'"+((JavaXReference)xref).toString()+"'"}, dbConn, new IResultSetDelegate(){
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
 						if(args.length!=1) return -1;
@@ -804,7 +805,7 @@ public class ArchitectureModel extends ArchitectureElement
 					
 				},result);
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
+				// TODO Auto-generated catch block 
 				e.printStackTrace();
 			}
     	}
@@ -813,8 +814,9 @@ public class ArchitectureModel extends ArchitectureElement
     }
 	
 	private void initDb()  {
-    	dbConn = DBManager.connect();
+    	
 		try {
+			dbConn = DBManager.connect();
 			DBManager.update("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL ,type_name VARCHAR(128) NOT NULL)",  dbConn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block

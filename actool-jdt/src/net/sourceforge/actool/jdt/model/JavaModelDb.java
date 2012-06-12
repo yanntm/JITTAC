@@ -108,7 +108,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 		try {
 			LinkedList<String> compilationUnits = new LinkedList<String>();
-			DBManager.query("SELECT distinct CompilationUnitKey, xref FROM "+rootTableName , conn, new IResultSetDelegate(){
+			DBManager.preparedQuery("SELECT distinct CompilationUnitKey, xref FROM "+rootTableName , conn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args)
@@ -124,7 +124,8 @@ public class JavaModelDb extends AbstractJavaModel{
 			Iterator<String> iter = compilationUnits.iterator();
 			String current="";
 			while(iter.hasNext()){
-				DBManager.query("SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey='"+(current=iter.next())+"'" , conn, new IResultSetDelegate() {
+//				DBManager.query("SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey='"+(current=iter.next())+"'" , conn, new IResultSetDelegate() {
+				DBManager.preparedQuery("SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey= ?" , new Object[]{(current=iter.next())}, conn, new IResultSetDelegate() {
 				    @Override
 				    public int invoke(ResultSet rs,Object... args) throws SQLException{
 				    	LinkedList<String> added = new LinkedList<String>();
@@ -171,7 +172,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 		try {
 			boolean common = false;
-			DBManager.query("select xref from "+ removedTableName+" where xref = '"+xref+"'" , conn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select xref from "+ removedTableName+" where xref = ?",new Object[]{xref} , conn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args)
@@ -288,7 +289,8 @@ public class JavaModelDb extends AbstractJavaModel{
 		LinkedList<String> result = new LinkedList<String>();
 		try {
 			
-			DBManager.query("SELECT distinct xref FROM "+table+" " , conn, new IResultSetDelegate() {
+//			DBManager.query("SELECT distinct xref FROM "+table+" " , conn, new IResultSetDelegate() {
+			DBManager.preparedQuery("SELECT distinct xref FROM "+table, conn, new IResultSetDelegate() {
 			    @SuppressWarnings("unchecked")
 				@Override
 			    public int invoke(ResultSet rs,Object... args) throws SQLException{

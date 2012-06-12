@@ -230,7 +230,8 @@ public class Connector extends ArchitectureElement {
     	
     	int[] result= new int[]{0};
     	try {
-			DBManager.query("select count(xref) from "+TABLE_NAME+" where connector_id= '" + this.toString()+"'" , dbConn, new IResultSetDelegate(){
+//			DBManager.query("select count(xref) from "+TABLE_NAME+" where connector_id= '" + this.toString()+"'" , dbConn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select count(xref) from "+TABLE_NAME+" where connector_id= ?",new Object[]{this.toString()} , dbConn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -286,7 +287,7 @@ public class Connector extends ArchitectureElement {
     public static Collection<IXReference> retriveXrefs(String connectorId) {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-			DBManager.query("select distinct xref , type_name from "+TABLE_NAME+" where connector_id= '" + connectorId+"'" , dbConn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select distinct xref , type_name from "+TABLE_NAME+" where connector_id= ?",new Object[]{connectorId} , dbConn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -314,7 +315,8 @@ public class Connector extends ArchitectureElement {
     	boolean[] result= new boolean[]{ false};
     	if(xref instanceof JavaXReference){
 	    	try {
-				DBManager.query("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= '" + this.toString()+"' and xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
+//				DBManager.query("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= '" + this.toString()+"' and xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
+	    		DBManager.preparedQuery("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= ? and xref= ?" ,new Object[]{this.toString(),((JavaXReference)xref).toString()}, dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -338,7 +340,8 @@ public class Connector extends ArchitectureElement {
     	String id = "";
     	if(xref instanceof JavaXReference){
 	    	try {
-				DBManager.query("select connector_id as id from "+TABLE_NAME+" where xref= '" + ((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
+//				DBManager.query("select connector_id as id from "+TABLE_NAME+" where xref= '" + ((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
+				DBManager.preparedQuery("select connector_id as id from "+TABLE_NAME+" where xref= ?" ,new Object[]{((JavaXReference)xref).toString()}, dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
