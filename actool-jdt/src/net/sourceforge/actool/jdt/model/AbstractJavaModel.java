@@ -4,10 +4,11 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import net.sourceforge.actool.model.ia.IXReference;
 import net.sourceforge.actool.model.ia.IXReferenceFactory;
+import net.sourceforge.actool.model.ia.IXReferenceStringFactory;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.model.ia.ImplementationModel;
 
-public abstract class AbstractJavaModel extends ImplementationModel implements IXReferenceFactory  {
+public abstract class AbstractJavaModel extends ImplementationModel implements IXReferenceStringFactory  {
 
 	public AbstractJavaModel() {
 		super();
@@ -40,6 +41,10 @@ public abstract class AbstractJavaModel extends ImplementationModel implements I
 
 	public IXReference createXReference(String xref) {
 		return JavaXReference.fromString(xref);
+	}
+	public String toString(IXReference xref){
+		if(xref instanceof JavaXReference)return((JavaXReference)xref).toString();
+		else return xref.toString();
 	}
 
 }

@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 
@@ -27,7 +28,7 @@ import net.sourceforge.actool.model.ia.IXReferenceFactory;
 import net.sourceforge.actool.model.ia.ImplementationChangeDelta;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.db.*;
-import net.sourceforge.actool.db.DBManager.IResutlSetDelegate;
+import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
 
 
 public class JavaModelDb extends AbstractJavaModel{
@@ -106,37 +107,44 @@ public class JavaModelDb extends AbstractJavaModel{
 				
 		
 		try {
+			LinkedList<String> compilationUnits = new LinkedList<String>();
+			DBManager.query("SELECT distinct CompilationUnitKey, xref FROM "+rootTableName , conn, new IResultSetDelegate(){
+
+				@Override
+				public int invoke(ResultSet rs, Object... args)
+						throws SQLException {
+					if(args.length!=1 || !(args[0] instanceof LinkedList<?>)) return -1;
+					LinkedList<String> result =((LinkedList<String>)args[0]);
+					while(rs.next())
+					result.add(rs.getString("CompilationUnitKey"));
+					return 0;
+				}
 				
-			DBManager.query("SELECT CompilationUnitKey, xref FROM "+rootTableName+" order by CompilationUnitKey " , conn, new IResutlSetDelegate() {
-			    @Override
-			    public int invoke(ResultSet rs,Object... args) throws SQLException{
-			    	LinkedList<String> added = new LinkedList<String>();
-			    	if(args.length!=2) return-1;
-			    	ImplementationChangeListener listener= (ImplementationChangeListener)args[0];
-			    	IXReferenceFactory jModelDb = (IXReferenceFactory)args[1];
-			        String key ="";
-			        while(rs.next()) {
-			        			
-							String currentKey = rs.getString("CompilationUnitKey");
-							if(!key.equals(currentKey)){
-								if(added.size()!=0){
-									listener.implementationChangeEvent(new ImplementationChangeDelta(jModelDb, new String[0], added.toArray(new String[added.size()]), new String[0]));
-									added.clear();
-								}
-								key=currentKey;
-								try {
-									JavaCore.create(key).getResource().deleteMarkers(defaults.MARKER_TYPE_OLD, true, IResource.DEPTH_INFINITE);
-								} catch (CoreException ex) {}
-							}
-							added.add(rs.getString("xref"));
-			        }
-			            
-			            if(added.size()!=0)listener.implementationChangeEvent(new ImplementationChangeDelta(jModelDb, new String[0], added.toArray(new String[added.size()]), new String[0]));
-//			            System.gc();
-			        return 0;  //To change body of implemented methods use File | Settings | File Templates.
-			    }
-//			},templistener,tempRef);
-			},listener,this);
+			},compilationUnits);
+			Iterator<String> iter = compilationUnits.iterator();
+			String current="";
+			while(iter.hasNext()){
+				DBManager.query("SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey='"+(current=iter.next())+"'" , conn, new IResultSetDelegate() {
+				    @Override
+				    public int invoke(ResultSet rs,Object... args) throws SQLException{
+				    	LinkedList<String> added = new LinkedList<String>();
+				    	if(args.length!=3) return-1;
+				    	ImplementationChangeListener listener= (ImplementationChangeListener)args[0];
+				    	IXReferenceFactory jModelDb = (IXReferenceFactory)args[1];
+				        String key =(String)args[2];
+				        try {
+							JavaCore.create(key).getResource().deleteMarkers(defaults.MARKER_TYPE_OLD, true, IResource.DEPTH_INFINITE);
+						} catch (CoreException ex) {}
+				        while(rs.next()){	
+								added.add(rs.getString("xref"));
+				        }
+				        if(added.size()!=0)listener.implementationChangeEvent(new ImplementationChangeDelta(jModelDb, new String[0], added.toArray(new String[added.size()]), new String[0]));
+	//			            System.gc();
+				        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+				    }
+	//			},templistener,tempRef);
+				},listener,this,current);
+			}
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -163,7 +171,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 		try {
 			boolean common = false;
-			DBManager.query("select xref from "+ removedTableName+" where xref = '"+xref+"'" , conn, new IResutlSetDelegate(){
+			DBManager.query("select xref from "+ removedTableName+" where xref = '"+xref+"'" , conn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args)
@@ -280,7 +288,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		LinkedList<String> result = new LinkedList<String>();
 		try {
 			
-			DBManager.query("SELECT distinct xref FROM "+table+" " , conn, new IResutlSetDelegate() {
+			DBManager.query("SELECT distinct xref FROM "+table+" " , conn, new IResultSetDelegate() {
 			    @SuppressWarnings("unchecked")
 				@Override
 			    public int invoke(ResultSet rs,Object... args) throws SQLException{

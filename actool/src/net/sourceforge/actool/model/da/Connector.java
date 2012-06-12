@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 import net.sourceforge.actool.db.DBManager;
-import net.sourceforge.actool.db.DBManager.IResutlSetDelegate;
+import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
 import net.sourceforge.actool.model.ia.IXReference;
 import net.sourceforge.actool.jdt.model.JavaXReference;
 
@@ -230,7 +230,7 @@ public class Connector extends ArchitectureElement {
     	
     	int[] result= new int[]{0};
     	try {
-			DBManager.query("select count(xref) from "+TABLE_NAME+" where connector_id= '" + this.toString()+"'" , dbConn, new IResutlSetDelegate(){
+			DBManager.query("select count(xref) from "+TABLE_NAME+" where connector_id= '" + this.toString()+"'" , dbConn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -280,9 +280,13 @@ public class Connector extends ArchitectureElement {
 	}
     
     private Collection<IXReference> retriveXrefs() {
+			return retriveXrefs(this.toString());
+	}
+    
+    public static Collection<IXReference> retriveXrefs(String connectorId) {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-			DBManager.query("select distinct xref , type_name from "+TABLE_NAME+" where connector_id= '" + this.toString()+"'" , dbConn, new IResutlSetDelegate(){
+			DBManager.query("select distinct xref , type_name from "+TABLE_NAME+" where connector_id= '" + connectorId+"'" , dbConn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -310,7 +314,7 @@ public class Connector extends ArchitectureElement {
     	boolean[] result= new boolean[]{ false};
     	if(xref instanceof JavaXReference){
 	    	try {
-				DBManager.query("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= '" + this.toString()+"' and xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResutlSetDelegate(){
+				DBManager.query("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= '" + this.toString()+"' and xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -329,9 +333,34 @@ public class Connector extends ArchitectureElement {
     	
     	return result[0]; 
     }
+    
+    public static String findConnectorId(IXReference xref){
+    	String id = "";
+    	if(xref instanceof JavaXReference){
+	    	try {
+				DBManager.query("select connector_id as id from "+TABLE_NAME+" where xref= '" + ((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
+	
+					@Override
+					public int invoke(ResultSet rs, Object... args) throws SQLException {
+						if(args.length!=1) return -1;
+						if(rs.next())
+							args[0]=rs.getString("id");
+						return 0;
+					}
+					
+				},id);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	return id;
+    }
+    
     private void initDb() throws SQLException {
     	dbConn = DBManager.connect();
 //		DBManager.update("CREATE TABLE if not exists "+TABLE_NAME+" ( xref_id INTEGER NOT NULL, connector_id VARCHAR(128) NOT NULL, FOREIGN KEY (xref_id) REFERENCES compilationUnit_xrefs(id)) ",  dbConn);
     	DBManager.update("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL,type_name VARCHAR(128) NOT NULL )",  dbConn);
 	}
+
 }

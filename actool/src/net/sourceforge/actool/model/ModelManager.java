@@ -14,6 +14,7 @@ import net.sourceforge.actool.ProblemManager;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.ArchitectureModelReader;
 import net.sourceforge.actool.model.ia.IImplementationModelFactory;
+import net.sourceforge.actool.model.ia.IXReferenceStringFactory;
 import net.sourceforge.actool.model.ia.ImplementationModel;
 
 import org.eclipse.core.resources.IFile;
@@ -22,6 +23,7 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
 
 public class ModelManager {
 	
@@ -181,8 +183,10 @@ public class ModelManager {
 		dependants.add(project);
     	
     	for (ArchitectureModel am: models.values()) {
-    		if (dependants.contains(am.getResource().getProject()))
+    		if (dependants.contains(am.getResource().getProject())){
     			am.attachToImplementation(im);
+    			
+    		}
     	}
     	
     	return im;

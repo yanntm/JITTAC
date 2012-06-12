@@ -56,12 +56,12 @@ public class DBManager {
 			return conn;
 		}
 	
-		public static interface IResutlSetDelegate{
+		public static interface IResultSetDelegate{
 	        public int invoke(ResultSet rs,Object... args)throws SQLException;
 	    }
 		
 		//use for SQL command SELECT
-	    public static synchronized int query(String expression, Connection conn,IResutlSetDelegate delegate,Object... args ) throws SQLException {
+	    public static synchronized int query(String expression, Connection conn,IResultSetDelegate delegate,Object... args ) throws SQLException {
 	        Statement st = conn.createStatement();
 	        int result = delegate.invoke(st.executeQuery(expression),args);
 	        st.close();     // also closes ResultSet rs

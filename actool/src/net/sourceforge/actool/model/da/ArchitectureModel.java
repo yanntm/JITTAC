@@ -13,12 +13,13 @@ import java.util.List;
 import java.util.Map;
 
 import net.sourceforge.actool.db.DBManager;
-import net.sourceforge.actool.db.DBManager.IResutlSetDelegate;
+import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
 import net.sourceforge.actool.jdt.model.JavaXReference;
 import net.sourceforge.actool.model.ResourceMap;
 import net.sourceforge.actool.model.ResourceMapping;
 import net.sourceforge.actool.model.ia.IElement;
 import net.sourceforge.actool.model.ia.IXReference;
+import net.sourceforge.actool.model.ia.IXReferenceStringFactory;
 import net.sourceforge.actool.model.ia.ImplementationChangeDelta;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.model.ia.ImplementationModel;
@@ -43,7 +44,7 @@ public class ArchitectureModel extends ArchitectureElement
 
     public static final String COMPONENTS   = "components";
 	public static final String _DELETION  = "_deletion";
-
+	public static IXReferenceStringFactory xrefStringFactory= null;
     public static final IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[]  {
         new PropertyDescriptor("name", "Name")
     };
@@ -52,10 +53,12 @@ public class ArchitectureModel extends ArchitectureElement
 //	private LinkedList<IXReference> _unresolved = new LinkedList<IXReference>(); //replace duble linked list
 	private ResourceMap map = new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
 	
-	private Map<String, Connector> xrefs = new HashMap<String, Connector>(); //replace with list of connectors
+//	private Map<String, Connector> xrefs = new HashMap<String, Connector>(); //replace with list of connectors
+	private LinkedList<Connector>  connectorList = new LinkedList<Connector>();
 	private final IResource resource;
 	private final ModelProperties properties;
 	private final String unresolvedTableName;
+//	private boolean initalisingModle = false;
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
 		
@@ -190,8 +193,22 @@ public class ArchitectureModel extends ArchitectureElement
 	
 	public void attachToImplementation(ImplementationModel implementation) {
 		// TODO: Parse model to get existing cross references.
-		if (implementation.addImplementationChangeListener(this))
-			implementation._updateListener(this);
+		if (implementation.addImplementationChangeListener(this)){
+//			initalisingModle = true;
+//			implementation._updateListener(this);
+//			initalisingModle = false;
+//			Thread thread = new Thread(new Runnable() {
+//				
+//				@Override
+//				public void run() {
+					// TODO Auto-generated method stub
+			if(implementation instanceof IXReferenceStringFactory) xrefStringFactory=(IXReferenceStringFactory) implementation;
+					reconnectAll();
+//				}
+//			});
+//			thread.start();
+			
+		}
 	}
 
 	public void detachFromImplementation(ImplementationModel implementation) {
@@ -429,6 +446,66 @@ public class ArchitectureModel extends ArchitectureElement
         System.gc();
     }
     
+    private void  reconnectAll(){
+    	LinkedList<IXReference> result= new LinkedList<IXReference>();
+    	LinkedList<String> connectors = new LinkedList<String>();
+		try {
+			DBManager.query("select distinct connector_id from "+Connector.TABLE_NAME, dbConn, new IResultSetDelegate(){
+
+				@Override
+				public int invoke(ResultSet rs, Object... args) throws SQLException {
+					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
+					LinkedList<String> result= (LinkedList<String>) args[0];
+					while(rs.next())result.add(rs.getString("connector_id"));
+					return 0;
+				}
+				
+				
+			},connectors);
+			for(String connectorID: connectors){
+				
+				try {
+					DBManager.query("select TOP 1 xref , type_name from "+Connector.TABLE_NAME+" where connector_id= '" + connectorID+"'" , dbConn, new IResultSetDelegate(){
+						@Override
+						public int invoke(ResultSet rs, Object... args) throws SQLException {
+							if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
+							LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
+							while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+							return 0;
+						}
+						
+						private IXReference createXref(String xref,String typeName){
+							if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
+							return null;
+						}
+						
+					},result);
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+			for(IXReference xref:result){
+				reconnect(xref);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    }
+    
+    private void  reconnect(IXReference xref){
+    	Component source = resolveMapping(xref.getSource());
+		Component target = resolveMapping(xref.getTarget());
+		Connector conn = getConnector(source, target, true);
+		
+//			if(!xrefs.containsKey(xref.toString()))xrefs.put(xref.toString(), conn);
+		if(!connectorList.contains(conn))connectorList.add(conn);
+		
+    }
+    
 
 	public void addXReference(IXReference xref) {
 		
@@ -436,7 +513,8 @@ public class ArchitectureModel extends ArchitectureElement
 		Component source = resolveMapping(xref.getSource());
 		Component target = resolveMapping(xref.getTarget());
 		if (source == null || target == null || source.equals(target)) {
-		    addUnresolvedXReference(xref);
+//		    if(!initalisingModle)
+		    	addUnresolvedXReference(xref);
 			return;
 		}
 		
@@ -448,9 +526,11 @@ public class ArchitectureModel extends ArchitectureElement
 	    
 	    // Get connection between the components, if none exists, create one.
        Connector conn = getConnector(source, target, true);
+       
        if(!conn.containsXref(xref)){// check if connection already exits before adding.
-       conn.addXReference(xref);
-       xrefs.put(xref.toString(), conn);
+    	   conn.addXReference(xref);
+//    	   xrefs.put(xref.toString(), conn);
+    	   if(!connectorList.contains(conn))connectorList.add(conn);
        }
 	}
 	
@@ -463,7 +543,15 @@ public class ArchitectureModel extends ArchitectureElement
 	    }
 	    
 	    // Check if we have a mapping for the x-reference and remove it.
-	    Connector connector = xrefs.remove(xref.toString());
+	    Connector connector =null;
+//	    connector= xrefs.remove(xref.toString());
+	    String targetId = Connector.findConnectorId(xref);
+	    for(Connector c: connectorList){
+	    	if(c.toString().equals(targetId)){ 
+	    		connector = c;
+	    		break;
+	    	}
+	    }
 		if (connector == null)
 			// No connector, nothing to do then. This should not happen though...
 			return; // TODO: Handle this!
@@ -471,13 +559,15 @@ public class ArchitectureModel extends ArchitectureElement
 	    // Remove x-reference from the connector
 	    // and destroy the connector if it's a violation
 		connector.removeXReference(xref);
-		if (!connector.isEnvisaged() && connector.getNumXReferences() == 0)
+		if (!connector.isEnvisaged() && connector.getNumXReferences() == 0){
+			connectorList.remove(connector);
 			connector.disconnect();
+		}
 	}
 	
 	protected void addUnresolvedXReference(IXReference xref) {
 //		_unresolved.add(xref);
-		if(xref instanceof JavaXReference){
+		if(xref instanceof JavaXReference && !containsUndiclaredXref(xref)){
 			try {
 				DBManager.update("insert into "+unresolvedTableName+" values ('"+((JavaXReference)xref).toString()+"' , '"+ JavaXReference.class.getName()+"')" ,dbConn);
 			} catch (SQLException e) {
@@ -511,7 +601,7 @@ public class ArchitectureModel extends ArchitectureElement
 		boolean[] result= new boolean[]{ false};
     	if(xref instanceof JavaXReference){
 	    	try {
-				DBManager.query("select count(xref)>0 as found from "+unresolvedTableName , dbConn, new IResutlSetDelegate(){
+				DBManager.query("select count(xref)>0 as found from "+unresolvedTableName , dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -567,6 +657,7 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
     protected void reprocessUnresolvedXReferences() {
+//    	if(initalisingModle)return;
         Iterator<IXReference> iter = retriveUnresolvedXrefs().iterator();
         
         while (iter.hasNext()) {
@@ -673,7 +764,7 @@ public class ArchitectureModel extends ArchitectureElement
 	private Collection<IXReference> retriveUnresolvedXrefs() {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-			DBManager.query("select distinct xref , type_name from "+unresolvedTableName , dbConn, new IResutlSetDelegate(){
+			DBManager.query("select distinct xref , type_name from "+unresolvedTableName , dbConn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -696,6 +787,30 @@ public class ArchitectureModel extends ArchitectureElement
 		return result;
 	}
 	
+	public boolean containsUndiclaredXref(IXReference xref)
+    { 
+    	boolean[] result= new boolean[]{ false};
+    	if(xref instanceof JavaXReference){
+	    	try {
+				DBManager.query("select count(xref)>0 as found from "+unresolvedTableName +" where xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
+	
+					@Override
+					public int invoke(ResultSet rs, Object... args) throws SQLException {
+						if(args.length!=1) return -1;
+						if(rs.next())
+						((boolean[])args[0])[0]=rs.getBoolean("found");
+						return 0;
+					}
+					
+				},result);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	
+    	return result[0]; 
+    }
 	
 	private void initDb()  {
     	dbConn = DBManager.connect();
