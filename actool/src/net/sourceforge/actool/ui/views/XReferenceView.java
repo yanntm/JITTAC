@@ -109,13 +109,28 @@ public class XReferenceView extends ViewPart
 class XReferenceContentProvider implements IStructuredContentProvider {
 
 
-    public Object[] getElements(Object inputElement) {//not used
+    public Object[] getElements(Object inputElement) {//used for arch relations view table data
         if (inputElement != null && !(inputElement instanceof Connector))
             throw new IllegalArgumentException();
         
-//        if (inputElement != null)
-//            return ((Connector) inputElement).getXReferences().toArray();
+        Thread cleanup = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(20);
+					System.gc();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+        cleanup.start();
         
+        if (inputElement != null){
+            return ((Connector) inputElement).getXReferences().toArray();
+        }
         return null;
     }
 

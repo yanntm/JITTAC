@@ -27,6 +27,14 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.Position;
+import org.eclipse.jface.text.source.IAnnotationModel;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.texteditor.IDocumentProvider;
+import org.eclipse.ui.texteditor.ITextEditor;
+import org.eclipse.ui.texteditor.SimpleMarkerAnnotation;
 
 
 public class ProblemManager extends ArchitectureModelListener {
@@ -282,6 +290,8 @@ public class ProblemManager extends ArchitectureModelListener {
             marker.setAttribute(IMarker.CHAR_START, xref.getOffset());
             marker.setAttribute(IMarker.CHAR_END, xref.getOffset() + xref.getLength());
             marker.setAttribute(IMarker.LINE_NUMBER, xref.getLine());
+            marker.setAttribute(defaults.MODEL, model.getResource().getFullPath());
+            marker.setAttribute(defaults.CONNECTOR_ID, Connector.findConnectorId(xref));
 
             violations.put(xref.toString(), marker.getId());
         } catch (CoreException ex) {
@@ -332,4 +342,7 @@ public class ProblemManager extends ArchitectureModelListener {
 		// TODO Auto-generated method stub
 		
 	}
+	
+   
+
 }

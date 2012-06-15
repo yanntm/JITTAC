@@ -124,5 +124,38 @@
             name="Archiecture Consistency">
       </page>
    </extension>
+   <extension
+         id="ArchitecturalViolationAnnotation"
+         name="ArchitecturalViolationAnnotation"
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+         <specification annotationType="net.sourceforge.actool.ui.ArchitecturalViolationAnnotation"
+                label="Architectural Violation Annotation"
+                icon="icons/art-icon.gif"
+                overviewRulerPreferenceKey="clruler"
+                overviewRulerPreferenceValue="true"
+                colorPreferenceKey="clcolor"
+                colorPreferenceValue="165,75,165"
+                textPreferenceKey="cltext"
+                textPreferenceValue="true"
+                verticalRulerPreferenceKey="clvertical"
+                verticalRulerPreferenceValue="true"
+                textStylePreferenceKey="clstyle"
+                textStylePreferenceValue="UNDERLINE">
+		</specification> 
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+   		<type markerSeverity="0"
+        super="org.eclipse.ui.workbench.texteditor.info"
+        name="net.sourceforge.actool.ui.ArchitecturalViolationAnnotation"
+        markerType="net.sourceforge.actool.markers.Problem"/>
+         
+   </extension>
+   <extension point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+         markerType="net.sourceforge.actool.markers.Problem"
+         class="net.sourceforge.actool.ui.editor.quickfix.ArchitecturalViolationQuickFixer"/>
+   </extension>
+   
 
 </plugin>

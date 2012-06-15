@@ -87,7 +87,7 @@ public class ArchitectureEditor extends GraphicalEditorWithFlyoutPalette
 		viewer.setEditPartFactory(new ArchitectureEditPartFactory());
 		viewer.setRootEditPart(new ScalableFreeformRootEditPart());
 		viewer.setKeyHandler(new GraphicalViewerKeyHandler(viewer));
-
+		
 		ContextMenuProvider provider = new ArchitectureEditorContextMenuProvider(
 				viewer, getActionRegistry());
 		viewer.setContextMenu(provider);

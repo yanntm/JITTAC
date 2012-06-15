@@ -108,6 +108,8 @@ public class ModelManager {
 
 		ArchitectureModel model = models.get(key);
 		if (model == null) {
+			ImplementationModel ia = getImplementationModel(file.getProject());
+			ArchitectureModel.xrefStringFactory=(IXReferenceStringFactory) ia;
 			model = _loadModel(file);
 			if (model == null)
 				throw new IllegalArgumentException(
@@ -118,7 +120,7 @@ public class ModelManager {
 
 			// Attach project containing the file if implementation is
 			// available.
-			ImplementationModel ia = getImplementationModel(file.getProject());
+			
 			if (ia != null)
 				model.attachToImplementation(ia);
 

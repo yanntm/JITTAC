@@ -259,7 +259,7 @@ public class Connector extends ArchitectureElement {
     
     private void deleteXref(JavaXReference xref) {
     	try {
-			DBManager.update("delete from "+TABLE_NAME+" where xref='"+xref.toString()+"' and connector_id='"+this.toString()+"'",dbConn);
+			DBManager.preparedUpdate("delete from "+TABLE_NAME+" where xref=? and connector_id=?",new Object[]{xref.toString(),this.toString()},dbConn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -272,7 +272,7 @@ public class Connector extends ArchitectureElement {
     
     private void storeXref(JavaXReference xref) {
     	try {
-			DBManager.update("insert into "+TABLE_NAME+" values ('"+xref.toString()+"' , '"+this.toString()+"' , '"+ JavaXReference.class.getName()+"' )",dbConn);
+			DBManager.preparedUpdate("insert into "+TABLE_NAME+" values (?,?,?)",new Object[]{xref.toString(),this.toString(),JavaXReference.class.getName()},dbConn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -363,7 +363,7 @@ public class Connector extends ArchitectureElement {
     private void initDb() throws SQLException {
     	dbConn = DBManager.connect();
 //		DBManager.update("CREATE TABLE if not exists "+TABLE_NAME+" ( xref_id INTEGER NOT NULL, connector_id VARCHAR(128) NOT NULL, FOREIGN KEY (xref_id) REFERENCES compilationUnit_xrefs(id)) ",  dbConn);
-    	DBManager.update("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL,type_name VARCHAR(128) NOT NULL )",  dbConn);
+    	DBManager.preparedUpdate("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL,type_name VARCHAR(128) NOT NULL )",  dbConn);
 	}
 
 }

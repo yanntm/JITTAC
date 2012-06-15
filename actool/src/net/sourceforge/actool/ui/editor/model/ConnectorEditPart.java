@@ -1,5 +1,6 @@
 package net.sourceforge.actool.ui.editor.model;
 
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -19,6 +20,7 @@ import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 import org.eclipse.gef.editpolicies.ConnectionEditPolicy;
 import org.eclipse.gef.requests.GroupRequest;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 
 
 
@@ -28,7 +30,7 @@ public class ConnectorEditPart extends AbstractConnectionEditPart
 							   			  Visibility {
 
 	PropertyChangeDelegate delegate;
-	
+	private static IFigure oldFigure = null;
 	public void activate() {
 		if (isActive())
 			return;
@@ -174,9 +176,21 @@ public class ConnectorEditPart extends AbstractConnectionEditPart
 			return FADED;
 		else
 			return VISIBLE;
+		
 	}
+	
+	@Override
+	protected void fireSelectionChanged() {
+		super.fireSelectionChanged();
+		if(oldFigure!=null) oldFigure.setForegroundColor(ColorConstants.black);
+		oldFigure =this.figure;
+		oldFigure.setForegroundColor(ColorConstants.blue);
+		
+	};
 
 	public void setVisibility(int visibility) {
 		throw new UnsupportedOperationException("Connector's visibility is controlled by Components!");
 	}
+	
+	
 }

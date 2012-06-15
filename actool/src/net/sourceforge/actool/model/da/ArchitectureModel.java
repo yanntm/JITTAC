@@ -494,7 +494,7 @@ public class ArchitectureModel extends ArchitectureElement
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	
+    	System.gc();
     }
     
     private void  reconnect(IXReference xref){
@@ -570,7 +570,7 @@ public class ArchitectureModel extends ArchitectureElement
 //		_unresolved.add(xref);
 		if(xref instanceof JavaXReference && !containsUndiclaredXref(xref)){
 			try {
-				DBManager.update("insert into "+unresolvedTableName+" values ('"+((JavaXReference)xref).toString()+"' , '"+ JavaXReference.class.getName()+"')" ,dbConn);
+				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (? , ?)",new Object[]{((JavaXReference)xref).toString(),JavaXReference.class.getName()} ,dbConn);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -602,7 +602,7 @@ public class ArchitectureModel extends ArchitectureElement
 		boolean[] result= new boolean[]{ false};
     	if(xref instanceof JavaXReference){
 	    	try {
-				DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName , dbConn, new IResultSetDelegate(){
+				DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName + " where xref=?",new Object[]{((JavaXReference) xref).toString()} , dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -628,7 +628,7 @@ public class ArchitectureModel extends ArchitectureElement
 //		_unresolved.remove(xref);
 		if(xref instanceof JavaXReference){
 			try {
-				DBManager.update("delete from "+unresolvedTableName+"  where xref='"+((JavaXReference)xref).toString()+"'",dbConn);
+				DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{((JavaXReference)xref).toString()},dbConn);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -817,7 +817,7 @@ public class ArchitectureModel extends ArchitectureElement
     	
 		try {
 			dbConn = DBManager.connect();
-			DBManager.update("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL ,type_name VARCHAR(128) NOT NULL)",  dbConn);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL ,type_name VARCHAR(128) NOT NULL)",  dbConn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

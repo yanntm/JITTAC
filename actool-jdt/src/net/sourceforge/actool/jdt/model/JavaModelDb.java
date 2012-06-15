@@ -87,7 +87,7 @@ public class JavaModelDb extends AbstractJavaModel{
 
 
 	private void initDb() throws SQLException {
-		DBManager.update("CREATE TABLE if not exists "+rootTableName+" ( id INTEGER IDENTITY, CompilationUnitKey VARCHAR(1024), xref VARCHAR(1024))",  conn);
+		DBManager.preparedUpdate("CREATE TABLE if not exists "+rootTableName+" ( id INTEGER IDENTITY, CompilationUnitKey VARCHAR(1024), xref VARCHAR(1024))",  conn);
 		clearCommon();
 		clearAdded();
 		clearRemoved();
@@ -183,13 +183,13 @@ public class JavaModelDb extends AbstractJavaModel{
 				}
 				
 			},common);
-			if(common)DBManager.update("insert into "+ commonTableName+" values ('"+xref+"')",conn);
+			if(common)DBManager.preparedUpdate("insert into "+ commonTableName+" values (?)",new Object[]{xref},conn);
 			else {	
-				DBManager.update("insert into "+ addedTableName+" values ('"+xref+"')",conn);
-				DBManager.update("Insert into "+rootTableName+" ( CompilationUnitKey, xref) values ('"+currentUnit.getHandleIdentifier()+"' , '"+xref+"')",  conn);
+				DBManager.preparedUpdate("insert into "+ addedTableName+" values (?)",new Object[]{xref},conn);
+				DBManager.preparedUpdate("Insert into "+rootTableName+" ( CompilationUnitKey, xref) values (? , ?)",new Object[]{currentUnit.getHandleIdentifier(),xref},  conn);
 			}
 
-			DBManager.update("Delete from "+ removedTableName+" where xref = '"+xref+"'",  conn);
+			DBManager.preparedUpdate("Delete from "+ removedTableName+" where xref = ?",new Object[]{xref},conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -222,7 +222,7 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 		// Removed all references and put the new ones.
 		try {
-			DBManager.update("Delete from "+rootTableName+"  where CompilationUnitKey='"+currentUnit.getHandleIdentifier()+"' AND xref in (select xref from "+ removedTableName+")",  conn);				
+			DBManager.preparedUpdate("Delete from "+rootTableName+"  where CompilationUnitKey=? AND xref in (select xref from "+ removedTableName+")",new Object[]{currentUnit.getHandleIdentifier()},  conn);				
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -241,8 +241,8 @@ public class JavaModelDb extends AbstractJavaModel{
 
 	private void clearAdded(){
 		try {
-			DBManager.update("DROP TABLE if exists "+ addedTableName,  conn);
-			DBManager.update("CREATE TABLE if not exists "+ addedTableName+" (xref VARCHAR(1024))",  conn);
+			DBManager.preparedUpdate("DROP TABLE if exists "+ addedTableName,  conn);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+ addedTableName+" (xref VARCHAR(1024))",  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -252,8 +252,8 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 	private void clearRemoved(){
 		try {
-			DBManager.update("DROP TABLE if exists "+ removedTableName,  conn);
-			DBManager.update("CREATE TABLE if not exists "+ removedTableName+" (xref VARCHAR(1024))",  conn);
+			DBManager.preparedUpdate("DROP TABLE if exists "+ removedTableName,  conn);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+ removedTableName+" (xref VARCHAR(1024))",  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -266,7 +266,7 @@ public class JavaModelDb extends AbstractJavaModel{
 	private void createRemovedforUnit(ICompilationUnit unit){
 		try {
 			clearRemoved();
-			DBManager.update("insert into "+ removedTableName+" ( SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey = '" +unit.getHandleIdentifier()+"'"+" )",  conn);
+			DBManager.preparedUpdate("insert into "+ removedTableName+" ( SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey = ?)",new Object[]{unit.getHandleIdentifier()},  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -276,8 +276,8 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 	private void clearCommon(){
 		try {
-			DBManager.update("DROP TABLE if exists "+ commonTableName,  conn);
-			DBManager.update("CREATE TABLE if not exists "+ commonTableName+" (xref VARCHAR(1024))",  conn);
+			DBManager.preparedUpdate("DROP TABLE if exists "+ commonTableName,  conn);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+ commonTableName+" (xref VARCHAR(1024))",  conn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
