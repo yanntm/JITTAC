@@ -3,7 +3,6 @@
 	<name>actool</name>
 	<comment></comment>
 	<projects>
-		<project>actool-jdt</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -105,11 +106,27 @@ public class ModelManager {
 			return null;
 
 		String key = file.getProjectRelativePath().toPortableString();
-
+		LinkedList<ImplementationModel> imodels = new LinkedList<ImplementationModel>();
+		try {
+			
+			IProject projects[] = file.getProject().getReferencedProjects();
+			for (IProject project : projects) {
+				ImplementationModel im = getImplementationModel(project);
+				if (im != null) {
+//					model.attachToImplementation(im);
+					imodels.add(im);
+					if(im instanceof IXReferenceStringFactory && ArchitectureModel.xrefStringFactory== null)
+					ArchitectureModel.xrefStringFactory=(IXReferenceStringFactory) im;
+				}
+			}
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
 		ArchitectureModel model = models.get(key);
 		if (model == null) {
 			ImplementationModel ia = getImplementationModel(file.getProject());
-			ArchitectureModel.xrefStringFactory=(IXReferenceStringFactory) ia;
+			
+			
 			model = _loadModel(file);
 			if (model == null)
 				throw new IllegalArgumentException(
@@ -125,17 +142,7 @@ public class ModelManager {
 				model.attachToImplementation(ia);
 
 			// Attach all implementation models this project depends on.
-			try {
-				IProject projects[] = file.getProject().getReferencedProjects();
-				for (IProject project : projects) {
-					ImplementationModel im = getImplementationModel(project);
-					if (im != null) {
-						model.attachToImplementation(im);
-					}
-				}
-			} catch (CoreException e) {
-				e.printStackTrace();
-			}
+			for(ImplementationModel im :imodels) model.attachToImplementation(im);
 
 			model.addModelListener(ProblemManager.getInstance(model));
 			models.put(key, model);

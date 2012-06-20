@@ -15,6 +15,7 @@ import net.sourceforge.actool.ui.editor.commands.ComponentCreateCommand;
 import net.sourceforge.actool.ui.editor.commands.ComponentSetConstraintCommand;
 import net.sourceforge.actool.ui.editor.dnd.MapEditPolicy;
 
+import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.ConnectionLayer;
 import org.eclipse.draw2d.FanRouter;
 import org.eclipse.draw2d.Figure;
@@ -41,7 +42,7 @@ import org.eclipse.gef.requests.CreateRequest;
  *
  */
 public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
-                                       implements PropertyChangeListener {
+                                       implements PropertyChangeListener, IViolationHighlighter {
     PropertyChangeDelegate delegate;
     
     public void activate() {
@@ -126,6 +127,30 @@ public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
 	    } else
 	        return;
 	}
+	/* (non-Javadoc)
+	 * @see net.sourceforge.actool.ui.editor.model.IViolationHighlighter#highlightViolation(java.lang.String)
+	 */
+	@Override
+	public void highlightViolation(String id) {
+//		List<ComponentEditPart> temp =this.getSource().getParent().getChildren();
+		List<ComponentEditPart> temp =this.getChildren();
+		ConnectorEditPart connector=null;
+		outer:
+		for(ComponentEditPart componentParts :temp){
+			for(ConnectorEditPart con :(List<ConnectorEditPart>)componentParts.getSourceConnections()){
+				if(con.toString().contains(id)){
+					connector=con;
+					break outer;
+				}
+			}
+//			for(ConnectorEditPart con :(List<ConnectorEditPart>)componentParts.getTargetConnections()){
+//				if(con.toString().equals(id))
+//				break outer;
+//			}
+		}
+		
+		if(connector!=null)connector.getFigure().setForegroundColor(ColorConstants.red);
+	} 
 }
 
 

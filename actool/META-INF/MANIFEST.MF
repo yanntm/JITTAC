@@ -24,4 +24,3 @@ Export-Package: net.sourceforge.actool,
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: hsqldb.jar,
  .
-Import-Package: net.sourceforge.actool.jdt.model

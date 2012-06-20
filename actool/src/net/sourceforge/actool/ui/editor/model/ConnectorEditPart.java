@@ -3,6 +3,11 @@ package net.sourceforge.actool.ui.editor.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.sourceforge.actool.model.da.Connector;
 import net.sourceforge.actool.ui.editor.commands.ConnectorDeleteCommand;
@@ -31,6 +36,7 @@ public class ConnectorEditPart extends AbstractConnectionEditPart
 
 	PropertyChangeDelegate delegate;
 	private static IFigure oldFigure = null;
+	private boolean selected = false;
 	public void activate() {
 		if (isActive())
 			return;
@@ -184,9 +190,10 @@ public class ConnectorEditPart extends AbstractConnectionEditPart
 		super.fireSelectionChanged();
 		if(oldFigure!=null) oldFigure.setForegroundColor(ColorConstants.black);
 		oldFigure =this.figure;
-		oldFigure.setForegroundColor(ColorConstants.blue);
-		
-	};
+		oldFigure.setForegroundColor(ColorConstants.blue);	
+	}
+
+	
 
 	public void setVisibility(int visibility) {
 		throw new UnsupportedOperationException("Connector's visibility is controlled by Components!");

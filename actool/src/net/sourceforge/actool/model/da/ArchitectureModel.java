@@ -14,7 +14,7 @@ import java.util.Map;
 
 import net.sourceforge.actool.db.DBManager;
 import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
-import net.sourceforge.actool.jdt.model.JavaXReference;
+//import net.sourceforge.actool.jdt.model.JavaXReference;
 import net.sourceforge.actool.model.ResourceMap;
 import net.sourceforge.actool.model.ResourceMapping;
 import net.sourceforge.actool.model.ia.IElement;
@@ -465,19 +465,22 @@ public class ArchitectureModel extends ArchitectureElement
 			for(String connectorID: connectors){
 				
 				try {
-//					DBManager.query("select TOP 1 xref , type_name from "+Connector.TABLE_NAME+" where connector_id= '" + connectorID+"'" , dbConn, new IResultSetDelegate(){
-					DBManager.preparedQuery("select TOP 1 xref , type_name from "+Connector.TABLE_NAME+" where connector_id= ? " , new Object[]{connectorID}, dbConn, new IResultSetDelegate(){
+//					DBManager.preparedQuery("select TOP 1 xref , type_name from "+Connector.TABLE_NAME+" where connector_id= ? " , new Object[]{connectorID}, dbConn, new IResultSetDelegate(){
+					DBManager.preparedQuery("select TOP 1 xref from "+Connector.TABLE_NAME+" where connector_id= ? " , new Object[]{connectorID}, dbConn, new IResultSetDelegate(){
 						@Override
 						public int invoke(ResultSet rs, Object... args) throws SQLException {
 							if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
 							LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
-							while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+//							while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+							while(rs.next())result.add(createXref(rs.getString("xref")));
 							return 0;
 						}
 						
-						private IXReference createXref(String xref,String typeName){
-							if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
-							return null;
+//						private IXReference createXref(String xref,String typeName){
+//							if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
+//							return null;
+						private IXReference createXref(String xref){
+							return xrefStringFactory.createXReference(xref);
 						}
 						
 					},result);
@@ -500,6 +503,7 @@ public class ArchitectureModel extends ArchitectureElement
     private void  reconnect(IXReference xref){
     	Component source = resolveMapping(xref.getSource());
 		Component target = resolveMapping(xref.getTarget());
+		if(target.equals(source))return;
 		Connector conn = getConnector(source, target, true);
 		
 //			if(!xrefs.containsKey(xref.toString()))xrefs.put(xref.toString(), conn);
@@ -568,9 +572,11 @@ public class ArchitectureModel extends ArchitectureElement
 	
 	protected void addUnresolvedXReference(IXReference xref) {
 //		_unresolved.add(xref);
-		if(xref instanceof JavaXReference && !containsUndiclaredXref(xref)){
+//		if(xref instanceof JavaXReference && !containsUndiclaredXref(xref)){
+		if(!containsUndiclaredXref(xref)){
 			try {
-				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (? , ?)",new Object[]{((JavaXReference)xref).toString(),JavaXReference.class.getName()} ,dbConn);
+//				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (? , ?)",new Object[]{((JavaXReference)xref).toString(),JavaXReference.class.getName()} ,dbConn);
+				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (? , ?)",new Object[]{xrefStringFactory.toString(xref), "net.sourceforge.actool.jdt.model.JavaXReference"} ,dbConn);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -600,9 +606,10 @@ public class ArchitectureModel extends ArchitectureElement
 	
 	protected boolean hasUnresolveddXReference(IXReference xref) {
 		boolean[] result= new boolean[]{ false};
-    	if(xref instanceof JavaXReference){
+//    	if(xref instanceof JavaXReference){
 	    	try {
-				DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName + " where xref=?",new Object[]{((JavaXReference) xref).toString()} , dbConn, new IResultSetDelegate(){
+//				DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName + " where xref=?",new Object[]{((JavaXReference) xref).toString()} , dbConn, new IResultSetDelegate(){
+	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName + " where xref=?",new Object[]{xrefStringFactory.toString(xref)} , dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -617,7 +624,7 @@ public class ArchitectureModel extends ArchitectureElement
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-    	}
+//    	}
     	
     	return result[0]; 
 		
@@ -626,14 +633,15 @@ public class ArchitectureModel extends ArchitectureElement
 	
 	protected void removeUnresolvedXReference(IXReference xref) {
 //		_unresolved.remove(xref);
-		if(xref instanceof JavaXReference){
+//		if(xref instanceof JavaXReference){
 			try {
-				DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{((JavaXReference)xref).toString()},dbConn);
+//				DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{((JavaXReference) xref).toString()},dbConn);
+				DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{xrefStringFactory.toString(xref)},dbConn);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
+//		}
 		/*Integer refCount;
 		
 		ITypeRoot source = (ITypeRoot) xref.getSource().getOpenable();
@@ -765,19 +773,23 @@ public class ArchitectureModel extends ArchitectureElement
 	private Collection<IXReference> retriveUnresolvedXrefs() {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-			DBManager.preparedQuery("select distinct xref , type_name from "+unresolvedTableName ,new Object[0], dbConn, new IResultSetDelegate(){
+//			DBManager.preparedQuery("select distinct xref , type_name from "+unresolvedTableName ,new Object[0], dbConn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select distinct xref from "+unresolvedTableName ,new Object[0], dbConn, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
 					LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
-					while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+//					while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+					while(rs.next())result.add(createXref(rs.getString("xref")));
 					return 0;
 				}
 				
-				private IXReference createXref(String xref,String typeName){
-					if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
-					return null;
+//				private IXReference createXref(String xref,String typeName){
+//					if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
+//					return null;
+				private IXReference createXref(String xref){
+					return xrefStringFactory.createXReference(xref);
 				}
 				
 			},result);
@@ -791,10 +803,10 @@ public class ArchitectureModel extends ArchitectureElement
 	public boolean containsUndiclaredXref(IXReference xref)
     { 
     	boolean[] result= new boolean[]{ false};
-    	if(xref instanceof JavaXReference){
+//    	if(xref instanceof JavaXReference){
 	    	try {
-//				DBManager.query("select count(xref)>0 as found from "+unresolvedTableName +" where xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
-	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName +" where xref = ? " , new Object[]{"'"+((JavaXReference)xref).toString()+"'"}, dbConn, new IResultSetDelegate(){
+//				DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName +" where xref = ? " , new Object[]{"'"+((JavaXReference)xref).toString()+"'"}, dbConn, new IResultSetDelegate(){
+	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName +" where xref = ? " , new Object[]{"'"+xrefStringFactory.toString(xref)+"'"}, dbConn, new IResultSetDelegate(){
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
 						if(args.length!=1) return -1;
@@ -808,7 +820,7 @@ public class ArchitectureModel extends ArchitectureElement
 				// TODO Auto-generated catch block 
 				e.printStackTrace();
 			}
-    	}
+//    	}
     	
     	return result[0]; 
     }
@@ -817,7 +829,8 @@ public class ArchitectureModel extends ArchitectureElement
     	
 		try {
 			dbConn = DBManager.connect();
-			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL ,type_name VARCHAR(128) NOT NULL)",  dbConn);
+//			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL ,type_name VARCHAR(128) NOT NULL)",  dbConn);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL)",  dbConn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -5,6 +5,7 @@ package net.sourceforge.actool.ui.editor;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.LinkedList;
 
 import net.sourceforge.actool.model.ModelManager;
 import net.sourceforge.actool.model.da.ArchitectureModel;
@@ -14,6 +15,7 @@ import net.sourceforge.actool.ui.editor.actions.ComponentMergeAction;
 import net.sourceforge.actool.ui.editor.actions.ComponentVisibilityAction;
 import net.sourceforge.actool.ui.editor.dnd.MappingDropTargetListener;
 import net.sourceforge.actool.ui.editor.model.ArchitectureEditPartFactory;
+import net.sourceforge.actool.ui.editor.model.IViolationHighlighter;
 import net.sourceforge.actool.ui.editor.model.Visibility;
 
 import org.eclipse.core.resources.IFile;
@@ -59,6 +61,7 @@ public class ArchitectureEditor extends GraphicalEditorWithFlyoutPalette
 	static private PaletteRoot palette;
 
 	ArchitectureModel model = null;
+	
 
 	public ArchitectureModel getModel() {
 		return model;
@@ -235,4 +238,6 @@ public class ArchitectureEditor extends GraphicalEditorWithFlyoutPalette
 		}
 		return super.getAdapter(type);
 	}
+
+	
 }

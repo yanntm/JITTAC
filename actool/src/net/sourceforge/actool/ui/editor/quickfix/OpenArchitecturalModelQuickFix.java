@@ -15,6 +15,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
+import net.sourceforge.actool.ui.editor.model.ArchitectureEditPartFactory;
 
 public class OpenArchitecturalModelQuickFix implements IMarkerResolution {
 	      String label;
@@ -29,11 +30,13 @@ public class OpenArchitecturalModelQuickFix implements IMarkerResolution {
 	      @Override
 	      public void run(IMarker marker) {
 	         try {
-	         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-	         IFile file = root.getFile( (IPath)marker.getAttribute(defaults.MODEL));
-	         IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 	         
-				IDE.openEditor(page, file);
+	        	 IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+		         IFile file = root.getFile( (IPath)marker.getAttribute(defaults.MODEL));
+		         IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+		         IDE.openEditor(page, file);
+		         ArchitectureEditPartFactory.highlightViolation((String)marker.getAttribute(defaults.CONNECTOR_ID));
+	         
 			} catch (PartInitException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

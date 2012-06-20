@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import net.sourceforge.actool.db.DBManager;
 import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
 import net.sourceforge.actool.model.ia.IXReference;
-import net.sourceforge.actool.jdt.model.JavaXReference;
+//import net.sourceforge.actool.jdt.model.JavaXReference;
 
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.PropertyDescriptor;
@@ -253,26 +253,29 @@ public class Connector extends ArchitectureElement {
 		
 	}
     private void deleteXref(IXReference xref) {
-    	if(xref instanceof JavaXReference) deleteXref((JavaXReference)xref);
-	    else throw new RuntimeException("deleting xrefs for this language is not implimented");	
+//    	if(xref instanceof JavaXReference) deleteXref((JavaXReference)xref);
+//	    else throw new RuntimeException("deleting xrefs for this language is not implimented");    	
+    	deleteXref(ArchitectureModel.xrefStringFactory.toString(xref));
 	}
     
-    private void deleteXref(JavaXReference xref) {
+    private void deleteXref(String xref) {
     	try {
-			DBManager.preparedUpdate("delete from "+TABLE_NAME+" where xref=? and connector_id=?",new Object[]{xref.toString(),this.toString()},dbConn);
+			DBManager.preparedUpdate("delete from "+TABLE_NAME+" where xref=? and connector_id=?",new Object[]{xref,this.toString()},dbConn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
     private void storeXref(IXReference xref) {
-    	    if(xref instanceof JavaXReference) storeXref((JavaXReference)xref);
-    	    else throw new RuntimeException("storeing xrefs for this language is not implimented");	
+//    	    if(xref instanceof JavaXReference) storeXref((JavaXReference)xref);
+//    	    else throw new RuntimeException("storeing xrefs for this language is not implimented");
+    	storeXref(ArchitectureModel.xrefStringFactory.toString(xref));
 	}
     
-    private void storeXref(JavaXReference xref) {
+    private void storeXref(String xref) {
     	try {
-			DBManager.preparedUpdate("insert into "+TABLE_NAME+" values (?,?,?)",new Object[]{xref.toString(),this.toString(),JavaXReference.class.getName()},dbConn);
+//			DBManager.preparedUpdate("insert into "+TABLE_NAME+" values (?,?,?)",new Object[]{xref,this.toString(),"net.sourceforge.actool.jdt.model.JavaXReference"},dbConn);
+    		DBManager.preparedUpdate("insert into "+TABLE_NAME+" values (?,?)",new Object[]{xref,this.toString()},dbConn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -287,19 +290,22 @@ public class Connector extends ArchitectureElement {
     public static Collection<IXReference> retriveXrefs(String connectorId) {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-			DBManager.preparedQuery("select distinct xref , type_name from "+TABLE_NAME+" where connector_id= ?",new Object[]{connectorId} , dbConn, new IResultSetDelegate(){
-
+//			DBManager.preparedQuery("select distinct xref , type_name from "+TABLE_NAME+" where connector_id= ?",new Object[]{connectorId} , dbConn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select distinct xref from "+TABLE_NAME+" where connector_id= ?",new Object[]{connectorId} , dbConn, new IResultSetDelegate(){
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
 					LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
-					while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+//					while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
+					while(rs.next())result.add(createXref(rs.getString("xref")));
 					return 0;
 				}
 				
-				private IXReference createXref(String xref,String typeName){
-					if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
-					return null;
+//				private IXReference createXref(String xref,String typeName){
+//					if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
+//					return null;
+				private IXReference createXref(String xref){
+					return ArchitectureModel.xrefStringFactory.createXReference(xref);
 				}
 				
 			},result);
@@ -313,10 +319,10 @@ public class Connector extends ArchitectureElement {
     public boolean containsXref(IXReference xref)
     { 
     	boolean[] result= new boolean[]{ false};
-    	if(xref instanceof JavaXReference){
+//    	if(xref instanceof JavaXReference){
 	    	try {
-//				DBManager.query("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= '" + this.toString()+"' and xref='"+((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
-	    		DBManager.preparedQuery("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= ? and xref= ?" ,new Object[]{this.toString(),((JavaXReference)xref).toString()}, dbConn, new IResultSetDelegate(){
+//				DBManager.preparedQuery("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= ? and xref= ?" ,new Object[]{this.toString(),((JavaXReference)xref).toString()}, dbConn, new IResultSetDelegate(){
+	    		DBManager.preparedQuery("select count(xref)>0 as found from "+TABLE_NAME+" where connector_id= ? and xref= ?" ,new Object[]{this.toString(),ArchitectureModel.xrefStringFactory.toString(xref)}, dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -331,17 +337,17 @@ public class Connector extends ArchitectureElement {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-    	}
+//    	}
     	
     	return result[0]; 
     }
     
     public static String findConnectorId(IXReference xref){
-    	String id = "";
-    	if(xref instanceof JavaXReference){
+    	String[] id = new String[]{""};
+//    	if(xref instanceof JavaXReference){
 	    	try {
 //				DBManager.query("select connector_id as id from "+TABLE_NAME+" where xref= '" + ((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
-				DBManager.preparedQuery("select connector_id as id from "+TABLE_NAME+" where xref= ?" ,new Object[]{((JavaXReference)xref).toString()}, dbConn, new IResultSetDelegate(){
+				DBManager.preparedQuery("select connector_id as id from "+TABLE_NAME+" where xref= ?" ,new Object[]{ArchitectureModel.xrefStringFactory.toString(xref)}, dbConn, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -356,14 +362,15 @@ public class Connector extends ArchitectureElement {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-    	}
-    	return id;
+//    	}
+    	return id[0];
     }
     
     private void initDb() throws SQLException {
     	dbConn = DBManager.connect();
 //		DBManager.update("CREATE TABLE if not exists "+TABLE_NAME+" ( xref_id INTEGER NOT NULL, connector_id VARCHAR(128) NOT NULL, FOREIGN KEY (xref_id) REFERENCES compilationUnit_xrefs(id)) ",  dbConn);
-    	DBManager.preparedUpdate("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL,type_name VARCHAR(128) NOT NULL )",  dbConn);
+//    	DBManager.preparedUpdate("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL,type_name VARCHAR(128) NOT NULL )",  dbConn);
+    	DBManager.preparedUpdate("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL)",  dbConn);
 	}
 
 }
