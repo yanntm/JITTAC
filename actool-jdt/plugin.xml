@@ -47,5 +47,10 @@
             id="net.sourceforge.actool.model.ia.jdt">
       </model>
    </extension>
-
+	<extension point="org.eclipse.jdt.ui.javaCompletionProposalSorters">
+	 <proposalSorter
+	  id="org.eclipse.jdt.ui.ViolationSorter"
+	  name="by Architectural consistency"
+	  class="net.sourceforge.actool.jdt.sorters.ArcitechtualConsistencySorter"/>
+	</extension>
 </plugin>
