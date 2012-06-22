@@ -32,6 +32,9 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 
 
+/**
+ * @since 0.1
+ */
 public class ModelBuilder extends ASTVisitor {
 
 	private AbstractJavaModel model = null;

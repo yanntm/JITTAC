@@ -14,6 +14,9 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 
+/**
+ * @since 0.1
+ */
 public class JavaXReference extends AbstractXReference {
 	
 	private class _JavaElement implements IElement {

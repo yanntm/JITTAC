@@ -7,6 +7,9 @@ import net.sourceforge.actool.model.ia.ImplementationModel;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
+/**
+ * @since 0.1
+ */
 public class JavaModelFactory implements
 		IImplementationModelFactory {
 

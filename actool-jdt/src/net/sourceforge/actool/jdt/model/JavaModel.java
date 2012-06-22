@@ -26,6 +26,9 @@ import org.eclipse.jdt.core.JavaCore;
 
 
 
+/**
+ * @since 0.1
+ */
 public class JavaModel extends AbstractJavaModel{
 
 	Map<String, Collection<String>> store;	/// Data store for all the relation (organised by CU).

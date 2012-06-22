@@ -16,6 +16,9 @@ import org.eclipse.core.runtime.CoreException;
 
 
 
+/**
+ * @since 0.1
+ */
 public class ACNatureJDT implements IProjectNature {
 
 	/**

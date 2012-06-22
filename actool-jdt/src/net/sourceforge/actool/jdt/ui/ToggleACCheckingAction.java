@@ -15,6 +15,9 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 
+/**
+ * @since 0.1
+ */
 public class ToggleACCheckingAction implements IObjectActionDelegate {
 
 	private ISelection selection;

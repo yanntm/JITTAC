@@ -31,6 +31,9 @@ import net.sourceforge.actool.db.*;
 import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
 
 
+/**
+ * @since 0.1
+ */
 public class JavaModelDb extends AbstractJavaModel{
 	private String rootTableName = "compilationUnit_xrefs";
 	

@@ -292,8 +292,7 @@ public class ProblemManager extends ArchitectureModelListener {
             marker.setAttribute(IMarker.LINE_NUMBER, xref.getLine());
             marker.setAttribute(defaults.MODEL, model.getResource().getFullPath());
             marker.setAttribute(defaults.CONNECTOR_ID, Connector.findConnectorId(xref));
-this.
-            violations.put(xref.toString(), marker.getId());
+            this.violations.put(xref.toString(), marker.getId());
         } catch (CoreException ex) {
             // TODO: Do something better here;
             ex.printStackTrace();

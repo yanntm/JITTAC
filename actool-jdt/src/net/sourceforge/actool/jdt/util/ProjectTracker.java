@@ -24,6 +24,9 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
+/**
+ * @since 0.1
+ */
 public class ProjectTracker implements PropertyChangeListener {
 	
 	private IProject project = null;

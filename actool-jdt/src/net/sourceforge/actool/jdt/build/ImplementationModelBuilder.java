@@ -29,6 +29,9 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 
 
+/**
+ * @since 0.1
+ */
 public class ImplementationModelBuilder extends IncrementalProjectBuilder {
 
 	public static final String BUILDER_ID = "net.sourceforge.actool.jdt.build.ImplementationModelBuilder";

@@ -8,6 +8,9 @@ import net.sourceforge.actool.model.ia.IXReferenceStringFactory;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.model.ia.ImplementationModel;
 
+/**
+ * @since 0.1
+ */
 public abstract class AbstractJavaModel extends ImplementationModel implements IXReferenceStringFactory  {
 
 	public AbstractJavaModel() {
