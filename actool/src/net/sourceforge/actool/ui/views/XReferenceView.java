@@ -15,10 +15,16 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISelectionListener;
@@ -35,6 +41,7 @@ public class XReferenceView extends ViewPart
                             implements ISelectionListener {
     
     public static final String ID = "net.sourceforge.actool.ui.views.XReferenceView";
+    private static int[] sortdirection = new int[]{1,1};
     
     private TableViewer viewer;
     
@@ -53,20 +60,39 @@ public class XReferenceView extends ViewPart
     public void createPartControl(Composite parent) {
         
         // Create the table control
-        viewer = new TableViewer(parent, SWT.SINGLE);
+        viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL
+				| SWT.V_SCROLL | SWT.BORDER);
         viewer.getTable().setHeaderVisible(true);
         viewer.getTable().setLinesVisible(true);
+        viewer.setSorter(new ViewerSorter(){
+        	@Override
+        	public int compare(Viewer viewer, Object e1, Object e2) {
+        		
+        		int source = ((IXReference) e1).getSource().toString().compareTo(((IXReference) e2).getSource().toString())*sortdirection[0];
+        		int target = ((IXReference) e1).getTarget().toString().compareTo(((IXReference) e2).getTarget().toString())*sortdirection[1];
+        		
+        		return target!=0?target:source;
+        	}
+        });
+        
         
         // Create columns in the table.
         String[] columns = {"Source", "Target"};
+       
         for (int i = 0; i < columns.length; ++i) {
             TableColumn column = new TableColumn(viewer.getTable(), SWT.NONE);
+            
             column.setText(columns[i]);
+            column.addSelectionListener(getSelectionAdapter(column, i));
+            column.setResizable(true);
+    		column.setMoveable(true);
             column.pack();
+          
         }
-        
+        viewer.getTable().setSortColumn(viewer.getTable().getColumn(1));
         viewer.setContentProvider(new XReferenceContentProvider());
         viewer.setLabelProvider(new XReferenceLabelProvider());
+        
         viewer.addDoubleClickListener(new IDoubleClickListener() {
             
             public void doubleClick(DoubleClickEvent event) {
@@ -85,6 +111,21 @@ public class XReferenceView extends ViewPart
             }
         });
     }
+   
+    private SelectionAdapter getSelectionAdapter(final TableColumn column,
+			final int index) {
+		SelectionAdapter selectionAdapter = new SelectionAdapter() {
+			boolean flip = false;
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				viewer.getTable().setSortDirection((sortdirection[index]*=-1)==1?SWT.UP:SWT.DOWN);
+				viewer.getTable().setSortColumn(column);
+				
+				viewer.refresh();
+			}
+		};
+		return selectionAdapter;
+	}
 
     public void setFocus() {
         viewer.getControl().setFocus();
@@ -102,6 +143,8 @@ public class XReferenceView extends ViewPart
             // Set the column size to be half of the control size.
             int width = viewer.getTable().getSize().x;
             viewer.getTable().getColumn(0).setWidth(width / 2);
+            viewer.getTable().getColumn(1).setWidth(width / 2);
+            
         }
     }
 }
