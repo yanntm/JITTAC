@@ -15,6 +15,7 @@ public class ArcitechtualConsistencySorter extends AbstractProposalSorter {
 	}
 	
 	
+	
 
 	
 
