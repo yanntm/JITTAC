@@ -22,6 +22,19 @@ public class ResourceMapping {
             return false;
     }
     
+    /**
+	 * @since 0.1
+	 */
+    public String getName(){
+		String result = this.resource.getLocation().toString();
+		String regx = "src/";
+		//if package class or method is mapped this will be true
+		if(result.contains(regx)) result = result.substring(result.indexOf(regx)+regx.length()).replace("/", ".");
+		else result=this.resource.getLocation().lastSegment();// Handle when a project is mapped.
+    	return result;
+    	
+    }
+    
     public IResource getResource() {
         return this.resource;
     }

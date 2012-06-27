@@ -1,27 +1,36 @@
 package net.sourceforge.actool.jdt.sorters;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.internal.ui.text.java.HippieProposalComputer;
-import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposalComputer;
-import org.eclipse.jdt.ui.text.java.AbstractProposalSorter;
+import org.eclipse.jdt.core.CompletionContext;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
+import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
+import org.eclipse.jdt.internal.ui.text.java.JavaAllCompletionProposalComputer;
 import org.eclipse.swt.graphics.Color;
 
 public class ProposalComputer implements IJavaCompletionProposalComputer {
 	 
-	private static JavaCompletionProposalComputer hpc = new JavaCompletionProposalComputer();
+	private static JavaAllCompletionProposalComputer hpc = new JavaAllCompletionProposalComputer();
 	private static ArcitechtualComparator arcitechtualComparator = new ArcitechtualComparator();
 	@Override
 	public List<ICompletionProposal> computeCompletionProposals(ContentAssistInvocationContext context, IProgressMonitor monitor) {
-		List<ICompletionProposal> result =hpc.computeCompletionProposals(context, monitor);
-		context.getViewer().setTextColor(new Color(null, 50, 0, 0));
+		if(context instanceof JavaContentAssistInvocationContext) {
+		      JavaContentAssistInvocationContext jcontext = (JavaContentAssistInvocationContext) context;
+			  arcitechtualComparator.setContext(jcontext);
+		}
+		   
 		
+		
+		List<ICompletionProposal> result =hpc.computeCompletionProposals(context, monitor);
 		Collections.sort(result,arcitechtualComparator);
 		return result;
 	}

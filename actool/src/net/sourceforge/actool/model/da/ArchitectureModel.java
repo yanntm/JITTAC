@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import net.sourceforge.actool.db.DBManager;
 import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
@@ -24,6 +25,7 @@ import net.sourceforge.actool.model.ia.ImplementationChangeDelta;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.model.ia.ImplementationModel;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -31,6 +33,8 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.PropertyDescriptor;
 
@@ -49,18 +53,19 @@ public class ArchitectureModel extends ArchitectureElement
         new PropertyDescriptor("name", "Name")
     };
     private static Connection dbConn;  
-	private Map<String, Component> components = new HashMap<String, Component>();
+	private static Map<String, Component> components = new HashMap<String, Component>();
 //	private LinkedList<IXReference> _unresolved = new LinkedList<IXReference>(); //replace duble linked list
-	private ResourceMap map = new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
+	private  ResourceMap map=null;
 	
 //	private Map<String, Connector> xrefs = new HashMap<String, Connector>(); //replace with list of connectors
-	private LinkedList<Connector>  connectorList = new LinkedList<Connector>();
+	private  LinkedList<Connector> connectorList = new LinkedList<Connector>();
 	private final IResource resource;
 	private final ModelProperties properties;
 	private final String unresolvedTableName;
 //	private boolean initalisingModle = false;
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
+		if(map==null)map =  new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
 		
 		this.properties = new ModelProperties(resource);
 		unresolvedTableName = "unresolved_"+this.resource.getName().replace(".", "_");
@@ -75,7 +80,7 @@ public class ArchitectureModel extends ArchitectureElement
 		return this;
 	}
 	
-	public ResourceMap getResourceMap() {
+	public  ResourceMap getResourceMap() {
 	    return map;
 	}
 	
@@ -362,7 +367,7 @@ public class ArchitectureModel extends ArchitectureElement
 	    return Connector.connect(source, target, true);
 	}
 	
-	public Connector getConnector(Component source, Component target, boolean create) {
+	public static Connector getConnector(Component source, Component target, boolean create) {
 	   if ((source == null ) || (target == null) || target.equals(source))
 	        throw new IllegalArgumentException();
 
@@ -512,6 +517,9 @@ public class ArchitectureModel extends ArchitectureElement
     }
     
 
+    
+   
+    
 	public void addXReference(IXReference xref) {
 		
 		// Map given java elements to model components.
@@ -683,7 +691,7 @@ public class ArchitectureModel extends ArchitectureElement
         System.gc();
     }
 
-	protected Component resolveMapping(IElement element) {
+	protected  Component resolveMapping(IElement element) {
 	    return getResourceMap().resolveMapping(element.getResource());
 	}
 	
@@ -835,5 +843,48 @@ public class ArchitectureModel extends ArchitectureElement
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	 /**
+	 * @since 0.1
+	 */
+	public  static Component getComponentByIJavaElement(IJavaElement element){
+	    	return getComponentByFQN(getFullname(element));
+	    }
+
+		private static String getFullname(IJavaElement element) {
+			Stack<String> temp = new Stack<String>();
+	    	IJavaElement packageElement = element;
+	    	while(packageElement.getElementType() !=4 ) {
+	    		if(packageElement.getElementType()!=5){ 
+	    			temp.push(packageElement.getElementName());
+	    			temp.push(".");
+	    		}
+	    		packageElement=packageElement.getParent();
+	    	}
+	    	temp.push(packageElement.getElementName());
+	    	String fullname = "";
+	    	for(int i=0;i<temp.size();i++) fullname+=temp.pop();
+			return fullname;
+		}
+	/**
+	 * @since 0.1
+	 */
+	public static Component getComponentByFQN(String fullname) {
+		Component result=null;
+    	String bestMatch ="";
+    	for(Component c : components.values()){
+    		for(ResourceMapping rm : c.getMappings()){
+	    		String current = rm.getName();
+	    		
+	    		if(fullname.contains(current)){ 
+	    			if(bestMatch.length()<current.length()) {
+	    				bestMatch=current;
+	    				if(result==null||!result.getName().contains(bestMatch)) result=c;
+	    			}
+	    		}
+    		}
+    	}
+    	    	
+    	return result;
 	}
 }

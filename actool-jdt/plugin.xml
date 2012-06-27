@@ -53,5 +53,14 @@
 	  name="by Architectural consistency"
 	  class="net.sourceforge.actool.jdt.sorters.ArcitechtualConsistencySorter"/>
 	</extension>
-	
+	<extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
+	   id="ArcitechtualConsistencyProposalComputer"
+	   name="Architectural consistency Proposal Computer">
+	   <javaCompletionProposalComputer
+	   	  activate="true"
+	      class="net.sourceforge.actool.jdt.sorters.ProposalComputer"
+	      categoryId="org.eclipse.ui.texteditor.Architectural_consistency_proposals">
+	      <partition type="__dftl_partition_content_type"/>
+	   </javaCompletionProposalComputer>
+	 </extension>
 </plugin>
