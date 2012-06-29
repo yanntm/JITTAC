@@ -1,5 +1,6 @@
 package net.sourceforge.actool.model.da;
 
+import java.awt.image.ComponentSampleModel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
@@ -53,8 +54,8 @@ public class ArchitectureModel extends ArchitectureElement
         new PropertyDescriptor("name", "Name")
     };
     private static Connection dbConn;  
-	private static Map<String, Component> components = new HashMap<String, Component>();
-//	private static Map<ArchitectureModel, HashMap<String, Component>> components = new HashMap<ArchitectureModel,HashMap<String, Component>>();
+//	private static Map<String, Component> components = new HashMap<String, Component>();
+	private static Map<ArchitectureModel, HashMap<String, Component>> components = new HashMap<ArchitectureModel,HashMap<String, Component>>();
 	private  ResourceMap map=null;
 	private  LinkedList<Connector> connectorList = new LinkedList<Connector>();
 	private final IResource resource;
@@ -63,7 +64,7 @@ public class ArchitectureModel extends ArchitectureElement
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
 		if(map==null)map =  new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
-		
+		components.put(this, new HashMap<String, Component>());
 		this.properties = new ModelProperties(resource);
 		unresolvedTableName = "unresolved_"+this.resource.getName().replace(".", "_");
 		initDb();
@@ -256,7 +257,7 @@ public class ArchitectureModel extends ArchitectureElement
 	
 	   
     public boolean hasComponent(String id) {
-        return components.containsKey(id);
+        return components.get(this).containsKey(id);
     }
 
     public boolean hasComponent(Component component) {
@@ -286,8 +287,8 @@ public class ArchitectureModel extends ArchitectureElement
 	public void addComponent(Component component) {
 	    if (component.hasModel())
 	        throw new IllegalArgumentException("Component already associated with a model!");
-//	    components.get(this).put(component.getID(), component);
-	    components.put(component.getID(), component);
+	    components.get(this).put(component.getID(), component);
+//	    components.put(component.getID(), component);
 	    component.setModel(this);
 	    
 	    component.addPropertyChangeListener(this);
@@ -307,7 +308,7 @@ public class ArchitectureModel extends ArchitectureElement
 	    // Remove component.
 	    component.removePropertyChangeListener(this);
 	    component.setModel(null);
-	    components.remove(component.getID());
+	    components.get(this).remove(component.getID());
 	    
 	    // Re-process all the X references for given component.
 	    reprocessXReferences(component);
@@ -316,11 +317,13 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
 	public Component getComponent(String id) {
-		return components.get(id);
+//		return components.get(id);
+		return components.get(this).get(id);
 	}
 	
 	public List<Component> getComponents() {
-		return new LinkedList<Component>(components.values());
+//		return new LinkedList<Component>(components.values());
+		return new LinkedList<Component>(components.get(this).values());
 	}
 	
 	public Connector connect(String sourceId, String targetId) {
@@ -351,7 +354,8 @@ public class ArchitectureModel extends ArchitectureElement
 	public Collection<Connector> getConnectors() {
 		LinkedList<Connector> connectors = new LinkedList<Connector>();
 	    
-	    Iterator<Component> iter = components.values().iterator();
+//	    Iterator<Component> iter = components.values().iterator();
+		Iterator<Component> iter = components.get(this).values().iterator();
 	    while (iter.hasNext())
 	        connectors.addAll(iter.next().getSourceConnectors());
 	    
@@ -513,7 +517,7 @@ public class ArchitectureModel extends ArchitectureElement
 	protected void addUnresolvedXReference(IXReference xref) {
 		if(!containsUndiclaredXref(xref)){
 			try {
-				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (? , ?)",new Object[]{xrefStringFactory.toString(xref), "net.sourceforge.actool.jdt.model.JavaXReference"} ,dbConn);
+				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (?)",new Object[]{xrefStringFactory.toString(xref)} ,dbConn);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -584,11 +588,13 @@ public class ArchitectureModel extends ArchitectureElement
                 String oldID = (String) event.getOldValue();
                 String newID = (String) event.getNewValue();
     
-                Component comp = components.get(oldID);
+//                Component comp = components.get(oldID);
+                Component comp = components.get(this).get(oldID);
                 if (comp == null || !comp.equals(event.getSource())) 
                     throw new IllegalStateException();
-                components.remove(oldID);
-                components.put(newID, comp);
+                components.get(this).remove(oldID);
+//                components.put(newID, comp);
+                components.get(this).put(newID, comp);
             } else if (event.getPropertyName() == Component.MAPPINGS) {
                 if (event.getNewValue() == null && event.getOldValue() != null)
                     onMappingRemoved((ResourceMapping) event.getOldValue());
@@ -603,7 +609,8 @@ public class ArchitectureModel extends ArchitectureElement
     		return;
     	
     	// Visit all the components...
-    	for (Component component: components.values())
+//    	for (Component component: components.values())
+    	for (Component component: components.get(this).values())
     		component.accept(visitor);
     }
 
@@ -751,10 +758,11 @@ public class ArchitectureModel extends ArchitectureElement
 	public static Component getComponentByFQN(String fullname) {
 		Component result=null;
     	String bestMatch ="";
-//    	Iterator<ArchitectureModel> it= components.keySet().iterator();
-//    	LinkedList<Component> comps= new LinkedList<Component>();
-//    	while(it.hasNext())comps.addAll(components.get(it.next()).values());
-    	for(Component c : components.values()){
+    	Iterator<ArchitectureModel> it= components.keySet().iterator();
+    	LinkedList<Component> comps= new LinkedList<Component>();
+    	while(it.hasNext())comps.addAll(components.get(it.next()).values());
+    	for(Component c : comps){
+//    	for(Component c : components.values()){
     		for(ResourceMapping rm : c.getMappings()){
 	    		String current = rm.getName();
 	    		

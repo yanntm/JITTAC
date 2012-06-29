@@ -37,10 +37,13 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 	@Override
 	public int compare(ICompletionProposal arg0, ICompletionProposal arg1) {
 		int vc0, vc1;
+		vc0=vc1=0;
+		if(arg0 instanceof AbstractJavaCompletionProposal && arg1 instanceof AbstractJavaCompletionProposal){
 		vc0=(violationChecker(arg0));
 		vc1=(violationChecker(arg1));
 		colourProposal(arg0,vc0);
 		colourProposal(arg1,vc1);
+		}
 		if(vc0<vc1)
 			return -1;
 		else if(vc0>vc1)
