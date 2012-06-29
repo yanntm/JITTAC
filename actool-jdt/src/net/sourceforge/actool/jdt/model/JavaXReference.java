@@ -2,6 +2,7 @@ package net.sourceforge.actool.jdt.model;
 
 import net.sourceforge.actool.model.ia.AbstractXReference;
 import net.sourceforge.actool.model.ia.IElement;
+import net.sourceforge.actool.model.ia.IXReference;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -117,13 +118,19 @@ public class JavaXReference extends AbstractXReference {
 	static public JavaXReference fromString(String xref) {
 		String[] entries = xref.split(SEPARATOR);
 		
-		assert entries.length == 6;
-		return new JavaXReference(Integer.parseInt(entries[0]),
+		assert entries.length == 6;	
+		int type=IXReference.UNKNOWN ;
+		try{type= Integer.parseInt(entries[0]);}
+		catch (Exception e) {
+			e.getMessage();
+		}
+		return new JavaXReference(type,
 								  JavaCore.create(entries[1]),
 								  JavaCore.create(entries[2]),
 								  Integer.parseInt(entries[3]),
 								  Integer.parseInt(entries[4]),
 								  Integer.parseInt(entries[5]));
+		
 	}
 
 	public String toString() {

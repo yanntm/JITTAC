@@ -31,6 +31,7 @@ public class ResourceMapping {
 		//if package class or method is mapped this will be true
 		if(result.contains(regx)) result = result.substring(result.indexOf(regx)+regx.length()).replace("/", ".");
 		else result=this.resource.getLocation().lastSegment();// Handle when a project is mapped.
+		if(result.endsWith(".java")) result=result.substring(0,result.length()-5);
     	return result;
     	
     }

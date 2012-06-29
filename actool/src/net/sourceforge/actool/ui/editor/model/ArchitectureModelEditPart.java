@@ -149,7 +149,10 @@ public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
 //			}
 		}
 		
-		if(connector!=null)connector.getFigure().setForegroundColor(ColorConstants.red);
+		if(connector!=null){
+			ConnectorEditPart.setOldFigure(connector.getFigure());
+			connector.getFigure().setForegroundColor(ColorConstants.red);
+		}
 	} 
 }
 

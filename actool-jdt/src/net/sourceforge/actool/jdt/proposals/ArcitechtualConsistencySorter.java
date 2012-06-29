@@ -1,4 +1,4 @@
-package net.sourceforge.actool.jdt.sorters;
+package net.sourceforge.actool.jdt.proposals;
 
 
 

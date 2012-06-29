@@ -41,19 +41,17 @@ public class XReferenceView extends ViewPart
                             implements ISelectionListener {
     
     public static final String ID = "net.sourceforge.actool.ui.views.XReferenceView";
-    private static int[] sortdirection = new int[]{1,1};
-    
+    private int[] sortdirection = new int[]{1,1};
+    private int sortColumn =1;
     private TableViewer viewer;
     
     public void init(IViewSite site) throws PartInitException {
         super.init(site);
-        
         getSite().getWorkbenchWindow().getSelectionService().addPostSelectionListener(this);
     }
 
     public void dispose() {
         getSite().getWorkbenchWindow().getSelectionService().removeSelectionListener(this);
-        
         super.dispose();
     }
 
@@ -67,11 +65,11 @@ public class XReferenceView extends ViewPart
         viewer.setSorter(new ViewerSorter(){
         	@Override
         	public int compare(Viewer viewer, Object e1, Object e2) {
-        		
-        		int source = ((IXReference) e1).getSource().toString().compareTo(((IXReference) e2).getSource().toString())*sortdirection[0];
-        		int target = ((IXReference) e1).getTarget().toString().compareTo(((IXReference) e2).getTarget().toString())*sortdirection[1];
-        		
-        		return target!=0?target:source;
+        		int[] result = new int[2];
+        		result[0] = ((IXReference) e1).getSource().toString().compareTo(((IXReference) e2).getSource().toString())*sortdirection[0];
+        		result[1] = ((IXReference) e1).getTarget().toString().compareTo(((IXReference) e2).getTarget().toString())*sortdirection[1];
+//        		sortColumn =result[1]!=0?1:0;
+        		return result[sortColumn];
         	}
         });
         
@@ -120,7 +118,7 @@ public class XReferenceView extends ViewPart
 			public void widgetSelected(SelectionEvent e) {
 				viewer.getTable().setSortDirection((sortdirection[index]*=-1)==1?SWT.UP:SWT.DOWN);
 				viewer.getTable().setSortColumn(column);
-				
+				sortColumn=index;
 				viewer.refresh();
 			}
 		};

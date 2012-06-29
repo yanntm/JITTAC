@@ -192,7 +192,11 @@ public class ConnectorEditPart extends AbstractConnectionEditPart
 		oldFigure =this.figure;
 		oldFigure.setForegroundColor(ColorConstants.blue);	
 	}
-
+	
+	public static  void setOldFigure(IFigure fig){
+		if(oldFigure!=null) oldFigure.setForegroundColor(ColorConstants.black);
+		oldFigure =fig;
+	}
 	
 
 	public void setVisibility(int visibility) {

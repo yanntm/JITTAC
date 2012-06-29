@@ -54,15 +54,12 @@ public class ArchitectureModel extends ArchitectureElement
     };
     private static Connection dbConn;  
 	private static Map<String, Component> components = new HashMap<String, Component>();
-//	private LinkedList<IXReference> _unresolved = new LinkedList<IXReference>(); //replace duble linked list
+//	private static Map<ArchitectureModel, HashMap<String, Component>> components = new HashMap<ArchitectureModel,HashMap<String, Component>>();
 	private  ResourceMap map=null;
-	
-//	private Map<String, Connector> xrefs = new HashMap<String, Connector>(); //replace with list of connectors
 	private  LinkedList<Connector> connectorList = new LinkedList<Connector>();
 	private final IResource resource;
 	private final ModelProperties properties;
 	private final String unresolvedTableName;
-//	private boolean initalisingModle = false;
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
 		if(map==null)map =  new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
@@ -199,20 +196,7 @@ public class ArchitectureModel extends ArchitectureElement
 	public void attachToImplementation(ImplementationModel implementation) {
 		// TODO: Parse model to get existing cross references.
 		if (implementation.addImplementationChangeListener(this)){
-//			initalisingModle = true;
-//			implementation._updateListener(this);
-//			initalisingModle = false;
-//			Thread thread = new Thread(new Runnable() {
-//				
-//				@Override
-//				public void run() {
-					// TODO Auto-generated method stub
-			
-					reconnectAll();
-//				}
-//			});
-//			thread.start();
-			
+					reconnectAll();	
 		}
 	}
 
@@ -231,27 +215,6 @@ public class ArchitectureModel extends ArchitectureElement
 		while (iter.hasNext())
 			addXReference(iter.next());
 		
-		// Need to re-create the markers for existing warnings.
-//		iter = event.getCommonXReferences().iterator();
-//		while (iter.hasNext()) {
-//			IXReference xref = iter.next();
-//			
-//			// Get connector the reference has been assigned to.
-//			Component source = _map(xref.getSource());
-//			Component target = _map(xref.getTarget());
-//			if (source == null || target == null || source.equals(target))
-//				return; // TODO: Handle this!
-//
-//			Connector connector = getConnector(source, target);
-//			if (connector == null)
-//				// No connector, nothing to do then.
-//				return;
-//			if (!connector.isEnvisaged())
-//				createMarker(connector, xref);
-//		}
-		
-		
-		// TODO: Fire a change event!
 	}
 	
 	
@@ -323,6 +286,7 @@ public class ArchitectureModel extends ArchitectureElement
 	public void addComponent(Component component) {
 	    if (component.hasModel())
 	        throw new IllegalArgumentException("Component already associated with a model!");
+//	    components.get(this).put(component.getID(), component);
 	    components.put(component.getID(), component);
 	    component.setModel(this);
 	    
@@ -394,24 +358,6 @@ public class ArchitectureModel extends ArchitectureElement
 	    return connectors;
 	}
 	
-    /*
-	public void createPatternMapping(String pattern, String targetid) {
-		Component target = getComponent(targetid);
-		if (target == null)
-			return;
-		createPatternMapping(target, pattern);
-	}
-
-    public void createPatternMapping(Component component, String pattern) {
-        try {
-            // Try to compile the regular expression.
-            Pattern regex = Pattern.compile(pattern);
-            PatternMapping mapping = new PatternMapping(component, regex);
-            patterns.add(mapping);
-        } catch (PatternSyntaxException ex) {
-            ex.printStackTrace();
-        }
-    }*/
     
    
     protected void reprocessXReferences(Component component) {
@@ -445,8 +391,6 @@ public class ArchitectureModel extends ArchitectureElement
                 connector.removeXReference(xref);
                 addXReference(xref);
             }
-            
-            
         }
         System.gc();
     }
@@ -456,7 +400,6 @@ public class ArchitectureModel extends ArchitectureElement
     	LinkedList<String> connectors = new LinkedList<String>();
 		try {
 			DBManager.preparedQuery("select distinct connector_id from "+Connector.TABLE_NAME, dbConn, new IResultSetDelegate(){
-
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
@@ -464,26 +407,19 @@ public class ArchitectureModel extends ArchitectureElement
 					while(rs.next())result.add(rs.getString("connector_id"));
 					return 0;
 				}
-				
-				
+
 			},connectors);
 			for(String connectorID: connectors){
-				
 				try {
-//					DBManager.preparedQuery("select TOP 1 xref , type_name from "+Connector.TABLE_NAME+" where connector_id= ? " , new Object[]{connectorID}, dbConn, new IResultSetDelegate(){
 					DBManager.preparedQuery("select TOP 1 xref from "+Connector.TABLE_NAME+" where connector_id= ? " , new Object[]{connectorID}, dbConn, new IResultSetDelegate(){
 						@Override
 						public int invoke(ResultSet rs, Object... args) throws SQLException {
 							if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
 							LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
-//							while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
 							while(rs.next())result.add(createXref(rs.getString("xref")));
 							return 0;
 						}
-						
-//						private IXReference createXref(String xref,String typeName){
-//							if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
-//							return null;
+
 						private IXReference createXref(String xref){
 							return xrefStringFactory.createXReference(xref);
 						}
@@ -508,10 +444,8 @@ public class ArchitectureModel extends ArchitectureElement
     private void  reconnect(IXReference xref){
     	Component source = resolveMapping(xref.getSource());
 		Component target = resolveMapping(xref.getTarget());
-		if(target.equals(source))return;
+		if(source==null||target==null||target.equals(source))return;
 		Connector conn = getConnector(source, target, true);
-		
-//			if(!xrefs.containsKey(xref.toString()))xrefs.put(xref.toString(), conn);
 		if(!connectorList.contains(conn))connectorList.add(conn);
 		
     }
@@ -526,7 +460,7 @@ public class ArchitectureModel extends ArchitectureElement
 		Component source = resolveMapping(xref.getSource());
 		Component target = resolveMapping(xref.getTarget());
 		if (source == null || target == null || source.equals(target)) {
-//		    if(!initalisingModle)
+
 		    	addUnresolvedXReference(xref);
 			return;
 		}
@@ -542,7 +476,6 @@ public class ArchitectureModel extends ArchitectureElement
        
        if(!conn.containsXref(xref)){// check if connection already exits before adding.
     	   conn.addXReference(xref);
-//    	   xrefs.put(xref.toString(), conn);
     	   if(!connectorList.contains(conn))connectorList.add(conn);
        }
 	}
@@ -557,7 +490,6 @@ public class ArchitectureModel extends ArchitectureElement
 	    
 	    // Check if we have a mapping for the x-reference and remove it.
 	    Connector connector =null;
-//	    connector= xrefs.remove(xref.toString());
 	    String targetId = Connector.findConnectorId(xref);
 	    for(Connector c: connectorList){
 	    	if(c.toString().equals(targetId)){ 
@@ -579,44 +511,19 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
 	protected void addUnresolvedXReference(IXReference xref) {
-//		_unresolved.add(xref);
-//		if(xref instanceof JavaXReference && !containsUndiclaredXref(xref)){
 		if(!containsUndiclaredXref(xref)){
 			try {
-//				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (? , ?)",new Object[]{((JavaXReference)xref).toString(),JavaXReference.class.getName()} ,dbConn);
 				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (? , ?)",new Object[]{xrefStringFactory.toString(xref), "net.sourceforge.actool.jdt.model.JavaXReference"} ,dbConn);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		
-		/*if (source == null) {
-			ITypeRoot key = (ITypeRoot) xref.getSource().getOpenable();
-			Integer refCount = _unmapped.get(key);
-			if (refCount == null) {
-				_unmapped.put(key, Integer.valueOf(1));
-				// TODO: add marker!
-			} else
-				_unmapped.put(key, refCount.intValue() + 1);
-		}
-		
-		if (target == null) {
-			ITypeRoot key = (ITypeRoot) xref.getTarget().getOpenable();
-			Integer refCount = _unmapped.get(key);
-			if (refCount == null) {
-				_unmapped.put(key, Integer.valueOf(1));
-				// TODO: add marker!
-			} else
-				_unmapped.put(key, refCount.intValue() + 1);
-		}*/
 	}
 	
 	protected boolean hasUnresolveddXReference(IXReference xref) {
 		boolean[] result= new boolean[]{ false};
-//    	if(xref instanceof JavaXReference){
 	    	try {
-//				DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName + " where xref=?",new Object[]{((JavaXReference) xref).toString()} , dbConn, new IResultSetDelegate(){
 	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName + " where xref=?",new Object[]{xrefStringFactory.toString(xref)} , dbConn, new IResultSetDelegate(){
 	
 					@Override
@@ -632,53 +539,29 @@ public class ArchitectureModel extends ArchitectureElement
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-//    	}
-    	
     	return result[0]; 
-		
-//		return _unresolved.contains(xref);
 	}
 	
 	protected void removeUnresolvedXReference(IXReference xref) {
-//		_unresolved.remove(xref);
-//		if(xref instanceof JavaXReference){
-			try {
-//				DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{((JavaXReference) xref).toString()},dbConn);
-				DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{xrefStringFactory.toString(xref)},dbConn);
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-//		}
-		/*Integer refCount;
-		
-		ITypeRoot source = (ITypeRoot) xref.getSource().getOpenable();
-		refCount = _unmapped.get(source);
-		if (refCount != null) {
-			if (refCount.intValue() == 1) {
-				_unmapped.remove(source);
-				// TODO: remove marker!
-			} else
-				_unmapped.put(source, refCount.intValue() - 1);
-		}
-		
-		ITypeRoot target = (ITypeRoot) xref.getTarget().getOpenable();
-		refCount = _unmapped.get(target);
-		if (refCount != null) {
-			if (refCount.intValue() == 1) {
-				_unmapped.remove(target);
-				// TODO: remove marker!
-			} else
-				_unmapped.put(target, refCount.intValue() - 1);
-		}*/
+		removeUnresolvedXReference(xrefStringFactory.toString(xref));
 	}
-	
+	/**
+	 * @since 0.1
+	 */
+	protected void removeUnresolvedXReference(String xref) {
+		try {
+			DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{xref},dbConn);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
     protected void reprocessUnresolvedXReferences() {
-//    	if(initalisingModle)return;
         Iterator<IXReference> iter = retriveUnresolvedXrefs().iterator();
         
         while (iter.hasNext()) {
             IXReference xref = iter.next();
+            while(xref==null&& iter.hasNext())xref = iter.next();
             Component source = resolveMapping(xref.getSource());
             Component target = resolveMapping(xref.getTarget());
             if (source == null || target == null || source.equals(target))
@@ -704,7 +587,6 @@ public class ArchitectureModel extends ArchitectureElement
                 Component comp = components.get(oldID);
                 if (comp == null || !comp.equals(event.getSource())) 
                     throw new IllegalStateException();
-                
                 components.remove(oldID);
                 components.put(newID, comp);
             } else if (event.getPropertyName() == Component.MAPPINGS) {
@@ -781,21 +663,20 @@ public class ArchitectureModel extends ArchitectureElement
 	private Collection<IXReference> retriveUnresolvedXrefs() {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-//			DBManager.preparedQuery("select distinct xref , type_name from "+unresolvedTableName ,new Object[0], dbConn, new IResultSetDelegate(){
-			DBManager.preparedQuery("select distinct xref from "+unresolvedTableName ,new Object[0], dbConn, new IResultSetDelegate(){
-
+			DBManager.preparedQuery("select distinct xref from "+unresolvedTableName , dbConn, new IResultSetDelegate(){
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
 					LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
-//					while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
-					while(rs.next())result.add(createXref(rs.getString("xref")));
+					while(rs.next()){
+						String current = rs.getString("xref");
+						if(current.contains("\t"))
+						result.add(createXref(current));
+						else removeUnresolvedXReference(current);
+					}
 					return 0;
 				}
 				
-//				private IXReference createXref(String xref,String typeName){
-//					if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
-//					return null;
 				private IXReference createXref(String xref){
 					return xrefStringFactory.createXReference(xref);
 				}
@@ -808,12 +689,12 @@ public class ArchitectureModel extends ArchitectureElement
 		return result;
 	}
 	
+	
+
 	public boolean containsUndiclaredXref(IXReference xref)
     { 
     	boolean[] result= new boolean[]{ false};
-//    	if(xref instanceof JavaXReference){
 	    	try {
-//				DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName +" where xref = ? " , new Object[]{"'"+((JavaXReference)xref).toString()+"'"}, dbConn, new IResultSetDelegate(){
 	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName +" where xref = ? " , new Object[]{"'"+xrefStringFactory.toString(xref)+"'"}, dbConn, new IResultSetDelegate(){
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -828,7 +709,6 @@ public class ArchitectureModel extends ArchitectureElement
 				// TODO Auto-generated catch block 
 				e.printStackTrace();
 			}
-//    	}
     	
     	return result[0]; 
     }
@@ -837,7 +717,6 @@ public class ArchitectureModel extends ArchitectureElement
     	
 		try {
 			dbConn = DBManager.connect();
-//			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL ,type_name VARCHAR(128) NOT NULL)",  dbConn);
 			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL)",  dbConn);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -872,12 +751,15 @@ public class ArchitectureModel extends ArchitectureElement
 	public static Component getComponentByFQN(String fullname) {
 		Component result=null;
     	String bestMatch ="";
+//    	Iterator<ArchitectureModel> it= components.keySet().iterator();
+//    	LinkedList<Component> comps= new LinkedList<Component>();
+//    	while(it.hasNext())comps.addAll(components.get(it.next()).values());
     	for(Component c : components.values()){
     		for(ResourceMapping rm : c.getMappings()){
 	    		String current = rm.getName();
 	    		
 	    		if(fullname.contains(current)){ 
-	    			if(bestMatch.length()<current.length()) {
+	    			if(isBetterMatch(fullname, bestMatch, current)) {
 	    				bestMatch=current;
 	    				if(result==null||!result.getName().contains(bestMatch)) result=c;
 	    			}
@@ -886,5 +768,21 @@ public class ArchitectureModel extends ArchitectureElement
     	}
     	    	
     	return result;
+	}
+
+	private static boolean isBetterMatch(String fullname, String bestMatch,String current) {
+		 boolean result = true;
+		 int cLength = current.length();
+		result&=bestMatch.length()<cLength;
+		 int fLlength = fullname.length();
+		result&=cLength<=fLlength;
+		int cLastSegIndex = current.lastIndexOf(".");
+		int fLastSegIndex = fullname.lastIndexOf(".");
+		if(cLastSegIndex==fLastSegIndex){
+			String cLastSeg = current.substring(cLastSegIndex,cLength);
+			String fLastSeg = fullname.substring(fLastSegIndex,fLlength);
+			result&=cLastSeg.equals(fLastSeg);
+		}
+		return result;
 	}
 }
