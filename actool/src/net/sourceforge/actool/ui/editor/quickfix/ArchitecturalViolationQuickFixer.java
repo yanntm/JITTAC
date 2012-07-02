@@ -11,7 +11,8 @@ public class ArchitecturalViolationQuickFixer implements
 	@Override
 	public IMarkerResolution[] getResolutions(IMarker mk) {
 		return new IMarkerResolution[] {
-		   new OpenArchitecturalModelQuickFix("Show violation in architectural model")
+		    new OpenArchitecturalModelQuickFix("Show violation in architectural model")
+		   ,new EmailArcitectQuickFix("Propose Architectural Change")
 		 
 		};
 	}

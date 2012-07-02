@@ -59,6 +59,9 @@ public class ArchitectureModelReader {
 					IResource resource = ResourcesPlugin.getWorkspace().getRoot().findMember(path);
 					if (resource != null)
 						model.getComponent(target).addMapping(resource);
+				}else if (name.equals("email")) {
+					String url = atts.getValue("url");
+					model.setEmail(url);
 				}
 			} catch (IllegalArgumentException ex) {
 				// TODO: Report errors in the file!

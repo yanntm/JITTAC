@@ -64,6 +64,12 @@ public class XReferenceView extends ViewPart
         viewer.getTable().setLinesVisible(true);
         viewer.setSorter(new ViewerSorter(){
         	@Override
+        	public void sort(Viewer viewer, Object[] elements) {
+        		// TODO change to sort by frequency then alfa.
+        		super.sort(viewer, elements);
+        	}
+        	
+        	@Override
         	public int compare(Viewer viewer, Object e1, Object e2) {
         		int[] result = new int[2];
         		result[0] = ((IXReference) e1).getSource().toString().compareTo(((IXReference) e2).getSource().toString())*sortdirection[0];

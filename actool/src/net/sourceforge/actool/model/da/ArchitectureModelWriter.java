@@ -121,6 +121,7 @@ public class ArchitectureModelWriter {
             writeComponents(writer, model, level);
             writeConnectors(writer, model, level);
             writeMappings(writer, model, level);
+            writeEmail(writer, model, level);
             level--;
             
             // Finish the document.
@@ -134,4 +135,15 @@ public class ArchitectureModelWriter {
             e.printStackTrace();
         }
     }
+    protected static void writeEmail(XMLStreamWriter writer, ArchitectureModel model, int level)
+            throws XMLStreamException {
+
+        	// Write all the components.
+            writer.writeCharacters(EOL);
+            writeIndentation(writer, level++);
+            writer.writeEmptyElement("email");
+            writer.writeAttribute("url", model.getEmail());
+            writeIndentation(writer, --level);
+            writer.writeCharacters(EOL);
+        }
 }

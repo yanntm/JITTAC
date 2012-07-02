@@ -33,15 +33,20 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.PropertyDescriptor;
+import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
 
 
 
+/**
+ * @since 0.1
+ */
 public class ArchitectureModel extends ArchitectureElement
 							   implements ImplementationChangeListener, 
 							   			  IResourceChangeListener,
@@ -49,10 +54,17 @@ public class ArchitectureModel extends ArchitectureElement
 
     public static final String COMPONENTS   = "components";
 	public static final String _DELETION  = "_deletion";
+	/**
+	 * @since 0.1
+	 */
+	public static final String EMAIL      = "email";
+//	public static final String NAME      = "name";
 	public static IXReferenceStringFactory xrefStringFactory= null;
     public static final IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[]  {
-        new PropertyDescriptor("name", "Name")
+         new TextPropertyDescriptor(EMAIL, "Email")
     };
+    private static Map<String,String> emailAddresses = new HashMap<String, String>();
+//    private String email=loadEmail();
     private static Connection dbConn;  
 //	private static Map<String, Component> components = new HashMap<String, Component>();
 	private static Map<ArchitectureModel, HashMap<String, Component>> components = new HashMap<ArchitectureModel,HashMap<String, Component>>();
@@ -63,6 +75,7 @@ public class ArchitectureModel extends ArchitectureElement
 	private final String unresolvedTableName;
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
+//		email=loadEmail();
 		if(map==null)map =  new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
 		components.put(this, new HashMap<String, Component>());
 		this.properties = new ModelProperties(resource);
@@ -620,26 +633,55 @@ public class ArchitectureModel extends ArchitectureElement
 
     @Override
     public Object getPropertyValue(Object id) {
+    	if (id.equals(EMAIL))  return getEmail();
         return null;
     }
 
     @Override
     public boolean isPropertySet(Object id) {
-        // TODO Auto-generated method stub
+    	if (id.equals(EMAIL))  return getEmail() != null && !getEmail().isEmpty();
         return false;
     }
 
     @Override
     public void resetPropertyValue(Object id) {
-        // TODO Auto-generated method stub
+//    	if (id.equals(EMAIL))  setEmail(loadEmail());
         
     }
 
-    @Override
+    private String loadEmail() {
+		// TODO Auto-generated method stub
+		return "Architect@company.com";
+	}
+    /**
+	 * @since 0.1
+	 */
+    public String getEmail(){
+      	return getEmail(this.resource.getFullPath());
+    }
+    
+    /**
+	 * @since 0.1
+	 */
+    public static String getEmail(IPath fullPath){
+    	String result = emailAddresses.get(fullPath.toString());
+    	if(result==null||result.isEmpty())emailAddresses.put(fullPath.toString(),(result = "Architect@company.com"));
+    	return result;
+    }
+
+	@Override
     public void setPropertyValue(Object id, Object value) {
-        // TODO Auto-generated method stub
+        if (id.equals(EMAIL))  setEmail((String)value);
         
     }
+
+	/**
+	 * @since 0.1
+	 */
+	public void setEmail(String value) {
+		emailAddresses.put(this.resource.getFullPath().toString(),value);
+		
+	}
 
 	public void resourceChanged(IResourceChangeEvent event) {
 		class Visitor implements IResourceDeltaVisitor {
