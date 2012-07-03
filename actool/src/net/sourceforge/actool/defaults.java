@@ -11,4 +11,8 @@ public final class defaults {
 	 * @since 0.1
 	 */
 	public static final String PROJECT = "PROJECT";
+	/**
+	 * @since 0.1
+	 */
+	public static final int MAX_THREADS = Runtime.getRuntime().availableProcessors()*2;
 }

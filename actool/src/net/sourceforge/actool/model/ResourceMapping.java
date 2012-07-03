@@ -1,8 +1,11 @@
 package net.sourceforge.actool.model;
 
+import java.io.File;
+
 import net.sourceforge.actool.model.da.Component;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IPath;
 
 
 public class ResourceMapping {
@@ -30,11 +33,30 @@ public class ResourceMapping {
 		String regx = "src/";
 		//if package class or method is mapped this will be true
 		if(result.contains(regx)) result = result.substring(result.indexOf(regx)+regx.length()).replace("/", ".");
-		else result=this.resource.getLocation().lastSegment();// Handle when a project is mapped.
+		else{ 
+//			result=this.resource.getLocation().lastSegment();// Handle when a project is mapped.
+			IPath path = this.resource.getLocation().append(regx);
+			result = getNamspaceFromProjectPath(path);
+//			result=this.resource.getLocation().lastSegment();// Handle when a project is mapped.
+		}
 		if(result.endsWith(".java")) result=result.substring(0,result.length()-5);
     	return result;
     	
     }
+
+	public static String getNamspaceFromProjectPath(IPath path) {
+		String result;
+		File crawler = path.toFile();
+		
+		while(crawler.isDirectory()&& crawler.listFiles().length==1&&crawler.listFiles()[0].isDirectory()){
+			path=path.append(crawler.listFiles()[0].getName());
+			crawler = path.toFile();
+			
+		}
+		result = path.toString();
+		result = result.substring(result.indexOf("src/")+4 ).replace("/", ".");
+		return result;
+	}
     
     public IResource getResource() {
         return this.resource;

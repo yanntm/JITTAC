@@ -8,7 +8,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import net.sourceforge.actool.defaults;
 import net.sourceforge.actool.model.da.Component;
 
 import org.eclipse.core.resources.IWorkspace;
@@ -22,7 +25,8 @@ import org.eclipse.core.runtime.Platform;
 public class DBManager {
 
 		private static Map<String, Connection> connections = new HashMap<String, Connection>();
-		private static Map<String,PreparedStatement> statements= new HashMap<String, PreparedStatement>();
+//		private static ConcurrentLinkedQueue<Connection> free = new ConcurrentLinkedQueue<Connection>();
+//		private static ConcurrentLinkedQueue<Connection>locked = new ConcurrentLinkedQueue<Connection>();
 	
 	//--------------------------------------------------db helper functions-----------------------------------------------------------------
 		
@@ -36,7 +40,8 @@ public class DBManager {
 		public static Connection connect(IPath workspacedir) {
 			return connect("jdbc:hsqldb:"+workspacedir.toString()+"; shutdown=true", "sa", "");
 		}
-	
+		
+		
 	
 		public static Connection connect(String connectionString, String user, String password) {
 			Connection conn = null;
@@ -50,6 +55,8 @@ public class DBManager {
 				}	
 			    conn = DriverManager.getConnection(connectionString, user, password);
 			    connections.put(key, conn);
+				
+				
 			}
 			catch(Exception e) {
 			    System.out.println(e.toString());
@@ -57,6 +64,23 @@ public class DBManager {
 			return conn;
 		}
 	
+//		public static Connection checkout(){
+//				Connection result = null;
+//				if(!free.isEmpty()){
+//					try {
+//					while(!free.isEmpty()&&((result=free.poll()).isClosed()));
+//					while(locked.size()<defaults.MAX_THREADS&&(result==null||result.isClosed()))Thread.sleep(20); 
+//						result = connect();
+//					locked.add(result);
+//					} catch (SQLException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//					return result;
+//					
+//				}
+//		}
+		
 		public static interface IResultSetDelegate{
 	        public int invoke(ResultSet rs,Object... args)throws SQLException;
 	    }

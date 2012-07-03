@@ -780,6 +780,7 @@ public class ArchitectureModel extends ArchitectureElement
 	    }
 
 		private static String getFullname(IJavaElement element) {
+//			element.getResource()
 			Stack<String> temp = new Stack<String>();
 	    	IJavaElement packageElement = element;
 	    	while(packageElement.getElementType() !=4 ) {

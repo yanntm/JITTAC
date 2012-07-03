@@ -5,13 +5,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import net.sourceforge.actool.jdt.model.JavaXReference;
+import net.sourceforge.actool.model.ResourceMapping;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.model.da.Connector;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -34,15 +40,21 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 	private static AlphabeticSorter alphaSorter = new AlphabeticSorter();
 	private static JavaContentAssistInvocationContext context= null;
 	private static Component parentComp =null;
+//	private static LinkedList<String> projectNameSpaces = new LinkedList<String>();
 	@Override
 	public int compare(ICompletionProposal arg0, ICompletionProposal arg1) {
 		int vc0, vc1;
 		vc0=vc1=0;
 		if(arg0 instanceof AbstractJavaCompletionProposal && arg1 instanceof AbstractJavaCompletionProposal){
-		vc0=(violationChecker(arg0));
-		vc1=(violationChecker(arg1));
-		colourProposal(arg0,vc0);
-		colourProposal(arg1,vc1);
+//		Map<ICompletionProposal,Boolean> isInProject = new HashMap<ICompletionProposal, Boolean>();
+//		vc0=(violationChecker(arg0,isInProject));
+//		vc1=(violationChecker(arg1,isInProject));
+//		colourProposal(arg0,vc0,isInProject);
+//		colourProposal(arg1,vc1,isInProject);
+			vc0=(violationChecker(arg0));
+			vc1=(violationChecker(arg1));
+			colourProposal(arg0,vc0);
+			colourProposal(arg1,vc1);
 		}
 		if(vc0<vc1)
 			return -1;
@@ -59,10 +71,13 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 	
 	}
 
-	private void colourProposal(ICompletionProposal pro,int validationState ){
+//	private void colourProposal(ICompletionProposal pro,int validationState, Map<ICompletionProposal, Boolean> isInProject ){
+	private void colourProposal(ICompletionProposal pro,int validationState){
 		AbstractJavaCompletionProposal current = (AbstractJavaCompletionProposal) pro;
 		StyledString ss = current.getStyledDisplayString();
 		StyledString.Styler styler;
+//		if(isInProject.get(pro)){
+		
 		switch(validationState){
 		case -1:
 			styler = new StyledString.Styler() {	
@@ -91,12 +106,23 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 			};	break;
 		
 		}
-		
+//		}else {
+//			styler = new StyledString.Styler() {	
+//			
+//				public void applyStyles(TextStyle t) {
+//					t.background =new Color(null, 250, 250, 250);
+//		    	   	t.foreground =new Color(null, 0,0, 0);
+//				}
+//			};
+//		}
 		ss.setStyle(0, ss.getString().length(), styler);
+		
 	}
 	
 	private int violationChecker(ICompletionProposal pro){
+//		private int violationChecker(ICompletionProposal pro, Map<ICompletionProposal, Boolean> isInProject){
 		// return  -1 mapped non violation 0 unmapped 1 violation
+//		isInProject.put(pro,false);
 		if(this.parentComp == null ) {
 			update() ;
 		}
@@ -106,10 +132,9 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 			if(current.getSortString().startsWith("class :")){
 				qualifiedProposalName= current.getSortString();
 				qualifiedProposalName= qualifiedProposalName.substring(qualifiedProposalName.indexOf("<")+1,qualifiedProposalName.lastIndexOf(">"));
-				
 			}
 			else if(current.getDisplayString().equalsIgnoreCase("this")){
-				return -1;
+				return 0;
 				
 			}
 			else{
@@ -125,14 +150,7 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 						privateField = InternalCompletionProposal.class.getDeclaredField("completionKind");
 						privateField.setAccessible(true);
 						temp=privateField.get(compPro);
-//						if(temp!=null&&temp instanceof Integer&&((Integer)temp)==9){
-//							qualifiedProposalName =new String(compPro.getCompletion());
-//						}
 						if(current.getReplacementString().length()!=0){
-							
-//							privateField = MemberProposalInfo.class.getDeclaredField("fProposal");
-//							privateField.setAccessible(true);
-//							InternalCompletionProposal compPro = (InternalCompletionProposal) privateField.get(returnValue);
 							privateField = InternalCompletionProposal.class.getDeclaredField("declarationPackageName");
 							privateField.setAccessible(true);
 							temp =privateField.get(compPro);
@@ -170,7 +188,7 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 				}    
 			}	
 				
-			
+//			for(String str : projectNameSpaces)if(qualifiedProposalName.startsWith(str)){isInProject.put(pro,true);break;}
 			Component proposedComponent = ArchitectureModel.getComponentByFQN(qualifiedProposalName);		
 			if(proposedComponent == null) 
 				return 0;
@@ -190,6 +208,9 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 	}
 
 	private static void update()  {
+//		projectNameSpaces.clear();
+//		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+//		for(IProject p :projects) projectNameSpaces.add(ResourceMapping.getNamspaceFromProjectPath(p.getLocation()));
 		if(context!=null){
 			try {
 			ICompilationUnit cunit =context.getCompilationUnit();
