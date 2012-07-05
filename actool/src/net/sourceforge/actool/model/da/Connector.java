@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,7 +20,7 @@ import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
 
 
-public class Connector extends ArchitectureElement {
+public class Connector extends ArchitectureElement implements Comparable<Connector>{
 
     public static final int ABSENT          = 0;
     public static final int CONVERGENT      = 1;
@@ -376,6 +377,12 @@ public class Connector extends ArchitectureElement {
 //    	DBManager.preparedUpdate("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL,type_name VARCHAR(128) NOT NULL )",  dbConn);
     	DBManager.preparedUpdate("CREATE TABLE if not exists "+TABLE_NAME+" ( xref VARCHAR(1024) NOT NULL, connector_id VARCHAR(128) NOT NULL)"/*,  dbConn*/);
     	initdb=false;
+	}
+
+	@Override
+	public int compareTo(Connector o) {
+		return this.toString().compareTo(o.toString());
+	
 	}
    
 }
