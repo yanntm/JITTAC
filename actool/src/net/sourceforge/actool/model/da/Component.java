@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.sourceforge.actool.model.ResourceMapping;
 
@@ -27,9 +28,8 @@ public class Component extends ArchitectureElement
 	
 	private ArchitectureModel model;
 	private String id, name;
-	
-	private List<Connector> sourceConnections      = new Vector<Connector>();
-	private List<Connector> targetConnections	   = new Vector<Connector>();
+	private ConcurrentLinkedQueue<Connector> sourceConnections      = new ConcurrentLinkedQueue<Connector>();
+	private ConcurrentLinkedQueue<Connector> targetConnections	   = new ConcurrentLinkedQueue<Connector>();
 	
 
     public static final IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[]  {

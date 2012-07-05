@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JOptionPane;
+
 /**
  * @author Sean
  *
@@ -63,9 +65,11 @@ public class EmailArcitectQuickFix implements IMarkerResolution {
 	      URI mailTo = new URI(url);
 	      //log(mailTo);
 	      desktop.mail(mailTo);
+	      
 	    }
 	    catch (IOException ex) {
 	    	Logger.getAnonymousLogger().warning("Cannot launch mail client");
+	    	JOptionPane.showMessageDialog(null, "Cannot launch mail client");
 	    }
 	    catch (URISyntaxException ex) {
 	    	Logger.getAnonymousLogger().warning("Bad mailTo URI: " + ex.getInput());

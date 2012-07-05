@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import net.sourceforge.actool.defaults;
 import net.sourceforge.actool.db.DBManager;
 import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
 //import net.sourceforge.actool.jdt.model.JavaXReference;
@@ -65,7 +66,7 @@ public class ArchitectureModel extends ArchitectureElement
     };
     private static Map<String,String> emailAddresses = new HashMap<String, String>();
 //    private String email=loadEmail();
-    private static Connection dbConn;  
+//    private static Connection dbConn;  
 //	private static Map<String, Component> components = new HashMap<String, Component>();
 	private static Map<ArchitectureModel, HashMap<String, Component>> components = new HashMap<ArchitectureModel,HashMap<String, Component>>();
 	private  ResourceMap map=null;
@@ -73,6 +74,7 @@ public class ArchitectureModel extends ArchitectureElement
 	private final IResource resource;
 	private final ModelProperties properties;
 	private final String unresolvedTableName;
+	private boolean initDb =true;
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
 //		email=loadEmail();
@@ -95,7 +97,7 @@ public class ArchitectureModel extends ArchitectureElement
 	    return map;
 	}
 	
-	protected void onMappingAdded(ResourceMapping mapping) {
+	protected void onMappingAdded(final ResourceMapping mapping) {
 	    ResourceMapping ancestor = this.map.getAncestorMapping(mapping);
 	    
 	    // If there is an 'ancestor' mapping which matches x-references
@@ -106,36 +108,104 @@ public class ArchitectureModel extends ArchitectureElement
 	        // We process source connections first.
 	        conns = ancestor.getComponent().getSourceConnectors().iterator();
 	        while (conns.hasNext()) {
-	            Connector connector = conns.next();
+	            final Connector connector = conns.next();
 	 
 	            // We need to go through all X references...
-	            Iterator<IXReference> xrefs = connector.getXReferences().iterator();
-	            while (xrefs.hasNext()) {
-	                IXReference xref = xrefs.next();
-	                
-	                if (mapping.matches(xref.getSource().getResource())) {              
-	                    connector.removeXReference(xref);
-	                    if (!mapping.getComponent().equals(connector.getTarget()))
-	                    	addXReference(xref, mapping.getComponent(), connector.getTarget());
-	                }
+	            final Iterator<IXReference> xrefs = connector.getXReferences().iterator();
+	            LinkedList<Thread> threads = new LinkedList<Thread>();//create list of threads
+                while (xrefs.hasNext()) {
+                	threads.clear();
+                	while(threads.size()<defaults.MAX_THREADS){
+                		
+    					threads.add(new Thread(new Runnable() {
+    						
+    						@Override
+    						public void run() {
+    							IXReference xref=null;
+    						
+    							synchronized (xrefs) {
+    								if(xrefs.hasNext())
+    									xref = xrefs.next();
+    							}
+    							if(xref==null)return;                
+    							if (mapping.matches(xref.getSource().getResource())) {              
+    			                    connector.removeXReference(xref);
+    			                    if (!mapping.getComponent().equals(connector.getTarget()))
+    			                    	addXReference(xref, mapping.getComponent(), connector.getTarget());
+    			                }
+    							
+    						}
+    					}));
+        			}
+                	
+    				
+                	for(Thread t :threads)t.start();
+                	for(Thread t :threads)
+    					try {
+    						t.join();
+    					} catch (InterruptedException e) {
+    						// TODO Auto-generated catch block
+    						e.printStackTrace();
+    					}
+//	                IXReference xref = xrefs.next();
+//	                
+//	                if (mapping.matches(xref.getSource().getResource())) {              
+//	                    connector.removeXReference(xref);
+//	                    if (!mapping.getComponent().equals(connector.getTarget()))
+//	                    	addXReference(xref, mapping.getComponent(), connector.getTarget());
+//	                }
 	            }
 	        }
 	        
 	        // And target connections then.
             conns = ancestor.getComponent().getTargetConnectors().iterator();
             while (conns.hasNext()) {
-                Connector connector = conns.next();
+                final Connector connector = conns.next();
      
                 // We need to go through all X references...
-                Iterator<IXReference> xrefs = connector.getXReferences().iterator();
+                final Iterator<IXReference> xrefs = connector.getXReferences().iterator();
+                LinkedList<Thread> threads = new LinkedList<Thread>();//create list of threads
                 while (xrefs.hasNext()) {
-                    IXReference xref = xrefs.next();
-                    
-                    if (mapping.matches(xref.getTarget().getResource())) {              
-                        connector.removeXReference(xref);
-                        if (!connector.getSource().equals(mapping.getComponent()))
-                        	addXReference(xref, connector.getSource(), mapping.getComponent());
-                    }
+                	threads.clear();
+                	while(threads.size()<defaults.MAX_THREADS){
+                		
+    					threads.add(new Thread(new Runnable() {
+    						
+    						@Override
+    						public void run() {
+    							IXReference xref=null;
+    						
+    							synchronized (xrefs) {
+    								if(xrefs.hasNext())
+    									xref = xrefs.next();
+    							}
+    							if(xref==null)return;               
+    		                    if (mapping.matches(xref.getTarget().getResource())) {              
+    		                        connector.removeXReference(xref);
+    		                        if (!connector.getSource().equals(mapping.getComponent()))
+    		                        	addXReference(xref, connector.getSource(), mapping.getComponent());
+    		                    }
+    							
+    						}
+    					}));
+        			}
+                	
+    				
+                	for(Thread t :threads)t.start();
+                	for(Thread t :threads)
+    					try {
+    						t.join();
+    					} catch (InterruptedException e) {
+    						// TODO Auto-generated catch block
+    						e.printStackTrace();
+    					}
+//                    IXReference xref = xrefs.next();
+//                    
+//                    if (mapping.matches(xref.getTarget().getResource())) {              
+//                        connector.removeXReference(xref);
+//                        if (!connector.getSource().equals(mapping.getComponent()))
+//                        	addXReference(xref, connector.getSource(), mapping.getComponent());
+//                    }
                 }
             }
 	    }
@@ -146,31 +216,72 @@ public class ArchitectureModel extends ArchitectureElement
 	
 	protected void onMappingRemoved(ResourceMapping mapping) {
 	    // Re process all x-references potentially previously mapped by the removed mapping.
-	    Component component = mapping.getComponent();
+	    final Component component = mapping.getComponent();
 	    Iterator<Connector> conns;
 	    
 	    // We process source connections first.
         conns = component.getSourceConnectors().iterator();
         while (conns.hasNext()) {
-            Connector connector = conns.next();
+            final Connector connector = conns.next();
            
             // We need to go through all X references...
-            Iterator<IXReference> xrefs = connector.getXReferences().iterator();
+            final Iterator<IXReference> xrefs = connector.getXReferences().iterator();
+            LinkedList<Thread> threads = new LinkedList<Thread>();
             while (xrefs.hasNext()) {
-                IXReference xref = xrefs.next();
-                
-                // If the x-reference does not resolve any more 
-                // that means it was matched by the removed mapping and is un-mapped now.
-                Component resolved = map.resolveMapping(xref.getSource().getResource());
-                if (resolved == null || resolved.equals(connector.getTarget())) {
-                    connector.removeXReference(xref);
-                    addUnresolvedXReference(xref);
-                } else if (!resolved.equals(component)) {
-                    connector.removeXReference(xref);
-                    
-                    // Get connection between the components, if none exists, create one.
-                    getConnector(resolved, connector.getTarget(), true).addXReference(xref);
-                }
+            	threads.clear();
+            	while(threads.size()<defaults.MAX_THREADS){
+            		
+					threads.add(new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							IXReference xref=null;
+						
+							synchronized (xrefs) {
+								if(xrefs.hasNext())
+									xref = xrefs.next();
+							}
+			                if(xref==null)return;
+			                // If the x-reference does not resolve any more 
+			                // that means it was matched by the removed mapping and is un-mapped now.
+			                Component resolved = map.resolveMapping(xref.getSource().getResource());
+			                if (resolved == null || resolved.equals(connector.getTarget())) {
+			                    connector.removeXReference(xref);
+			                    addUnresolvedXReference(xref);
+			                } else if (!resolved.equals(component)) {
+			                    connector.removeXReference(xref);
+			                    
+			                    // Get connection between the components, if none exists, create one.
+			                    getConnector(resolved, connector.getTarget(), true).addXReference(xref);
+			                }
+							
+						}
+					}));
+    			}
+            	
+				
+            	for(Thread t :threads)t.start();
+            	for(Thread t :threads)
+					try {
+						t.join();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+//                IXReference xref = xrefs.next();
+//                
+//                // If the x-reference does not resolve any more 
+//                // that means it was matched by the removed mapping and is un-mapped now.
+//                Component resolved = map.resolveMapping(xref.getSource().getResource());
+//                if (resolved == null || resolved.equals(connector.getTarget())) {
+//                    connector.removeXReference(xref);
+//                    addUnresolvedXReference(xref);
+//                } else if (!resolved.equals(component)) {
+//                    connector.removeXReference(xref);
+//                    
+//                    // Get connection between the components, if none exists, create one.
+//                    getConnector(resolved, connector.getTarget(), true).addXReference(xref);
+//                }
             }
             
             if (!connector.isEnvisaged() && !connector.hasXReferences())
@@ -180,25 +291,69 @@ public class ArchitectureModel extends ArchitectureElement
         // And then target connections!
         conns = component.getTargetConnectors().iterator();
         while (conns.hasNext()) {
-            Connector connector = conns.next();
- 
+            final Connector connector = conns.next();
+            
             // We need to go through all X references...
-            Iterator<IXReference> xrefs = connector.getXReferences().iterator();
+            final Iterator<IXReference> xrefs = connector.getXReferences().iterator();
+            LinkedList<Thread> threads = new LinkedList<Thread>();
             while (xrefs.hasNext()) {
-                IXReference xref = xrefs.next();
-                
-                // If the x-reference does not resolve any more 
-                // that means it was matched by the removed mapping and is un-mapped now.
-                Component resolved = map.resolveMapping(xref.getTarget().getResource());
-                if (resolved == null || resolved.equals(connector.getSource())) {
-                    connector.removeXReference(xref);
-                    addUnresolvedXReference(xref);
-                } else if (!resolved.equals(component)) {
-                    connector.removeXReference(xref);
-                    
-                    // Get connection between the components, if none exists, create one.
-                    getConnector(connector.getSource(), resolved, true).addXReference(xref);
-                }
+            	threads.clear();
+				while(threads.size()<defaults.MAX_THREADS){
+            		
+					threads.add(new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							IXReference xref=null;
+						
+							synchronized (xrefs) {
+								if(xrefs.hasNext())
+									xref = xrefs.next();
+							}
+			                if(xref==null)return;
+			                
+			                // If the x-reference does not resolve any more 
+			                // that means it was matched by the removed mapping and is un-mapped now.
+			                Component resolved = map.resolveMapping(xref.getTarget().getResource());
+			                if (resolved == null || resolved.equals(connector.getSource())) {
+			                    connector.removeXReference(xref);
+			                    addUnresolvedXReference(xref);
+			                } else if (!resolved.equals(component)) {
+			                    connector.removeXReference(xref);
+			                    
+			                    // Get connection between the components, if none exists, create one.
+			                    getConnector(connector.getSource(), resolved, true).addXReference(xref);
+			                }
+							
+						}
+					}));
+    			}
+            	
+				
+            	for(Thread t :threads)t.start();
+            	for(Thread t :threads)
+					try {
+						t.join();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            	
+            	
+//                IXReference xref = xrefs.next();
+//                
+//                // If the x-reference does not resolve any more 
+//                // that means it was matched by the removed mapping and is un-mapped now.
+//                Component resolved = map.resolveMapping(xref.getTarget().getResource());
+//                if (resolved == null || resolved.equals(connector.getSource())) {
+//                    connector.removeXReference(xref);
+//                    addUnresolvedXReference(xref);
+//                } else if (!resolved.equals(component)) {
+//                    connector.removeXReference(xref);
+//                    
+//                    // Get connection between the components, if none exists, create one.
+//                    getConnector(connector.getSource(), resolved, true).addXReference(xref);
+//                }
             }
             
             if (!connector.isEnvisaged() && !connector.hasXReferences())
@@ -416,7 +571,7 @@ public class ArchitectureModel extends ArchitectureElement
     	LinkedList<IXReference> result= new LinkedList<IXReference>();
     	LinkedList<String> connectors = new LinkedList<String>();
 		try {
-			DBManager.preparedQuery("select distinct connector_id from "+Connector.TABLE_NAME, dbConn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select distinct connector_id from "+Connector.TABLE_NAME/*, dbConn*/, new IResultSetDelegate(){
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
@@ -428,7 +583,7 @@ public class ArchitectureModel extends ArchitectureElement
 			},connectors);
 			for(String connectorID: connectors){
 				try {
-					DBManager.preparedQuery("select TOP 1 xref from "+Connector.TABLE_NAME+" where connector_id= ? " , new Object[]{connectorID}, dbConn, new IResultSetDelegate(){
+					DBManager.preparedQuery("select TOP 1 xref from "+Connector.TABLE_NAME+" where connector_id= ? " , new Object[]{connectorID}/*, dbConn*/, new IResultSetDelegate(){
 						@Override
 						public int invoke(ResultSet rs, Object... args) throws SQLException {
 							if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
@@ -448,8 +603,37 @@ public class ArchitectureModel extends ArchitectureElement
 				}
 				
 			}
-			for(IXReference xref:result){
-				reconnect(xref);
+//			for(IXReference xref:result){
+//				reconnect(xref);
+//			}
+			final Iterator<IXReference> it = result.iterator();
+			LinkedList<Thread> threads = new LinkedList<Thread>();
+			while(it.hasNext()){
+				threads.clear();
+            	while(threads.size()<defaults.MAX_THREADS){
+            		
+					threads.add(new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							IXReference xref=null;
+							synchronized (it) {
+							if(it.hasNext())xref=it.next();
+							}
+							if(xref!=null)reconnect(xref);
+						}
+					}));
+    			}
+            	
+				
+            	for(Thread t :threads)t.start();
+            	for(Thread t :threads)
+					try {
+						t.join();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -530,7 +714,7 @@ public class ArchitectureModel extends ArchitectureElement
 	protected void addUnresolvedXReference(IXReference xref) {
 		if(!containsUndiclaredXref(xref)){
 			try {
-				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (?)",new Object[]{xrefStringFactory.toString(xref)} ,dbConn);
+				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (?)",new Object[]{xrefStringFactory.toString(xref)} /*,dbConn*/);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -541,7 +725,7 @@ public class ArchitectureModel extends ArchitectureElement
 	protected boolean hasUnresolveddXReference(IXReference xref) {
 		boolean[] result= new boolean[]{ false};
 	    	try {
-	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName + " where xref=?",new Object[]{xrefStringFactory.toString(xref)} , dbConn, new IResultSetDelegate(){
+	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName + " where xref=?",new Object[]{xrefStringFactory.toString(xref)} /*, dbConn*/, new IResultSetDelegate(){
 	
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
@@ -567,7 +751,7 @@ public class ArchitectureModel extends ArchitectureElement
 	 */
 	protected void removeUnresolvedXReference(String xref) {
 		try {
-			DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{xref},dbConn);
+			DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{xref}/*,dbConn*/);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -712,7 +896,7 @@ public class ArchitectureModel extends ArchitectureElement
 	private Collection<IXReference> retriveUnresolvedXrefs() {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-			DBManager.preparedQuery("select distinct xref from "+unresolvedTableName , dbConn, new IResultSetDelegate(){
+			DBManager.preparedQuery("select distinct xref from "+unresolvedTableName /*, dbConn*/, new IResultSetDelegate(){
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
@@ -744,7 +928,7 @@ public class ArchitectureModel extends ArchitectureElement
     { 
     	boolean[] result= new boolean[]{ false};
 	    	try {
-	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName +" where xref = ? " , new Object[]{"'"+xrefStringFactory.toString(xref)+"'"}, dbConn, new IResultSetDelegate(){
+	    		DBManager.preparedQuery("select count(xref)>0 as found from "+unresolvedTableName +" where xref = ? " , new Object[]{"'"+xrefStringFactory.toString(xref)+"'"}/*, dbConn*/, new IResultSetDelegate(){
 					@Override
 					public int invoke(ResultSet rs, Object... args) throws SQLException {
 						if(args.length!=1) return -1;
@@ -763,14 +947,16 @@ public class ArchitectureModel extends ArchitectureElement
     }
 	
 	private void initDb()  {
-    	
+    	if(!this.initDb)return; 
 		try {
-			dbConn = DBManager.connect();
-			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL)",  dbConn);
+//			dbConn = DBManager.connect();
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL)"/*,  dbConn*/);
+			this.initDb =false;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 	}
 	 /**
 	 * @since 0.1

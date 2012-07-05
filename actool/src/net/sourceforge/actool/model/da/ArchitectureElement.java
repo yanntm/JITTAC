@@ -31,10 +31,10 @@ public abstract class ArchitectureElement  implements IPropertySource  {
 	    if (oldValue != null && oldValue.equals(newValue))
 	        return;
 	    
-	    synchronized (delegate) {
+//	    synchronized (delegate) { causes deadlocks!!!!
     		if (delegate.hasListeners(property))
     			delegate.firePropertyChange(property, oldValue, newValue);
-	    }
+//	    }
 	}
 
 	@Deprecated

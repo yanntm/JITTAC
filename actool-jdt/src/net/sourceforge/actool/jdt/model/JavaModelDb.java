@@ -40,12 +40,13 @@ public class JavaModelDb extends AbstractJavaModel{
 	private String removedTableName = rootTableName+"_removed";
 	private String commonTableName = rootTableName+"_common";
 	private String addedTableName = rootTableName+"_added";
+	private boolean initDb = true;
 //	
 //	private String removedTableName = "removed";
 //	private String commonTableName = "common";
 //	private String addedTableName = "added";
 	
-	private Connection conn= null;
+//	private Connection conn= null;
 	private ICompilationUnit currentUnit;			/// Current compilation unit
 	public JavaModelDb() {
 		
@@ -56,7 +57,7 @@ public class JavaModelDb extends AbstractJavaModel{
 	public void _restore(IPath path) {
 		try {
 //			rootTableName=path.removeLastSegments(2).lastSegment().replace("-", "_");
-			if(conn==null||conn.isClosed())conn=DBManager.connect();
+//			if(conn==null||conn.isClosed())conn=DBManager.connect();
 //			if(conn==null||conn.isClosed())conn=DBManager.connect(path);
 			initDb();
 		} catch (SQLException e) {
@@ -90,10 +91,12 @@ public class JavaModelDb extends AbstractJavaModel{
 
 
 	private void initDb() throws SQLException {
-		DBManager.preparedUpdate("CREATE TABLE if not exists "+rootTableName+" ( id INTEGER IDENTITY, CompilationUnitKey VARCHAR(1024), xref VARCHAR(1024))",  conn);
+		if(!initDb)return;
+		DBManager.preparedUpdate("CREATE TABLE if not exists "+rootTableName+" ( id INTEGER IDENTITY, CompilationUnitKey VARCHAR(1024), xref VARCHAR(1024))"/*,  conn*/);
 		clearCommon();
 		clearAdded();
 		clearRemoved();
+		initDb=false;
 	}
 
 	
@@ -111,7 +114,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 		try {
 			LinkedList<String> compilationUnits = new LinkedList<String>();
-			DBManager.preparedQuery("SELECT distinct CompilationUnitKey, xref FROM "+rootTableName , conn, new IResultSetDelegate(){
+			DBManager.preparedQuery("SELECT distinct CompilationUnitKey, xref FROM "+rootTableName /*, conn*/, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args)
@@ -128,7 +131,7 @@ public class JavaModelDb extends AbstractJavaModel{
 			String current="";
 			while(iter.hasNext()){
 //				DBManager.query("SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey='"+(current=iter.next())+"'" , conn, new IResultSetDelegate() {
-				DBManager.preparedQuery("SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey= ?" , new Object[]{(current=iter.next())}, conn, new IResultSetDelegate() {
+				DBManager.preparedQuery("SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey= ?" , new Object[]{(current=iter.next())}/*, conn*/, new IResultSetDelegate() {
 				    @Override
 				    public int invoke(ResultSet rs,Object... args) throws SQLException{
 				    	LinkedList<String> added = new LinkedList<String>();
@@ -174,25 +177,26 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 		
 		try {
-			boolean common = false;
-			DBManager.preparedQuery("select xref from "+ removedTableName+" where xref = ?",new Object[]{xref} , conn, new IResultSetDelegate(){
+			Boolean[] common = new Boolean[]{false};
+			DBManager.preparedQuery("select xref from "+ removedTableName+" where xref = ?",new Object[]{xref} /*, conn*/, new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args)
 						throws SQLException {
-					if(args.length!=1 || !(args[0] instanceof Boolean)) return -1;
+					if(args.length!=1 ) return -1;
 					args[0]=rs.getFetchSize()>0;
 					return 0;
 				}
 				
 			},common);
-			if(common)DBManager.preparedUpdate("insert into "+ commonTableName+" values (?)",new Object[]{xref},conn);
+			if(common[0])
+				DBManager.preparedUpdate("insert into "+ commonTableName+" values (?)",new Object[]{xref}/*,conn*/);
 			else {	
-				DBManager.preparedUpdate("insert into "+ addedTableName+" values (?)",new Object[]{xref},conn);
-				DBManager.preparedUpdate("Insert into "+rootTableName+" ( CompilationUnitKey, xref) values (? , ?)",new Object[]{currentUnit.getHandleIdentifier(),xref},  conn);
+				DBManager.preparedUpdate("insert into "+ addedTableName+" values (?)",new Object[]{xref}/*,conn*/);
+				DBManager.preparedUpdate("Insert into "+rootTableName+" ( CompilationUnitKey, xref) values (? , ?)",new Object[]{currentUnit.getHandleIdentifier(),xref}/*,  conn*/);
 			}
 
-			DBManager.preparedUpdate("Delete from "+ removedTableName+" where xref = ?",new Object[]{xref},conn);
+			DBManager.preparedUpdate("Delete from "+ removedTableName+" where xref = ?",new Object[]{xref}/*,conn*/);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -225,7 +229,7 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 		// Removed all references and put the new ones.
 		try {
-			DBManager.preparedUpdate("Delete from "+rootTableName+"  where CompilationUnitKey=? AND xref in (select xref from "+ removedTableName+")",new Object[]{currentUnit.getHandleIdentifier()},  conn);				
+			DBManager.preparedUpdate("Delete from "+rootTableName+"  where CompilationUnitKey=? AND xref in (select xref from "+ removedTableName+")",new Object[]{currentUnit.getHandleIdentifier()}/*,  conn*/);				
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -244,8 +248,8 @@ public class JavaModelDb extends AbstractJavaModel{
 
 	private void clearAdded(){
 		try {
-			DBManager.preparedUpdate("DROP TABLE if exists "+ addedTableName,  conn);
-			DBManager.preparedUpdate("CREATE TABLE if not exists "+ addedTableName+" (xref VARCHAR(1024))",  conn);
+			DBManager.preparedUpdate("DROP TABLE if exists "+ addedTableName/*,  conn*/);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+ addedTableName+" (xref VARCHAR(1024))"/*,  conn*/);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -255,8 +259,8 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 	private void clearRemoved(){
 		try {
-			DBManager.preparedUpdate("DROP TABLE if exists "+ removedTableName,  conn);
-			DBManager.preparedUpdate("CREATE TABLE if not exists "+ removedTableName+" (xref VARCHAR(1024))",  conn);
+			DBManager.preparedUpdate("DROP TABLE if exists "+ removedTableName/*,  conn*/);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+ removedTableName+" (xref VARCHAR(1024))"/*,  conn*/);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -269,7 +273,7 @@ public class JavaModelDb extends AbstractJavaModel{
 	private void createRemovedforUnit(ICompilationUnit unit){
 		try {
 			clearRemoved();
-			DBManager.preparedUpdate("insert into "+ removedTableName+" ( SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey = ?)",new Object[]{unit.getHandleIdentifier()},  conn);
+			DBManager.preparedUpdate("insert into "+ removedTableName+" ( SELECT distinct xref FROM "+rootTableName+" where CompilationUnitKey = ?)",new Object[]{unit.getHandleIdentifier()}/*,  conn*/);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -279,8 +283,8 @@ public class JavaModelDb extends AbstractJavaModel{
 	
 	private void clearCommon(){
 		try {
-			DBManager.preparedUpdate("DROP TABLE if exists "+ commonTableName,  conn);
-			DBManager.preparedUpdate("CREATE TABLE if not exists "+ commonTableName+" (xref VARCHAR(1024))",  conn);
+			DBManager.preparedUpdate("DROP TABLE if exists "+ commonTableName/*,  conn*/);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+ commonTableName+" (xref VARCHAR(1024))"/*,  conn*/);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -293,7 +297,7 @@ public class JavaModelDb extends AbstractJavaModel{
 		try {
 			
 //			DBManager.query("SELECT distinct xref FROM "+table+" " , conn, new IResultSetDelegate() {
-			DBManager.preparedQuery("SELECT distinct xref FROM "+table, conn, new IResultSetDelegate() {
+			DBManager.preparedQuery("SELECT distinct xref FROM "+table/*, conn*/, new IResultSetDelegate() {
 			    @SuppressWarnings("unchecked")
 				@Override
 			    public int invoke(ResultSet rs,Object... args) throws SQLException{

@@ -101,7 +101,7 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 			styler = new StyledString.Styler() {	
 				public void applyStyles(TextStyle t) {
 					t.background =new Color(null, 250, 250, 250);
-		    	   	t.foreground =new Color(null, 255, 125, 0);
+		    	   	t.foreground =new Color(null, 200, 160, 0);
 				}
 			};	break;
 		
