@@ -2,9 +2,11 @@ package net.sourceforge.actool.model.da;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import net.sourceforge.actool.model.ResourceMapping;
 
@@ -28,8 +30,8 @@ public class Component extends ArchitectureElement
 	
 	private ArchitectureModel model;
 	private String id, name;
-	private ConcurrentLinkedQueue<Connector> sourceConnections      = new ConcurrentLinkedQueue<Connector>();
-	private ConcurrentLinkedQueue<Connector> targetConnections	   = new ConcurrentLinkedQueue<Connector>();
+	private ConcurrentSkipListSet<Connector> sourceConnections      = new ConcurrentSkipListSet<Connector>();
+	private ConcurrentSkipListSet<Connector> targetConnections	   = new ConcurrentSkipListSet<Connector>();
 	
 
     public static final IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[]  {
@@ -117,7 +119,7 @@ public class Component extends ArchitectureElement
 	}
 	
 	public List<Connector> getSourceConnectors() {		
-		return new ArrayList<Connector>(sourceConnections);
+		return new LinkedList<Connector>(sourceConnections);
 	}
 
     public int getNumberSourceConnectors() {
@@ -139,7 +141,7 @@ public class Component extends ArchitectureElement
 	}
 	
 	public List<Connector> getTargetConnectors() {
-		return new ArrayList<Connector>(targetConnections);
+		return new LinkedList<Connector>(targetConnections);
 	}
 
 	public Connector getConnectorForSource(Component source) {
@@ -176,15 +178,17 @@ public class Component extends ArchitectureElement
      * Disconnect all component's connections (source and target).
      */
     public void disconnectAllConnectors() {
-        Iterator<Connector> iter;
+    	Iterator<Connector> iter;
         
-        iter = (new ArrayList<Connector>(sourceConnections)).iterator();
-        while (iter.hasNext())
-            iter.next().disconnect();
-        
-        iter = (new ArrayList<Connector>(targetConnections)).iterator();
-        while (iter.hasNext())
-            iter.next().disconnect();
+//      iter = (new ArrayList<Connector>(sourceConnections)).iterator();
+      iter=sourceConnections.iterator();
+      while (iter.hasNext())
+          iter.next().disconnect();
+      
+//      iter = (new ArrayList<Connector>(targetConnections)).iterator();
+      iter=targetConnections.iterator();
+      while (iter.hasNext())
+          iter.next().disconnect();
     }
   
     
