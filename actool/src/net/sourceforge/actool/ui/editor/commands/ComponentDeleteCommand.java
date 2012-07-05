@@ -69,27 +69,41 @@ public class ComponentDeleteCommand extends Command {
 	/**
 	 * Re-execute command.
 	 */
-	public void redo() {
+	public synchronized void redo() {
 	    // Remove the component, this will also remove connectors and mappings.
-	    getModel().removeComponent(getComponent());
+	   Thread t = new Thread(new Runnable() {
+		
+			@Override
+			public void run() {
+				getModel().removeComponent(getComponent());
+				
+			}
+		});t.start();
+		
 	}
 
 	/**
 	 * Undo the execution.
 	 */
-	public void undo() {
-	    getModel().addComponent(getComponent());
-
-	    Iterator<Connector> iter;	    
-	    iter = sourceConnectors.iterator();
-	    while (iter.hasNext())
-	        iter.next().connect();
-	    iter = targetConnectors.iterator();
-	    while (iter.hasNext())
-	        iter.next().connect();
-	    
-	    Iterator<ResourceMapping> miter = mappings.iterator();
-	    while (miter.hasNext())
-	        getComponent().addMapping(miter.next().getResource());
+	public synchronized void undo() {
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+		    getModel().addComponent(getComponent());
+	
+		    Iterator<Connector> iter;	    
+		    iter = sourceConnectors.iterator();
+		    while (iter.hasNext())
+		        iter.next().connect();
+		    iter = targetConnectors.iterator();
+		    while (iter.hasNext())
+		        iter.next().connect();
+		    
+		    Iterator<ResourceMapping> miter = mappings.iterator();
+		    while (miter.hasNext())
+		        getComponent().addMapping(miter.next().getResource());
+				}
+			});t.start();
 	}
 }

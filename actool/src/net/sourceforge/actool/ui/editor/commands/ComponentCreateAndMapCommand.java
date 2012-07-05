@@ -4,6 +4,7 @@ package net.sourceforge.actool.ui.editor.commands;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -22,7 +23,7 @@ import org.eclipse.jdt.ui.JavaElementLabelProvider;
 
 public class ComponentCreateAndMapCommand extends Command {
     private ArchitectureModel model;
-    private Collection<Component> components = new Vector<Component>();
+    private Collection<Component> components = new LinkedList<Component>();
     private Map<Component, IResource> mapping = new HashMap<Component, IResource>();
     
 	JavaElementLabelProvider labelProvider = new JavaElementLabelProvider();
@@ -57,30 +58,43 @@ public class ComponentCreateAndMapCommand extends Command {
 	 */
 	public void execute() {
 	    
-	    Iterator<Component> iter = components.iterator();
-	    while (iter.hasNext()) {
-	        Component component = iter.next();
-	        model.addComponent(component);
-	        component.addMapping(mapping.get(component));
-	    }
+		 redo();
 	}
 
 	/**
 	 * Re-execute command.
 	 */
 	public void redo() {
-	    execute();
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				 Iterator<Component> iter = components.iterator();
+				    while (iter.hasNext()) {
+				        Component component = iter.next();
+				        model.addComponent(component);
+				        component.addMapping(mapping.get(component));
+				    }
+			}
+		});t.start();
+	 
 	}
 
 	/**
 	 * Undo the execution.
 	 */
 	public void undo() {
-        Iterator<Component> iter = components.iterator();
-        while (iter.hasNext()) {
-            Component component = iter.next();
-            component.removeMapping(mapping.get(component));
-            model.removeComponent(component);
-        }
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				 Iterator<Component> iter = components.iterator();
+			        while (iter.hasNext()) {
+			            Component component = iter.next();
+			            component.removeMapping(mapping.get(component));
+			            model.removeComponent(component);
+			        }
+			}
+		});t.start();
+		
+       
 	}
 }

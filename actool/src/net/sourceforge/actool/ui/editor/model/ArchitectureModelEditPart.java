@@ -132,7 +132,6 @@ public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
 	 */
 	@Override
 	public void highlightViolation(String id) {
-//		List<ComponentEditPart> temp =this.getSource().getParent().getChildren();
 		List<ComponentEditPart> temp =this.getChildren();
 		ConnectorEditPart connector=null;
 		outer:
@@ -143,10 +142,7 @@ public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
 					break outer;
 				}
 			}
-//			for(ConnectorEditPart con :(List<ConnectorEditPart>)componentParts.getTargetConnections()){
-//				if(con.toString().equals(id))
-//				break outer;
-//			}
+//			
 		}
 		
 		if(connector!=null){

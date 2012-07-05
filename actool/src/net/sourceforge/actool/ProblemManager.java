@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -272,10 +273,10 @@ public class ProblemManager extends ArchitectureModelListener {
     
     @Override
     public void connectorXReferenceAdded(final Connector connector, final IXReference xref) {
-    	Thread thread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
+//    	Thread thread = new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
 				if (connector.isEnvisaged() || ignoreViolations()
 						|| !isEnabledForProject(xref.getSource().getResource().getProject()))
 						return;
@@ -301,17 +302,17 @@ public class ProblemManager extends ArchitectureModelListener {
 			            ex.printStackTrace();
 			        }
 				
-			}
-		});thread.start();
+//			}
+//		});thread.start();
 		
 	}
 
 	@Override
 	public void connectorXReferenceRemoved(Connector connector, final IXReference xref) {		
-        Thread thread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
+//        Thread thread = new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
 				IResource resource = xref.getSource().getResource();
 		        
 		        try {
@@ -329,23 +330,44 @@ public class ProblemManager extends ArchitectureModelListener {
 		            e.printStackTrace();
 		        }
 				
-			}
-		});thread.start();
+//			}
+//		});thread.start();
 		
 	}
 	
 	@Override
-	public void connectorStateChanged(Connector connector) {
-		Iterator<IXReference> iter = connector.getXReferences().iterator();
-		if (connector.isEnvisaged()) {
-			while (iter.hasNext())
-				connectorXReferenceRemoved(connector, iter.next());
-			//this method runs on a background thread
-		} else {
-			while (iter.hasNext())
-				connectorXReferenceAdded(connector, iter.next());
-			//this method runs on a background thread
+	public void connectorStateChanged(final Connector connector) {
+		final Iterator<IXReference> iter = connector.getXReferences().iterator();
+		LinkedList<Thread> threads = new LinkedList<Thread>();
+		threads.clear();
+		while (iter.hasNext()){
+			if(threads.size()<defaults.MAX_THREADS){
+				threads.add(new Thread(new Runnable() {
+					@Override
+					public void run() {
+						IXReference xref= null;
+						synchronized (iter) {
+						if(iter.hasNext())
+							xref=iter.next();
+						}
+						if(xref==null)return;
+						if (connector.isEnvisaged()) {
+							connectorXReferenceRemoved(connector, xref);
+						}else{
+							connectorXReferenceAdded(connector, xref);
+						}
+					}
+				}));
+			}
 		}
+		for(Thread t : threads) t.start();
+		for(Thread t : threads)
+			try {
+				t.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	}
 
 	@Override

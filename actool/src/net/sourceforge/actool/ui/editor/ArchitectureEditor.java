@@ -140,9 +140,10 @@ public class ArchitectureEditor extends GraphicalEditorWithFlyoutPalette
 
 	protected void initializeGraphicalViewer() {
 		super.initializeGraphicalViewer();
-
-		GraphicalViewer viewer = getGraphicalViewer();
-		viewer.setContents(model);
+			GraphicalViewer viewer = getGraphicalViewer();
+				
+				viewer.setContents(model);
+			
 	}
 
 	/*

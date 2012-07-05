@@ -30,16 +30,16 @@ public class ComponentMapCommand extends Command {
 	 * Execute command.
 	 */
 	public void execute() {
-	    Iterator<IResource> iter = resources.iterator();
-	    while (iter.hasNext())
-	        target.addMapping(iter.next());
+	    redo();
 	}
 
 	/**
 	 * Re-execute command.
 	 */
 	public void redo() {
-	    execute();
+	   Iterator<IResource> iter = resources.iterator();
+	    while (iter.hasNext())
+	        target.addMapping(iter.next());
 	}
 
 	/**

@@ -151,7 +151,6 @@ public class ModelPropertyPage extends PropertyPage {
 			"Info",
 			"Ignore"
 		});
-		
 		return combo;
 	}
 	
@@ -200,7 +199,7 @@ public class ModelPropertyPage extends PropertyPage {
 	
 	protected void initSettings() {
 		performDefaults();
-			
+		
 		ProblemManager manager = getProblemManager();
 		setCombo(violationsCombo, manager.getViolationSeverity());
 		//setCombo(unmappedCombo, manager.getUnmappedSeverity());

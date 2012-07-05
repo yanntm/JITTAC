@@ -38,14 +38,27 @@ public class ComponentCreateCommand extends Command {
 	/**
 	 * Re-execute command.
 	 */
-	public void redo() {
-	    getModel().addComponent(getComponent());
+	public synchronized  void redo() {
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				getModel().addComponent(getComponent());
+			}
+		});t.start();
 	}
 
 	/**
 	 * Undo the execution.
 	 */
-	public void undo() {
-	    getModel().removeComponent(getComponent());
+	public synchronized void undo() {
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				getModel().removeComponent(getComponent());
+				
+			}
+		});t.start();
+	   
 	}
 }
