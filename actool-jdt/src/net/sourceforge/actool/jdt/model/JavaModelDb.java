@@ -177,14 +177,15 @@ public class JavaModelDb extends AbstractJavaModel{
 		
 		
 		try {
-			Boolean[] common = new Boolean[]{false};
-			DBManager.preparedQuery("select xref from "+ removedTableName+" where xref = ?",new Object[]{xref} /*, conn*/, new IResultSetDelegate(){
+			boolean[] common= new boolean[]{false};
+			DBManager.preparedQuery("select count(xref) as rowcount from "+ removedTableName+" where xref = ?",new Object[]{xref} , new IResultSetDelegate(){
 
 				@Override
 				public int invoke(ResultSet rs, Object... args)
 						throws SQLException {
 					if(args.length!=1 ) return -1;
-					args[0]=rs.getFetchSize()>0;
+					if(rs.next())
+					((boolean[])args[0])[0]=rs.getInt("rowcount")>0;
 					return 0;
 				}
 				
