@@ -272,50 +272,67 @@ public class ProblemManager extends ArchitectureModelListener {
     }
     
     @Override
-    public void connectorXReferenceAdded(Connector connector, IXReference xref) {
-		if (connector.isEnvisaged() || ignoreViolations()
-			|| !isEnabledForProject(xref.getSource().getResource().getProject()))
-			return;
-		
-        IResource resource = xref.getSource().getResource(); 
+    public void connectorXReferenceAdded(final Connector connector, final IXReference xref) {
+    	Thread thread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				if (connector.isEnvisaged() || ignoreViolations()
+						|| !isEnabledForProject(xref.getSource().getResource().getProject()))
+						return;
+					
+			        IResource resource = xref.getSource().getResource(); 
 
-        try {
-            IMarker marker = resource.createMarker(defaults.MARKER_TYPE);
-            marker.setAttribute(IMarker.SEVERITY, getViolationSeverity());
-            marker.setAttribute(IMarker.MESSAGE, "Element " + xref.getTarget().getName() 
-                                                  + " should not be accessed in this context "
-                                                  + "(" + connector.getSource().getName() + "->" 
-                                                  + connector.getTarget().getName() + ")");
-            
-            marker.setAttribute(IMarker.CHAR_START, xref.getOffset());
-            marker.setAttribute(IMarker.CHAR_END, xref.getOffset() + xref.getLength());
-            marker.setAttribute(IMarker.LINE_NUMBER, xref.getLine());
-            marker.setAttribute(defaults.MODEL, model.getResource().getFullPath());
-            marker.setAttribute(defaults.CONNECTOR_ID, connector.toString());
-            this.violations.put(xref.toString(), marker.getId());
-        } catch (CoreException ex) {
-            // TODO: Do something better here;
-            ex.printStackTrace();
-        }
+			        try {
+			            IMarker marker = resource.createMarker(defaults.MARKER_TYPE);
+			            marker.setAttribute(IMarker.SEVERITY, getViolationSeverity());
+			            marker.setAttribute(IMarker.MESSAGE, "Element " + xref.getTarget().getName() 
+			                                                  + " should not be accessed in this context "
+			                                                  + "(" + connector.getSource().getName() + "->" 
+			                                                  + connector.getTarget().getName() + ")");
+			            
+			            marker.setAttribute(IMarker.CHAR_START, xref.getOffset());
+			            marker.setAttribute(IMarker.CHAR_END, xref.getOffset() + xref.getLength());
+			            marker.setAttribute(IMarker.LINE_NUMBER, xref.getLine());
+			            marker.setAttribute(defaults.MODEL, model.getResource().getFullPath());
+			            marker.setAttribute(defaults.CONNECTOR_ID, connector.toString());
+			            violations.put(ArchitectureModel.xrefStringFactory.toString(xref), marker.getId());
+			        } catch (CoreException ex) {
+			            // TODO: Do something better here;
+			            ex.printStackTrace();
+			        }
+				
+			}
+		});thread.start();
+		
 	}
 
 	@Override
-	public void connectorXReferenceRemoved(Connector connector, IXReference xref) {		
-        IResource resource = xref.getSource().getResource();
-        
-        try {
-        	Long id = violations.get(xref.toString());
-        	if (id == null)
-        		return;
+	public void connectorXReferenceRemoved(Connector connector, final IXReference xref) {		
+        Thread thread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				IResource resource = xref.getSource().getResource();
+		        
+		        try {
+		        	String strId = ArchitectureModel.xrefStringFactory.toString(xref);
+					Long id = violations.get(strId);
+		        	if (id == null)
+		        		return;
 
-            IMarker marker = resource.findMarker(id.longValue());
-            if (marker != null)
-            	marker.delete();
-            violations.remove(xref.toString());
-        } catch (CoreException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+		            IMarker marker = resource.findMarker(id.longValue());
+		            if (marker != null)
+		            	marker.delete();
+		            violations.remove(strId);
+		        } catch (CoreException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        }
+				
+			}
+		});thread.start();
+		
 	}
 	
 	@Override
