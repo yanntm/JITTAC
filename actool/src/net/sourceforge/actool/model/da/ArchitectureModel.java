@@ -669,16 +669,19 @@ public class ArchitectureModel extends ArchitectureElement
 		addXReference(xref, source, target);
 	}
 	
-	protected void addXReference(IXReference xref, Component source, Component target){
+	protected  void addXReference(IXReference xref, Component source, Component target){
 	    assert source != null && target != null && !source.equals(target);
 	    
 	    // Get connection between the components, if none exists, create one.
        Connector conn = getConnector(source, target, true);
        
-       if(!conn.containsXref(xref)){// check if connection already exits before adding.
-    	   conn.addXReference(xref);
-    	   if(!connectorList.contains(conn))connectorList.add(conn);
-       }
+       
+    	   if(!conn.containsXref(xref)){// check if connection already exits before adding.
+    		   conn.addXReference(xref);
+    	   
+    		   if(!connectorList.contains(conn))connectorList.add(conn);
+    	   }
+       
 	}
 	
 	protected void removeXReference(IXReference xref) {
