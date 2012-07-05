@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.sourceforge.actool.logging.EventLogger;
 import net.sourceforge.actool.logging.ModelEventListener;
@@ -39,7 +40,7 @@ import org.eclipse.ui.texteditor.SimpleMarkerAnnotation;
 
 public class ProblemManager extends ArchitectureModelListener {
 	private final static QualifiedName MODELS_KEY = new QualifiedName(ACTool.PLUGIN_ID, "controllingModels");
-	private final static Map<IResource, ProblemManager> instances = new HashMap<IResource, ProblemManager>();
+	private final static Map<IResource, ProblemManager> instances = new ConcurrentHashMap<IResource, ProblemManager>(defaults.MAX_THREADS);
 	
 	private final ArchitectureModel model;
 	private Set<IProject> projects = new HashSet<IProject>();
@@ -176,9 +177,7 @@ public class ProblemManager extends ArchitectureModelListener {
    				ArchitectureModel model = manager.getArchitectureModel((IFile) resource);
    				model.addModelListener(new ModelEventListener(EventLogger.getInstance()));
    				EventLogger.getInstance().logModelInitEnd(resource);
-   				if (model == null) {
-   					continue;
-   				}
+   				
 
    				// This will crate an instance of problem manager...
    				ProblemManager pm = getInstance(model);
@@ -341,9 +340,11 @@ public class ProblemManager extends ArchitectureModelListener {
 		if (connector.isEnvisaged()) {
 			while (iter.hasNext())
 				connectorXReferenceRemoved(connector, iter.next());
+			//this method runs on a background thread
 		} else {
 			while (iter.hasNext())
-				connectorXReferenceAdded(connector, iter.next());			
+				connectorXReferenceAdded(connector, iter.next());
+			//this method runs on a background thread
 		}
 	}
 
