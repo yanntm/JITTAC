@@ -9,7 +9,10 @@ import net.sourceforge.actool.model.da.ArchitectureModel;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IMarkerResolution;
+import org.eclipse.ui.PlatformUI;
+
 import java.awt.Desktop;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -69,7 +72,8 @@ public class EmailArcitectQuickFix implements IMarkerResolution {
 	    }
 	    catch (IOException ex) {
 	    	Logger.getAnonymousLogger().warning("Cannot launch mail client");
-	    	JOptionPane.showMessageDialog(null, "Cannot launch mail client");
+	    	MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Email Client Error", "Cannot launch mail client");
+	    	
 	    }
 	    catch (URISyntaxException ex) {
 	    	Logger.getAnonymousLogger().warning("Bad mailTo URI: " + ex.getInput());

@@ -339,34 +339,34 @@ public class ProblemManager extends ArchitectureModelListener {
 	public void connectorStateChanged(final Connector connector) {
 		final Iterator<IXReference> iter = connector.getXReferences().iterator();
 		LinkedList<Thread> threads = new LinkedList<Thread>();
-		threads.clear();
 		while (iter.hasNext()){
-			if(threads.size()<defaults.MAX_THREADS){
-				threads.add(new Thread(new Runnable() {
-					@Override
-					public void run() {
-						IXReference xref= null;
-						synchronized (iter) {
-						if(iter.hasNext())
-							xref=iter.next();
+			threads.clear();
+			while (threads.size()<defaults.MAX_THREADS){
+					threads.add(new Thread(new Runnable() {
+						@Override
+						public void run() {
+							IXReference xref= null;
+							synchronized (iter) {
+							if(iter.hasNext())
+								xref=iter.next();
+							}
+							if(xref==null)return;
+							if (connector.isEnvisaged()) {
+								connectorXReferenceRemoved(connector, xref);
+							}else{
+								connectorXReferenceAdded(connector, xref);
+							}
 						}
-						if(xref==null)return;
-						if (connector.isEnvisaged()) {
-							connectorXReferenceRemoved(connector, xref);
-						}else{
-							connectorXReferenceAdded(connector, xref);
-						}
-					}
-				}));
-			}
-		}
-		for(Thread t : threads) t.start();
-		for(Thread t : threads)
-			try {
-				t.join();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+					}));
+				}
+			for(Thread t : threads) t.start();
+			for(Thread t : threads)
+				try {
+					t.join();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 	}
 

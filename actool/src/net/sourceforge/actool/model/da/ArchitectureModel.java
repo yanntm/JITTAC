@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import net.sourceforge.actool.defaults;
 import net.sourceforge.actool.db.DBManager;
@@ -70,7 +71,7 @@ public class ArchitectureModel extends ArchitectureElement
 //	private static Map<String, Component> components = new HashMap<String, Component>();
 	private static Map<ArchitectureModel, HashMap<String, Component>> components = new HashMap<ArchitectureModel,HashMap<String, Component>>();
 	private  ResourceMap map=null;
-	private  LinkedList<Connector> connectorList = new LinkedList<Connector>();
+	private  ConcurrentSkipListSet<Connector> connectorList = new ConcurrentSkipListSet<Connector>();
 	private final IResource resource;
 	private final ModelProperties properties;
 	private final String unresolvedTableName;
@@ -505,14 +506,16 @@ public class ArchitectureModel extends ArchitectureElement
 	public static Connector getConnector(Component source, Component target, boolean create) {
 	   if ((source == null ) || (target == null) || target.equals(source))
 	        throw new IllegalArgumentException();
-
-	    Connector connector = source.getConnectorForTarget(target);
-	    if (connector == null) {
-	        if (create) {
-	            connector = Connector.connect(source, target, false);
-	            // TODO: A violation has been added, handle this!
-	        } else
-	            return null;
+	   Connector connector; 
+	   synchronized (source) {
+		    connector = source.getConnectorForTarget(target);
+		    if (connector == null) {
+		        if (create) {
+		            connector = Connector.connect(source, target, false);
+		            // TODO: A violation has been added, handle this!
+		        } else
+		            return null;
+		    }
 	    }
 	            	            
 	    assert connector.getTarget().equals(target);

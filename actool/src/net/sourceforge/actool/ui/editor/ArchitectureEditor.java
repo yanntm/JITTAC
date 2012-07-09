@@ -13,6 +13,7 @@ import net.sourceforge.actool.model.da.ArchitectureModelWriter;
 import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.ui.editor.actions.ComponentMergeAction;
 import net.sourceforge.actool.ui.editor.actions.ComponentVisibilityAction;
+import net.sourceforge.actool.ui.editor.actions.ViewExportAction;
 import net.sourceforge.actool.ui.editor.dnd.MappingDropTargetListener;
 import net.sourceforge.actool.ui.editor.model.ArchitectureEditPartFactory;
 import net.sourceforge.actool.ui.editor.model.IViolationHighlighter;
@@ -70,8 +71,11 @@ public class ArchitectureEditor extends GraphicalEditorWithFlyoutPalette
 	/**
 	 */
 	public ArchitectureEditor() {
+		
+		
 		// TODO: Investigate what this actually does!
 		setEditDomain(new DefaultEditDomain(this));
+		
 	}
 
 	public void addViewerSynchronisation(EditPartViewer viewer) {
@@ -84,7 +88,7 @@ public class ArchitectureEditor extends GraphicalEditorWithFlyoutPalette
 
 	protected void configureGraphicalViewer() {
 		super.configureGraphicalViewer();
-
+		
 		// Basic viewer configuration.
 		GraphicalViewer viewer = getGraphicalViewer();
 		viewer.setEditPartFactory(new ArchitectureEditPartFactory());
@@ -109,10 +113,12 @@ public class ArchitectureEditor extends GraphicalEditorWithFlyoutPalette
 	
 	protected void createActions() {
 		super.createActions();
-
+		
 		//createAction(new ComponentVisibilityAction(this, Visibility.INVISIBLE));
 		createAction(new ComponentVisibilityAction(this, Visibility.VISIBLE));
 		createAction(new ComponentVisibilityAction(this, Visibility.FADED));
+		
+		createAction(new ViewExportAction(this));
 
 		createAction(new ComponentMergeAction(this));
 	}

@@ -60,6 +60,7 @@ public class ComponentMergeCommand extends Command {
 	 * Re-execute command.
 	 */
 	public void redo() {
+		
 		// Add the new component.
 	    getModel().addComponent(getComponent());
 	    

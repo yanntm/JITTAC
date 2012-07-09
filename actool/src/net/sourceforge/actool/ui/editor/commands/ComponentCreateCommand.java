@@ -4,6 +4,10 @@ package net.sourceforge.actool.ui.editor.commands;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.gef.commands.Command;
 
 
@@ -38,27 +42,26 @@ public class ComponentCreateCommand extends Command {
 	/**
 	 * Re-execute command.
 	 */
-	public synchronized  void redo() {
-		Thread t = new Thread(new Runnable() {
+	public void redo() {
+		Job job = new Job("Create Component") {
 			@Override
-			public void run() {
+			protected IStatus run(IProgressMonitor monitor) {
 				getModel().addComponent(getComponent());
+				return Status.OK_STATUS;
 			}
-		});t.start();
+		};job.schedule();
 	}
 
 	/**
 	 * Undo the execution.
 	 */
-	public synchronized void undo() {
-		Thread t = new Thread(new Runnable() {
-			
+	public void undo() {
+		Job job = new Job("UnCreate Component") {
 			@Override
-			public void run() {
+			protected IStatus run(IProgressMonitor monitor) {
 				getModel().removeComponent(getComponent());
-				
+				return Status.OK_STATUS;
 			}
-		});t.start();
-	   
+		};job.schedule();
 	}
 }

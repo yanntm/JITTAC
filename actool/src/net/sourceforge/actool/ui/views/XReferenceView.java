@@ -96,6 +96,9 @@ public class XReferenceView extends ViewPart
         viewer.getTable().setSortColumn(viewer.getTable().getColumn(1));
         viewer.setContentProvider(new XReferenceContentProvider());
         viewer.setLabelProvider(new XReferenceLabelProvider());
+        int width = viewer.getTable().getSize().x;
+        viewer.getTable().getColumn(0).setWidth(width / 2);
+        viewer.getTable().getColumn(1).setWidth(width / 2);
         
         viewer.addDoubleClickListener(new IDoubleClickListener() {
             
@@ -153,47 +156,7 @@ public class XReferenceView extends ViewPart
     }
 }
 
-class XReferenceContentProvider implements IStructuredContentProvider {
 
-
-    public Object[] getElements(Object inputElement) {//used for arch relations view table data
-        if (inputElement != null && !(inputElement instanceof Connector))
-            throw new IllegalArgumentException();
-        
-        Thread cleanup = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(20);
-					System.gc();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		});
-        cleanup.start();
-        
-        if (inputElement != null){
-            return ((Connector) inputElement).getXReferences().toArray();
-        }
-        return null;
-    }
-
-    @Override
-    public void dispose() {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-        if ((oldInput != null && !(oldInput instanceof Connector)) || (newInput != null && !(newInput instanceof Connector)))
-            throw new IllegalArgumentException();
-        // TODO Auto-generated method stub
-
-    }
-}
 
 class XReferenceLabelProvider extends LabelProvider
                               implements ITableLabelProvider {

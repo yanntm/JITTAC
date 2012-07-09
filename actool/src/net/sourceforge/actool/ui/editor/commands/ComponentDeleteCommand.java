@@ -11,7 +11,12 @@ import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.model.da.Connector;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.swt.widgets.Display;
 
 
 
@@ -71,14 +76,21 @@ public class ComponentDeleteCommand extends Command {
 	 */
 	public synchronized void redo() {
 	    // Remove the component, this will also remove connectors and mappings.
-	   Thread t = new Thread(new Runnable() {
-		
+		Job job = new Job("Delete Component: "+component.getName()) {
 			@Override
-			public void run() {
+			protected IStatus run(IProgressMonitor monitor) {
 				getModel().removeComponent(getComponent());
-				
+				return Status.OK_STATUS;
 			}
-		});t.start();
+		};job.schedule();
+//	   Thread t = new Thread(new Runnable() { equivalent but dose not add item to progrss job list
+//		
+//			@Override
+//			public void run() {
+//				getModel().removeComponent(getComponent());
+//				
+//			}
+//		});t.start();
 		
 	}
 
@@ -86,24 +98,24 @@ public class ComponentDeleteCommand extends Command {
 	 * Undo the execution.
 	 */
 	public synchronized void undo() {
-		Thread t = new Thread(new Runnable() {
-			
+		Job job = new Job("UnDelete Component: "+component.getName()) {
 			@Override
-			public void run() {
-		    getModel().addComponent(getComponent());
-	
-		    Iterator<Connector> iter;	    
-		    iter = sourceConnectors.iterator();
-		    while (iter.hasNext())
-		        iter.next().connect();
-		    iter = targetConnectors.iterator();
-		    while (iter.hasNext())
-		        iter.next().connect();
-		    
-		    Iterator<ResourceMapping> miter = mappings.iterator();
-		    while (miter.hasNext())
-		        getComponent().addMapping(miter.next().getResource());
-				}
-			});t.start();
+			protected IStatus run(IProgressMonitor monitor) {
+			    getModel().addComponent(getComponent());
+		
+			    Iterator<Connector> iter;	    
+			    iter = sourceConnectors.iterator();
+			    while (iter.hasNext())
+			        iter.next().connect();
+			    iter = targetConnectors.iterator();
+			    while (iter.hasNext())
+			        iter.next().connect();
+			    
+			    Iterator<ResourceMapping> miter = mappings.iterator();
+			    while (miter.hasNext())
+			        getComponent().addMapping(miter.next().getResource());
+			    return Status.OK_STATUS;
+			}
+		};job.schedule(); 
 	}
 }

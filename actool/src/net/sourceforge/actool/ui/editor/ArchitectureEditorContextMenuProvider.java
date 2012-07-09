@@ -2,6 +2,7 @@ package net.sourceforge.actool.ui.editor;
 
 import net.sourceforge.actool.ui.editor.actions.ComponentMergeAction;
 import net.sourceforge.actool.ui.editor.actions.ComponentVisibilityAction;
+import net.sourceforge.actool.ui.editor.actions.ViewExportAction;
 
 import org.eclipse.gef.ContextMenuProvider;
 import org.eclipse.gef.EditPartViewer;
@@ -46,11 +47,12 @@ class ArchitectureEditorContextMenuProvider extends ContextMenuProvider {
 				getAction(ActionFactory.REDO.getId()));
 		menu.appendToGroup(GEFActionConstants.GROUP_EDIT,
 				getAction(ActionFactory.DELETE.getId()));
-		
+			
 		//appendAction(menu, ComponentVisibilityAction.ID_INVISIBLE);
 		appendAction(menu,GEFActionConstants.GROUP_VIEW, ComponentVisibilityAction.ID_VISIBLE);
 		appendAction(menu,GEFActionConstants.GROUP_VIEW, ComponentVisibilityAction.ID_FADED);
-
+		
+		appendAction(menu,GEFActionConstants.GROUP_EDIT, ViewExportAction.EXPORT);
 		appendAction(menu, GEFActionConstants.GROUP_EDIT, ComponentMergeAction.ID);
 	}
 	

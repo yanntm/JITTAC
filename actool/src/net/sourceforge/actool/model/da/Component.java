@@ -149,12 +149,14 @@ public class Component extends ArchitectureElement
     }
    
     public Connector getConnectorForSource(String sourceid) {
-        Iterator<Connector> iter = targetConnections.iterator();
-        while (iter.hasNext()) {
-            Connector connector = iter.next();
-            if (connector.getSource().getID() == sourceid)
-                return connector;
-        }
+    	synchronized (sourceConnections) {
+	    	Iterator<Connector> iter = targetConnections.iterator();
+	        while (iter.hasNext()) {
+	            Connector connector = iter.next();
+	            if (connector.getSource().getID() == sourceid)
+	                return connector;
+	        }
+    	}
 
         return null;
     } 
@@ -164,12 +166,14 @@ public class Component extends ArchitectureElement
     }
 
     public Connector getConnectorForTarget(String targetId) {
-        Iterator<Connector> iter = sourceConnections.iterator();
-        while (iter.hasNext()) {
-            Connector connector = iter.next();
-            if (connector.getTarget().getID() == targetId)
-                return connector;
-        }
+    	synchronized (sourceConnections) {
+			Iterator<Connector> iter = sourceConnections.iterator();
+	        while (iter.hasNext()) {
+	            Connector connector = iter.next();
+	            if (connector.getTarget().getID() == targetId)
+	                return connector;
+	        }
+    	}
 
         return null;
     }

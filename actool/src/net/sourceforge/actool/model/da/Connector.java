@@ -110,9 +110,12 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
         getSource().removeSourceConnector(this);
         getTarget().removeTargetConnector(this);
         connected = false;
+//        deleteConnector();
     }
     
-    public Component getSource() {
+   
+
+	public Component getSource() {
         return source;
     }
 
@@ -286,7 +289,15 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
 		}
 		
 	}
-    
+    private void deleteConnector() {
+    	try {
+    		DBManager.preparedUpdate("delete from "+TABLE_NAME+" where connector_id = ?",new Object[]{this.toString()});
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
     private Collection<IXReference> retriveXrefs() {
 			return retriveXrefs(this.toString());
 	}

@@ -21,6 +21,7 @@ public  class PropertyChangeDelegate implements PropertyChangeListener {
 	    }
 	    
 	    public void run() { 
+	    	if(listener!=null)
 	        listener.propertyChange(event);
 	    }
 	}

@@ -36,6 +36,7 @@ public class ComponentSetConstraintCommand extends Command {
 	 * Re-execute command.
 	 */
 	public void redo() {
+		
 		part.getFigure().setBounds(newBounds);
 		part._setLocationProperty(newBounds.getTopLeft());
 	}

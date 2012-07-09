@@ -37,6 +37,21 @@
             name="Architectural Views">
       </category>
    </extension>
+   
+   <extension point="org.eclipse.ui.views">
+         <view
+            category="net.sourceforge.actool.ui.views.Category"
+            class="net.sourceforge.actool.ui.views.XReferenceSummaryView"
+            id="net.sourceforge.actool.ui.views.XReferenceSummaryView"
+            name="Relation Summary View"
+            restorable="true">
+      </view>
+      <category
+            id="net.sourceforge.actool.ui.views.Category"
+            name="Architectural Views">
+      </category>
+   </extension>
+   
    <extension
          id="net.sourceforge.actool.markers.Problem"
          name="Architectural Problem"
