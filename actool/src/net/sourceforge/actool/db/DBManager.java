@@ -30,8 +30,7 @@ public class DBManager implements Runnable {
 		private  Vector<Connection> connectionPool;
 		private  Vector<Connection> busyPool;
 		private  boolean connectionPending;
-		private  final long timeout;
-		private  boolean waitIfBusy;
+		
 		private static  final int poolsize = defaults.MAX_THREADS*2;
 		
 	//--------------------------------------------------db helper functions-----------------------------------------------------------------
@@ -43,8 +42,8 @@ public class DBManager implements Runnable {
 			      connectionPool.addElement(connect());
 			    }
 			connectionPending = false;
-			timeout=60000;
-			waitIfBusy =true;
+			
+			
 		}
 		
 		public synchronized Connection getConnection()
@@ -54,10 +53,9 @@ public class DBManager implements Runnable {
 			        (Connection)connectionPool.lastElement();
 			      int lastIndex = connectionPool.size() - 1;
 			      connectionPool.removeElementAt(lastIndex);
-			      // If connection on available list is closed (e.g.,
-			      // it timed out), then remove it from available list
-			      // and repeat the process of obtaining a connection.
-			      // Also wake up threads that were waiting for a
+			      // If existing connection is closed
+			      // then remove it. repeat the process of obtaining a connection.
+			      // wake up threads that were waiting for a
 			      // connection because maxConnection limit was reached.
 			      if (existingConnection.isClosed()) {
 			        notifyAll(); // Freed up a spot for anybody waiting
@@ -68,32 +66,19 @@ public class DBManager implements Runnable {
 			      }
 			    } else {
 			      
-			      // Three possible cases:
-			      // 1) You haven't reached maxConnections limit. So
-			      //    establish one in the background if there isn't
-			      //    already one pending, then wait for
-			      //    the next available connection (whether or not
-			      //    it was the newly established one).
-			      // 2) You reached maxConnections limit and waitIfBusy
-			      //    flag is false. Throw SQLException in such a case.
-			      // 3) You reached maxConnections limit and waitIfBusy
-			      //    flag is true. Then do the same thing as in second
-			      //    part of step 1: wait for next available connection.
-			      
-//			      if ((totalConnections() < defaults.MAX_THREADS) &&
-//			          !connectionPending) {
-//			        makeBackgroundConnection();
-//			      } else if (!waitIfBusy) {
-//			        throw new SQLException("Connection limit reached");
-//			      }
+			     
+			      if ((totalConnections() < poolsize) &&
+			          !connectionPending) {
+			        makeBackgroundConnection();
+			      } 
 			      // Wait for either a new connection to be established
 			      // (if you called makeBackgroundConnection) or for
 			      // an existing connection to be freed up.
-//			      try {
-//			        wait();
-//			      } catch(InterruptedException ie) {}
+			      try {
+			        wait();
+			      } catch(InterruptedException ie) {}
 			      // Someone freed up a connection, so try again.
-			    	run();
+//			    	run();
 			      return(getConnection());
 			    }
 			  }
@@ -149,9 +134,9 @@ public class DBManager implements Runnable {
 
 			  public synchronized void closeAllConnections() {
 			    closeConnections(connectionPool);
-			    connectionPool = new Vector();
+			    connectionPool = new Vector<Connection>();
 			    closeConnections(busyPool);
-			    busyPool = new Vector();
+			    busyPool = new Vector<Connection>();
 			  }
 
 			  private void closeConnections(Vector connections) {
@@ -204,22 +189,7 @@ public class DBManager implements Runnable {
 			return conn;
 		}
 	
-//		public static Connection checkout(){
-//				Connection result = null;
-//				if(!free.isEmpty()){
-//					try {
-//					while(!free.isEmpty()&&((result=free.poll()).isClosed()));
-//					while(locked.size()<defaults.MAX_THREADS&&(result==null||result.isClosed()))Thread.sleep(20); 
-//						result = connect();
-//					locked.add(result);
-//					} catch (SQLException e) {
-//						// TODO Auto-generated catch block
-//						e.printStackTrace();
-//					}
-//					return result;
-//					
-//				}
-//		}
+
 		
 		public static interface IResultSetDelegate{
 	        public int invoke(ResultSet rs,Object... args)throws SQLException;
@@ -237,20 +207,18 @@ public class DBManager implements Runnable {
 	        instance.free(conn);
 	        return result;
 	    }
-	    public static int preparedQuery(String expression/*,Connection conn*/,IResultSetDelegate delegate,Object... args ) throws SQLException {
-//	        PreparedStatement st=conn.prepareStatement(expression);
-//	        int result = delegate.invoke(st.executeQuery(),args);
-//	        st.close();     // also closes ResultSet rs
-	        return preparedQuery(expression, new Object[0]/*,conn*/,delegate,args);
+	    public static int preparedQuery(String expression,IResultSetDelegate delegate,Object... args ) throws SQLException {
+
+	        return preparedQuery(expression, new Object[0],delegate,args);
 	    }
 
 	//use for SQL commands CREATE, DROP, INSERT and UPDATE
 
-	    public static void preparedUpdate(String expression/*, Connection conn*/) throws SQLException {
-	    	preparedUpdate(expression,new Object[0]/*, conn*/);
+	    public static void preparedUpdate(String expression) throws SQLException {
+	    	preparedUpdate(expression,new Object[0]);
 	        
 	    }
-	    public static  void preparedUpdate(final String expression,final Object[] values/*, Connection conn1*/) throws SQLException {
+	    public static  void preparedUpdate(final String expression,final Object[] values) throws SQLException {
 	    	
 	    	Connection conn = instance.getConnection();
 	        PreparedStatement st = conn.prepareStatement(expression);

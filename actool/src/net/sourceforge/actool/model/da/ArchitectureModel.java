@@ -1,9 +1,7 @@
 package net.sourceforge.actool.model.da;
 
-import java.awt.image.ComponentSampleModel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -18,7 +16,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import net.sourceforge.actool.defaults;
 import net.sourceforge.actool.db.DBManager;
 import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
-//import net.sourceforge.actool.jdt.model.JavaXReference;
 import net.sourceforge.actool.model.ResourceMap;
 import net.sourceforge.actool.model.ResourceMapping;
 import net.sourceforge.actool.model.ia.IElement;
@@ -28,7 +25,6 @@ import net.sourceforge.actool.model.ia.ImplementationChangeDelta;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.model.ia.ImplementationModel;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -38,9 +34,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
-import org.eclipse.ui.views.properties.PropertyDescriptor;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
 
@@ -384,6 +378,10 @@ public class ArchitectureModel extends ArchitectureElement
 		iter = event.getAddedXReferences().iterator();
 		while (iter.hasNext())
 			addXReference(iter.next());
+		iter = event.getCommonXReferences().iterator();
+		while (iter.hasNext())
+		updateCommonXReference(iter.next());
+		
 		
 	}
 	
@@ -655,9 +653,29 @@ public class ArchitectureModel extends ArchitectureElement
     }
     
 
-    
+    public void updateCommonXReference(IXReference xref) {
+		
+		// Map given java elements to model components.
+		Component source = resolveMapping(xref.getSource());
+		Component target = resolveMapping(xref.getTarget());
+		if (source == null || target == null || source.equals(target)) {
+			return;
+		}
+		
+		updateCommonXReference(xref, source, target);
+	}
    
     
+	private void updateCommonXReference(IXReference xref, Component source, Component target){
+		Connector conn = getConnector(source, target, true);
+	    if(!conn.containsXref(xref)){// check if connection already exits before adding.
+  		   conn.addXReference(xref);
+  	   
+  		   if(!connectorList.contains(conn))connectorList.add(conn);
+  	   }
+		
+	}
+
 	public void addXReference(IXReference xref) {
 		
 		// Map given java elements to model components.

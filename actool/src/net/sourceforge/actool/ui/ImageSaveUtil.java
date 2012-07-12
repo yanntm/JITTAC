@@ -14,6 +14,7 @@ import org.eclipse.gef.LayerConstants;
 import org.eclipse.gef.editparts.LayerManager;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.editparts.ScalableRootEditPart;
+import org.eclipse.gef.ui.actions.SetActivePaletteToolAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.Assert;
 import org.eclipse.swt.SWT;
@@ -38,7 +39,7 @@ public class ImageSaveUtil
 		Assert.isNotNull(comp, "null editorPart passed to ImageSaveUtil::save");
 		Assert.isNotNull(saveFilePath, "null saveFilePath passed to ImageSaveUtil::save");
 		
-		if( format != SWT.IMAGE_BMP && format != SWT.IMAGE_JPEG && format != SWT.IMAGE_ICO )
+		if( format != SWT.IMAGE_PNG && format != SWT.IMAGE_JPEG )
 			throw new IllegalArgumentException("Save format not supported");
 				
 		try {
@@ -59,13 +60,13 @@ public class ImageSaveUtil
 		String saveFilePath = getSaveFilePath(comp, -1);
 		if( saveFilePath == null ) return false;
 		
-		int format = SWT.IMAGE_JPEG;
+		int format = SWT.IMAGE_PNG;
 		if( saveFilePath.endsWith(".jpeg") )
 			format = SWT.IMAGE_JPEG;
-		else if( saveFilePath.endsWith(".bmp") )
-			format = SWT.IMAGE_BMP;
-		else if( saveFilePath.endsWith(".ico") )
-			format = SWT.IMAGE_ICO;
+		else if( saveFilePath.endsWith(".png") )
+			format = SWT.IMAGE_PNG;
+		
+
 			
 		return save(comp, saveFilePath, format);
 	}
@@ -75,13 +76,12 @@ public class ImageSaveUtil
 		
 		FileDialog fileDialog = new FileDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), SWT.SAVE);
 		
-		String[] filterExtensions = new String[] {"*.jpeg", "*.bmp", "*.ico"/*, "*.png", "*.gif"*/};
-		if( format == SWT.IMAGE_BMP )
-			filterExtensions = new String[] {"*.bmp"};
+		String[] filterExtensions = new String[] {"*.png","*.jpeg","*.gif"};
+		if( format == SWT.IMAGE_PNG )
+			filterExtensions = new String[] {"*.png"};
 		else if( format == SWT.IMAGE_JPEG )
 			filterExtensions = new String[] {"*.jpeg"};
-		else if( format == SWT.IMAGE_ICO )
-			filterExtensions = new String[] {"*.ico"};
+				
 		fileDialog.setFilterExtensions(filterExtensions);		
 		
 		return fileDialog.open();
@@ -116,7 +116,12 @@ public class ImageSaveUtil
 		GC figureCanvasGC = new GC(figureCanvas);		
 		
 		/* 3. Create a new Graphics for an Image onto which we want to paint rootFigure */
-		Image img = new Image(null, rootFigureBounds.width, rootFigureBounds.height);
+		double wScale,hScale;
+		wScale= 1000.0/rootFigureBounds.width;
+		hScale = 350.0/rootFigureBounds.height;
+		int scale = (int) Math.round(10*Math.min(wScale,hScale));
+		Image img = new Image(null,rootFigureBounds.width*scale,rootFigureBounds.height*scale);
+//		rootFigureBounds.height
 		GC imageGC = new GC(img);
 		imageGC.setBackground(figureCanvasGC.getBackground());
 		imageGC.setForeground(figureCanvasGC.getForeground());
@@ -124,7 +129,10 @@ public class ImageSaveUtil
 		imageGC.setLineStyle(figureCanvasGC.getLineStyle());
 		imageGC.setLineWidth(figureCanvasGC.getLineWidth());
 		imageGC.setXORMode(figureCanvasGC.getXORMode());
+		imageGC.setAntialias(SWT.ON);
 		Graphics imgGraphics = new SWTGraphics(imageGC);
+//		double aspect = rootFigureBounds.width/rootFigureBounds.height;
+		imgGraphics.scale(scale);
 		
 		/* 4. Draw rootFigure onto image. After that image will be ready for save */
 		rootFigure.paint(imgGraphics);
