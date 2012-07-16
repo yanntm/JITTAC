@@ -8,20 +8,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
 
-import javax.swing.RowFilter.ComparisonType;
-
-
-
-import net.sourceforge.actool.model.ResourceMapping;
-import net.sourceforge.actool.model.da.ArchitectureModel;
-import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.model.da.Connector;
 import net.sourceforge.actool.model.ia.IElement;
 import net.sourceforge.actool.model.ia.IXReference;
@@ -36,26 +27,17 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.texteditor.ITextEditor;
 
 
 /**
@@ -76,8 +58,9 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 		
 		@Override
 		public int compare(Node o1, Node o2) {
-			
-			return o1.getName().substring(o1.getName().indexOf("[")+1,o1.getName().indexOf("]")).compareTo(o2.getName().substring(o2.getName().indexOf("[")+1,o2.getName().indexOf("]")));
+			if(o1.getName().contains("[")&&o1.getName().contains("]")&&o2.getName().contains("[")&&o2.getName().contains("]"))
+			return Integer.parseInt(o2.getName().substring(o2.getName().indexOf("[")+1,o2.getName().indexOf("]")))-Integer.parseInt(o1.getName().substring(o1.getName().indexOf("[")+1,o1.getName().indexOf("]")));
+			else return o1.getName().compareTo(o2.getName());
 		}
 	};
    
@@ -87,7 +70,7 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 	 */
 	@Override
 	public void createPartControl(Composite arg0) {
-		this.tree = new Tree(arg0, PROP_TITLE);
+		tree = new Tree(arg0, PROP_TITLE);
 		treeViewer= new TreeViewer(tree);
 
 	    treeViewer.setContentProvider(new MyTreeContentProvider());
@@ -96,21 +79,26 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
             
             public void doubleClick(DoubleClickEvent event) {
            	 if(event==null)return;
+           	 //get selected node
            	 Node selected = (Node)((IStructuredSelection)event.getSelection()).getFirstElement();
            	 Stack<String> nodes = new Stack<String>();
            	 Node currentNode = selected;
+           	 //get nodes parents and add to stack after adding the selected node;
            	 while(currentNode!=null){
            		 String temp = currentNode.getName();
+           		 //strip out [] and type info
            		 if(temp.contains(":")&&temp.contains("[")){
            		 nodes.add(currentNode.getName().substring(currentNode.getName().indexOf(":")+1,currentNode.getName().indexOf("[")).trim());
            		 currentNode = currentNode.getParent();
            		 }else break;
            	 }
+           	 //create the fully qualified name to use as a key 
            	 String str = "";
            	 while(!nodes.isEmpty()) str+=nodes.pop()+".";
            	 if(str.endsWith("."))str=str.substring(0,str.length()-1);
            	 IXReference xref=null;
            	 IResource resource = null;
+           	 //check if key is in target map
            	 if(targetFqns.containsKey(str)){
            		 xref= targetFqns.get(str).key;
            		 resource= xref.getTarget().getResource();
@@ -118,22 +106,24 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 	                 	return;
 	                 
 	                 try {
-	                     IEditorPart editor = IDE.openEditor(getSite().getPage(), (IFile) resource, true);
+	                	 // use xref to open source code in editor
+	                     IDE.openEditor(getSite().getPage(), (IFile) resource, true);
 	                 } catch (PartInitException e) {
 	                     // TODO Auto-generated catch block
 	                     e.printStackTrace();
 	                 }
            	 }
+           	 //else check source map
            	 else if(sourceFqns.containsKey(str)){
            		 xref= sourceFqns.get(str).key;
            		 resource= xref.getSource().getResource();
-           		 if(xref==null) return;
+           		 
 	            	
 	                 
 	                 if (resource==null||resource.getType() != IResource.FILE)
 	                 	return;
 	                 try {
-	                     IEditorPart editor = IDE.openEditor(getSite().getPage(), (IFile) resource, true);
+	                     IDE.openEditor(getSite().getPage(), (IFile) resource, true);
 	                 } catch (PartInitException e) {
 	                     // TODO Auto-generated catch block
 	                     e.printStackTrace();
@@ -170,8 +160,11 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 	    
 	    private  void update(Connector data) {
 	    	Collection<IXReference> xrefs= data.getXReferences();
+	    	// clear maps
 	    	targetFqns.clear();
 	    	sourceFqns.clear();
+	    	
+	    	// file maps with data
 	    	for(IXReference xref : xrefs){
 				String key = xref.getTarget().toString().trim();
 				if(key.endsWith(".java"))
@@ -185,7 +178,7 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 				else sourceFqns.put(key,new Triplet<IXReference,Integer,Integer>(xref,Integer.valueOf(1),Integer.valueOf(countSegments(key,'.'))));
 				
 			}
-	    	//target
+	    	// generate targetMatrix
 	    	int maxSegments = 0;
 	    	for(Triplet<IXReference,Integer,Integer> triplet : targetFqns.values()) maxSegments = Math.max(maxSegments, triplet.segments);
 	    	String[][] targetMatrix = new String[targetFqns.keySet().size()][maxSegments];
@@ -195,11 +188,13 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 	    	}
 	    	
 	    	Vector<Node> nodes = new Vector<Node>();
+	    	// create target node and then build target tree
 	    	Node target = new Node("Target"+ " ["+targetMatrix.length+"]", null);
 	    	calcTree(target,targetMatrix,targetFqns,maxSegments);
-//	    	target.sortSubNodes(nodeComparator);
+	    	// sort the resulting tree layer by layer.
+	    	target.sortSubNodes(nodeComparator);
 	    	nodes.add(target);
-	    	//source
+	    	// generate source matrix
 	    	index=0;
 	    	maxSegments = 0;
 	    	for(Triplet<IXReference,Integer,Integer> triplet : sourceFqns.values()) maxSegments = Math.max(maxSegments, triplet.segments);
@@ -209,79 +204,59 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 	    	}
 	    	Node source = new Node("Source"+ " ["+sourceMatrix.length+"]", null);
 	    	calcTree(source,sourceMatrix,sourceFqns,maxSegments);
-//	    	source.sortSubNodes(nodeComparator);
+	    	source.sortSubNodes(nodeComparator);
 	    	nodes.add(source);
 	    	treeViewer.setInput(nodes);
 	    	treeViewer.expandToLevel(2);
 	    }
 	    
 	    
-	    
+	    // call only this version
 	    private static void calcTree(Node parent, String[][] matrix,HashMap<String, Triplet<IXReference, Integer, Integer>> fqns,int maxColoums) {
-//	    	Vector<Node> result= new Vector<Node>();
+	    	
 	    	String nodeNamePrefix = "";
 			int col =0;
+			// get longest common package name for nodes
 			while(col<maxColoums&&coloumIsEqual(matrix,col)){
 				if(!nodeNamePrefix.equals("")&&!nodeNamePrefix.endsWith("."))nodeNamePrefix+=".";
 				nodeNamePrefix+= getFirstColoumValue(matrix, col);
 				col++;
 			}
-			
+		
 	    	String type=getType(nodeNamePrefix,fqns);
-			Node category= col==0?parent:new Node(type+" "+nodeNamePrefix+ " ["+matrix.length+"]", parent);
-//			result.add(category);
+			// if a common pacage name is not found use parent node else create a node
+	    	Node category= col==0?parent:new Node(type+" "+nodeNamePrefix+ " ["+matrix.length+"]", parent);
 			
+	    	
+	    	// for each of the childern build a sub tree.
 			Set<String> childern = getColoumValues(matrix, col);
 			for(String str : childern){
 				String parentFullname =  getFullname(matrix,col-1);
 				type=getType(parentFullname+"."+str,fqns);
 				Node child= (type!=FIELD&&type!=METHOD)?new Node(type+" "+str+ " ["+countColoumValue(matrix, col, str)+"]", category):new Node(type+" "+str, category);
-//				result.add(child);
+
 				calcTree(getSubMatrix(matrix,str,col,maxColoums),fqns,col+1,child);
 			}
 			
 //			return result;
 		}
-	    
+	    // called recursively
 	    private static void calcTree(String[][] matrix,HashMap<String, Triplet<IXReference, Integer, Integer>> fqns,int currentcol,Node parent) {
 	    	int maxColoums = 0;
 	    	for(int i=0; i<matrix.length;i++)maxColoums=Math.max(maxColoums, matrix[i].length);
 	    	int col = currentcol;
 	    	if(!(col<maxColoums||parent==null))return;
-	    	String nodeName = "";
-//	    	while(col<maxColoums&&coloumIsEqual(matrix,col)){
-//				if(!nodeName.equals("")&&!nodeName.endsWith("."))nodeName+=".";
-//				nodeName+= getFirstColoumValue(matrix, col);
-//				col++;
-//			}
 	    	String parentFullname="";
 	    	String type ="";
-			if(!nodeName.equals("")){
+			Set<String> childern = getColoumValues(matrix, col);
+			for(String str : childern){
 				parentFullname =  getFullname(matrix,col-1);
-				type=getType(parentFullname+"."+nodeName,fqns);
-//				nodeName= type+ " " +nodeName+ " ["+countColoumValue(matrix, col-1, nodeName)+"]";
-				Node category=new Node(type+ " " +nodeName+ " ["+countColoumValue(matrix, col-1, nodeName)+"]", parent);
-				Set<String> childern = getColoumValues(matrix, col);
-				for(String str : childern){
-					if(parentFullname.contains(nodeName))type=getType(parentFullname+"."+str,fqns);
-					else type=getType(parentFullname+"."+nodeName+"."+str,fqns);
-					Node child= (type!=FIELD&&type!=METHOD)?new Node(type+" "+str+ " ["+countColoumValue(matrix, col, str)+"]", category):new Node(type+" "+str, category);
-	//				result.add(child);
-					calcTree(getSubMatrix(matrix,str,col,maxColoums),fqns,col+1,child);
-				}
-			}else{
-				Set<String> childern = getColoumValues(matrix, col);
-				for(String str : childern){
-					parentFullname =  getFullname(matrix,col-1);
-					type=getType(parentFullname+"."+str,fqns);
-					Node child= (type!=FIELD&&type!=METHOD)?new Node(type+" "+str+ " ["+countColoumValue(matrix, col, str)+"]", parent):new Node(type+" "+str, parent);
-	//				result.add(child);
-					calcTree(getSubMatrix(matrix,str,col,maxColoums),fqns,col+1,child);
-				}
-			}
-//			
-//			
+				type=getType(parentFullname+"."+str,fqns);
+				Node child= (type!=FIELD&&type!=METHOD)?new Node(type+" "+str+ " ["+countColoumValue(matrix, col, str)+"]", parent):new Node(type+" "+str, parent);
+				calcTree(getSubMatrix(matrix,str,col,maxColoums),fqns,col+1,child);
+			}	
 		}
+	    
 	    private static String getFullname(String[][] matrix, int i) {
 	    	String result ="";
 	    	int index=0;
@@ -294,8 +269,8 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 		private static String getType(String key,HashMap<String, Triplet<IXReference, Integer, Integer>> fqns) {
 	    	
 	    	
-				if(key.endsWith(")")) return METHOD;
-				else if(key.endsWith("_java")) return CLASS;
+				if(key.endsWith(")")) return METHOD; // ends in ) therefore method.
+				else if(key.endsWith("_java")) return CLASS; // if it end in .java it is a class!
 				else if(fqns.containsKey(key)){
 					switch(fqns.get(key).key.getType()){
 						case IXReference.IMPORT:return CLASS_PACKAGE;
@@ -307,30 +282,19 @@ public class XReferenceSummaryView extends ViewPart implements ISelectionListene
 							String elementName =elm.getName();
 							String className = elm.getResource().getName();
 							className = className.contains(".")?className.substring(0,className.lastIndexOf(".")):className;
-							return elementName.equals(className)? CLASS : FIELD;
+							return elementName.equals(className)? CLASS : FIELD;//tells the difference between implements/extends and fields
 							
 						}
-						default: return "";
+						default: return "";// if it gets here something very strange has happened investigate
 						
 					}
 					
 				}
 	    	
-			return CLASS_PACKAGE;
+			return CLASS_PACKAGE;//it is etheir a class or a package but we cannont tell.
 		}
 
-		private static String getFullname(Node node){
-	    	String result = "";
-	    	Stack<Node> stack = new Stack<Node>();
-	    	Node current = node;
-	    	while(current!=null){
-	    		stack.push(current);
-	    		current=current.getParent();
-	    	}
-	    	while(!stack.isEmpty())result+= stack.pop().getName()+".";
-	    	result= result.endsWith(".")?result: result.substring(0,result.length()-1);
-	    	return result;
-	    }
+		
 	    
 	    private static int countColoumValue(String[][] matrix, int col,	String nodeName) {
 			// TODO Auto-generated method stub
@@ -503,6 +467,7 @@ class Node {
 	  }
 	  
 	  public void sortSubNodes(Comparator<Node> comparator){
+		  if(subNodes==null)return;
 		  Collections.sort(subNodes,comparator);
 		  for(Node n :subNodes) n.sortSubNodes(comparator);
 	  }

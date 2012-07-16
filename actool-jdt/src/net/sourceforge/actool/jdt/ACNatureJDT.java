@@ -1,9 +1,5 @@
 package net.sourceforge.actool.jdt;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import net.sourceforge.actool.jdt.build.ImplementationModelBuilder;
 import net.sourceforge.actool.model.ModelManager;
 
@@ -11,7 +7,6 @@ import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 
 

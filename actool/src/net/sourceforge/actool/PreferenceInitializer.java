@@ -9,7 +9,8 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
 	public void initializeDefaultPreferences() {
-		IEclipsePreferences preferences = new DefaultScope().getNode(ACTool.PLUGIN_ID);
+//		IEclipsePreferences preferences = new DefaultScope().getNode(ACTool.PLUGIN_ID);
+		IEclipsePreferences preferences = DefaultScope.INSTANCE.getNode(ACTool.PLUGIN_ID);
 		
 		// General Settings
 		preferences.putBoolean(Config.AC_ENABLE, false);

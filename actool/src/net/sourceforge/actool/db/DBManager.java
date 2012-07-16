@@ -6,16 +6,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.sourceforge.actool.defaults;
-import net.sourceforge.actool.model.da.Component;
-
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -26,33 +20,31 @@ import org.eclipse.core.runtime.Platform;
 
 public class DBManager implements Runnable {
 		private static DBManager instance = new DBManager();
-//		private static Map<String, Connection> connections = new HashMap<String, Connection>();
-		private  Vector<Connection> connectionPool;
-		private  Vector<Connection> busyPool;
-		private  boolean connectionPending;
+		private  ConcurrentLinkedQueue<Connection> connectionPool;
+		private  ConcurrentLinkedQueue<Connection> busyPool;
+		private  static boolean  initDriver = true;
 		
 		private static  final int poolsize = defaults.MAX_THREADS*2;
 		
 	//--------------------------------------------------db helper functions-----------------------------------------------------------------
 		protected DBManager(){
-//			connections = new HashMap<String, Connection>();
-			connectionPool = new Vector<Connection>(poolsize);
-			busyPool = new Vector<Connection>();
+			connectionPool = new ConcurrentLinkedQueue<Connection>();
+			busyPool = new ConcurrentLinkedQueue<Connection>();
 			for(int i=0; i<poolsize; i++) {
-			      connectionPool.addElement(connect());
+			      connectionPool.add(connect());
 			    }
-			connectionPending = false;
 			
 			
 		}
 		
+		/**
+		 * @since 0.2
+		 */
 		public synchronized Connection getConnection()
 			      throws SQLException {
 			    if (!connectionPool.isEmpty()) {
 			      Connection existingConnection =
-			        (Connection)connectionPool.lastElement();
-			      int lastIndex = connectionPool.size() - 1;
-			      connectionPool.removeElementAt(lastIndex);
+			        (Connection)connectionPool.poll();
 			      // If existing connection is closed
 			      // then remove it. repeat the process of obtaining a connection.
 			      // wake up threads that were waiting for a
@@ -61,48 +53,26 @@ public class DBManager implements Runnable {
 			        notifyAll(); // Freed up a spot for anybody waiting
 			        return(getConnection());
 			      } else {
-			    	  busyPool.addElement(existingConnection);
+			    	  busyPool.add(existingConnection);
 			        return(existingConnection);
 			      }
 			    } else {
-			      
-			     
-			      if ((totalConnections() < poolsize) &&
-			          !connectionPending) {
-			        makeBackgroundConnection();
-			      } 
-			      // Wait for either a new connection to be established
-			      // (if you called makeBackgroundConnection) or for
-			      // an existing connection to be freed up.
-			      try {
-			        wait();
-			      } catch(InterruptedException ie) {}
-			      // Someone freed up a connection, so try again.
-//			    	run();
+			    	run();
 			      return(getConnection());
 			    }
 			  }
 		
 		
-		private void makeBackgroundConnection() {
-		    connectionPending = true;
-		    try {
-		      Thread connectThread = new Thread(this);
-		      connectThread.start();
-		    } catch(OutOfMemoryError oome) {
-		      // Give up on new connection
-		    }
-		  }
-		
-		
 
-		  public void run() {
+		  /**
+		 * @since 0.2
+		 */
+		public void run() {
 		    try {
 		      Connection connection = connect();
 		      synchronized(this) {
-		    	  connectionPool.addElement(connection);
-		        connectionPending = false;
-		        notifyAll();
+		    	  connectionPool.add(connection);
+		    	  notifyAll();
 		      }
 		    } catch(Exception e) { // SQLException or OutOfMemory
 		      // Give up on new connection and wait for existing one
@@ -110,15 +80,20 @@ public class DBManager implements Runnable {
 		    }
 		  }
 		
-		  public synchronized void free(Connection connection) {
-			  busyPool.removeElement(connection);
+		  /**
+		 * @since 0.2
+		 */
+		public synchronized void free(Connection connection) {
+			  busyPool.remove(connection);
 			  if(connectionPool.size()<poolsize)
-			    connectionPool.addElement(connection);
-			    // Wake up threads that are waiting for a connection
-			    notifyAll(); 
+				  connectionPool.add(connection);
+				  notifyAll();
 			  }
 			    
-			  public synchronized int totalConnections() {
+			  /**
+			 * @since 0.2
+			 */
+			public synchronized int totalConnections() {
 			    return(connectionPool.size() +
 			    		busyPool.size());
 			  }
@@ -130,23 +105,24 @@ public class DBManager implements Runnable {
 			   *  connections are guaranteed to be closed when
 			   *  garbage collected. But this method gives more control
 			   *  regarding when the connections are closed.
+			 * @since 0.2
 			   */
 
 			  public synchronized void closeAllConnections() {
 			    closeConnections(connectionPool);
-			    connectionPool = new Vector<Connection>();
+			    connectionPool.clear();
 			    closeConnections(busyPool);
-			    busyPool = new Vector<Connection>();
+			    busyPool.clear();
 			  }
 
-			  private void closeConnections(Vector connections) {
+			  private void closeConnections(ConcurrentLinkedQueue<Connection> connectionPool2) {
 			    try {
-			      for(int i=0; i<connections.size(); i++) {
-			        Connection connection =
-			          (Connection)connections.elementAt(i);
-			        if (!connection.isClosed()) {
-			          connection.close();
-			        }
+			    	Iterator<Connection> it = connectionPool2.iterator();
+			    	while(it.hasNext()) {
+				        Connection connection = it.next();
+				        if (!connection.isClosed()) {
+				        	connection.close();
+				        }
 			      }
 			    } catch(SQLException sqle) {
 			      // Ignore errors; garbage collect anyhow
@@ -171,17 +147,11 @@ public class DBManager implements Runnable {
 		protected static Connection connect(String connectionString, String user, String password) {
 			Connection conn = null;
 			try{
-				String key = connectionString+user+password;
-				Class.forName("org.hsqldb.jdbcDriver");
-//				if(connections.containsKey(key)){
-//					if(!(conn=connections.get(key)).isClosed())
-//					return connections.get(key);
-//					else connections.remove(key);
-//				}	
+				if(initDriver){
+					Class.forName("org.hsqldb.jdbcDriver");
+					initDriver=false;
+				}
 			    conn = DriverManager.getConnection(connectionString, user, password);
-//			    connections.put(key, conn);
-				
-				
 			}
 			catch(Exception e) {
 			    System.out.println(e.toString());
@@ -197,6 +167,9 @@ public class DBManager implements Runnable {
 		
 		//use for SQL command SELECT
 	   
+	    /**
+		 * @since 0.2
+		 */
 	    public static int preparedQuery(String expression, Object[] values/*,Connection conn1*/,IResultSetDelegate delegate,Object... args ) throws SQLException {
 	    	Connection conn = instance.getConnection();
 	    	PreparedStatement st=conn.prepareStatement(expression);
@@ -207,6 +180,9 @@ public class DBManager implements Runnable {
 	        instance.free(conn);
 	        return result;
 	    }
+	    /**
+		 * @since 0.2
+		 */
 	    public static int preparedQuery(String expression,IResultSetDelegate delegate,Object... args ) throws SQLException {
 
 	        return preparedQuery(expression, new Object[0],delegate,args);
@@ -214,10 +190,16 @@ public class DBManager implements Runnable {
 
 	//use for SQL commands CREATE, DROP, INSERT and UPDATE
 
+	    /**
+		 * @since 0.2
+		 */
 	    public static void preparedUpdate(String expression) throws SQLException {
 	    	preparedUpdate(expression,new Object[0]);
 	        
 	    }
+	    /**
+		 * @since 0.2
+		 */
 	    public static  void preparedUpdate(final String expression,final Object[] values) throws SQLException {
 	    	
 	    	Connection conn = instance.getConnection();

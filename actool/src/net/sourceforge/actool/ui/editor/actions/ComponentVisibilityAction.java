@@ -8,7 +8,6 @@ import net.sourceforge.actool.ui.editor.commands.ComponentVisibilityCommand;
 import net.sourceforge.actool.ui.editor.model.ComponentEditPart;
 import net.sourceforge.actool.ui.editor.model.Visibility;
 
-import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.gef.ui.actions.SelectionAction;
 import org.eclipse.ui.IWorkbenchPart;
 

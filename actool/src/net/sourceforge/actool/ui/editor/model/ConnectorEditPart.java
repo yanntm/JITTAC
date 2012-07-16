@@ -3,12 +3,6 @@ package net.sourceforge.actool.ui.editor.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import net.sourceforge.actool.model.da.Connector;
 import net.sourceforge.actool.ui.editor.commands.ConnectorDeleteCommand;
 
@@ -25,7 +19,6 @@ import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 import org.eclipse.gef.editpolicies.ConnectionEditPolicy;
 import org.eclipse.gef.requests.GroupRequest;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 
 
 

@@ -1,25 +1,15 @@
 package net.sourceforge.actool.jdt.proposals;
 
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.CompletionContext;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
-import org.eclipse.jface.viewers.StyledString;
-import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaAllCompletionProposalComputer;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.TextStyle;
-
+@SuppressWarnings("restriction")
 public class ProposalComputer implements IJavaCompletionProposalComputer {
 	 
 	private static JavaAllCompletionProposalComputer hpc = new JavaAllCompletionProposalComputer();

@@ -10,21 +10,17 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISelectionListener;
@@ -54,7 +50,15 @@ public class XReferenceView extends ViewPart
         getSite().getWorkbenchWindow().getSelectionService().removeSelectionListener(this);
         super.dispose();
     }
-
+     
+    class Pair<T1,T2>{
+    	T1 key;
+    	T2 val;
+    	Pair(T1 key, T2 val){
+    		this.key=key;
+    		this.val=val;
+    	}
+    }
     public void createPartControl(Composite parent) {
         
         // Create the table control
@@ -65,7 +69,9 @@ public class XReferenceView extends ViewPart
         viewer.setSorter(new ViewerSorter(){
         	@Override
         	public void sort(Viewer viewer, Object[] elements) {
-        		// TODO change to sort by frequency then alfa.
+        		
+        		
+        		
         		super.sort(viewer, elements);
         	}
         	
@@ -122,7 +128,6 @@ public class XReferenceView extends ViewPart
     private SelectionAdapter getSelectionAdapter(final TableColumn column,
 			final int index) {
 		SelectionAdapter selectionAdapter = new SelectionAdapter() {
-			boolean flip = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				viewer.getTable().setSortDirection((sortdirection[index]*=-1)==1?SWT.UP:SWT.DOWN);

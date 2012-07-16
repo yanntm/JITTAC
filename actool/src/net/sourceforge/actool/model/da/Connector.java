@@ -1,19 +1,16 @@
 package net.sourceforge.actool.model.da;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.logging.Logger;
 
 import net.sourceforge.actool.db.DBManager;
 import net.sourceforge.actool.db.DBManager.IResultSetDelegate;
 import net.sourceforge.actool.model.ia.IXReference;
 //import net.sourceforge.actool.jdt.model.JavaXReference;
 
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.PropertyDescriptor;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
@@ -67,8 +64,7 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
     	try {
 			initDb();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.getAnonymousLogger().warning(e.getMessage());
 		}
     	this.source = source;
         this.target = target;
@@ -289,15 +285,7 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
 		}
 		
 	}
-    private void deleteConnector() {
-    	try {
-    		DBManager.preparedUpdate("delete from "+TABLE_NAME+" where connector_id = ?",new Object[]{this.toString()});
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
+    
     private Collection<IXReference> retriveXrefs() {
 			return retriveXrefs(this.toString());
 	}
@@ -305,20 +293,16 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
     public static Collection<IXReference> retriveXrefs(String connectorId) {
 		LinkedList<IXReference> result= new LinkedList<IXReference>();
 		try {
-//			DBManager.preparedQuery("select distinct xref , type_name from "+TABLE_NAME+" where connector_id= ?",new Object[]{connectorId} , dbConn, new IResultSetDelegate(){
-			DBManager.preparedQuery("select distinct xref from "+TABLE_NAME+" where connector_id= ?",new Object[]{connectorId} , /*dbConn,*/ new IResultSetDelegate(){
+			DBManager.preparedQuery("select distinct xref from "+TABLE_NAME+" where connector_id= ?",new Object[]{connectorId} , new IResultSetDelegate(){
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
+					@SuppressWarnings("unchecked")
 					LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
-//					while(rs.next())result.add(createXref(rs.getString("xref"), rs.getString("type_name")));
 					while(rs.next())result.add(createXref(rs.getString("xref")));
 					return 0;
 				}
 				
-//				private IXReference createXref(String xref,String typeName){
-//					if(typeName.equals(JavaXReference.class.getName())) return JavaXReference.fromString(xref);
-//					return null;
 				private IXReference createXref(String xref){
 					return ArchitectureModel.xrefStringFactory.createXReference(xref);
 				}
@@ -359,9 +343,7 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
     
     public static String findConnectorId(IXReference xref){
     	String[] id = new String[]{""};
-//    	if(xref instanceof JavaXReference){
 	    	try {
-//				DBManager.query("select connector_id as id from "+TABLE_NAME+" where xref= '" + ((JavaXReference)xref).toString()+"'" , dbConn, new IResultSetDelegate(){
 				DBManager.preparedQuery("select connector_id as id from "+TABLE_NAME+" where xref= ?" ,new Object[]{ArchitectureModel.xrefStringFactory.toString(xref)}, /*dbConn,*/ new IResultSetDelegate(){
 	
 					@Override
@@ -377,7 +359,6 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-//    	}
     	return id[0];
     }
     
@@ -390,6 +371,9 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
     	initdb=false;
 	}
 
+	/**
+	 * @since 0.2
+	 */
 	@Override
 	public int compareTo(Connector o) {
 		return this.toString().compareTo(o.toString());

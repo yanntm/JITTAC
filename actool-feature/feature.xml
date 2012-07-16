@@ -2,7 +2,7 @@
 <feature
       id="net.sourceforge.actool"
       label="Architecture Consistency Tool"
-      version="0.1.2">
+      version="0.2.0">
 
    <description url="http://actool.sourceforge.net">
       Architecture Consistency plug-in for Eclipse helps maintaining consistency between the architectural design and the implementation. It detects the potential problem areas by a method based on Reflexion Model (jrmtool) and prompts the developer.
@@ -117,7 +117,7 @@ This Agreement is governed by the laws of the State of New York and the intellec
       <import plugin="org.eclipse.ui.editors" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.ide" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.views" match="greaterOrEqual"/>
-      <import plugin="net.sourceforge.actool" version="0.1.0" match="equivalent"/>
+      <import plugin="net.sourceforge.actool" version="0.2.0" match="equivalent"/>
    </requires>
 
    <plugin

@@ -8,11 +8,11 @@ public final class defaults {
 	public static final String MODEL = "Model";
 	public static final String CONNECTOR_ID = "CONNECTOR_ID";
 	/**
-	 * @since 0.1
+	 * @since 0.2
 	 */
 	public static final String PROJECT = "PROJECT";
 	/**
-	 * @since 0.1
+	 * @since 0.2
 	 */
 	public static final int MAX_THREADS = Runtime.getRuntime().availableProcessors()*4;
 }

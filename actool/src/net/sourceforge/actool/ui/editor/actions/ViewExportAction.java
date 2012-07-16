@@ -1,18 +1,8 @@
 package net.sourceforge.actool.ui.editor.actions;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import net.sourceforge.actool.ui.editor.commands.ComponentVisibilityCommand;
 import net.sourceforge.actool.ui.editor.commands.ViewExportCommand;
 import net.sourceforge.actool.ui.editor.model.ArchitectureModelEditPart;
-import net.sourceforge.actool.ui.editor.model.ComponentEditPart;
-import net.sourceforge.actool.ui.editor.model.Visibility;
-
-import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.ui.actions.SelectionAction;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPart;
 
 public class ViewExportAction extends SelectionAction {

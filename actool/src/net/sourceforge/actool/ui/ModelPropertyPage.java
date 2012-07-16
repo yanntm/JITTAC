@@ -3,8 +3,6 @@ package net.sourceforge.actool.ui;
 //import net.sourceforge.actool.Config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-
 import net.sourceforge.actool.ProblemManager;
 import net.sourceforge.actool.model.ModelManager;
 import net.sourceforge.actool.model.da.ArchitectureModel;
@@ -17,9 +15,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;

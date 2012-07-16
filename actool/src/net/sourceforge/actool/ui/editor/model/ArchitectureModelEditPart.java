@@ -130,6 +130,7 @@ public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
 	/* (non-Javadoc)
 	 * @see net.sourceforge.actool.ui.editor.model.IViolationHighlighter#highlightViolation(java.lang.String)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public void highlightViolation(String id) {
 		List<ComponentEditPart> temp =this.getChildren();

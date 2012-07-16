@@ -1,26 +1,17 @@
 package net.sourceforge.actool.jdt.proposals;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Logger;
 
-import net.sourceforge.actool.jdt.model.JavaXReference;
-import net.sourceforge.actool.model.ResourceMapping;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.model.da.Connector;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
@@ -32,15 +23,17 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.TextStyle;
-import org.eclipse.jdt.core.CompletionProposal;
 
-
+@SuppressWarnings("restriction")
 public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
+	
 	private static RelevanceSorter rSort= new RelevanceSorter();
+	
 	private static AlphabeticSorter alphaSorter = new AlphabeticSorter();
 	private static JavaContentAssistInvocationContext context= null;
 	private static Component parentComp =null;
 //	private static LinkedList<String> projectNameSpaces = new LinkedList<String>();
+	
 	@Override
 	public int compare(ICompletionProposal arg0, ICompletionProposal arg1) {
 		int vc0, vc1;
@@ -123,10 +116,10 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 //		private int violationChecker(ICompletionProposal pro, Map<ICompletionProposal, Boolean> isInProject){
 		// return  -1 mapped non violation 0 unmapped 1 violation
 //		isInProject.put(pro,false);
-		if(this.parentComp == null ) {
+		if(parentComp == null ) {
 			update() ;
 		}
-		if(this.parentComp != null ) {
+		if(parentComp != null ) {
 			AbstractJavaCompletionProposal current = (AbstractJavaCompletionProposal) pro;
 			String qualifiedProposalName ="";
 			if(current.getSortString().startsWith("class :")){
@@ -192,7 +185,7 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 			Component proposedComponent = ArchitectureModel.getComponentByFQN(qualifiedProposalName);		
 			if(proposedComponent == null) 
 				return 0;
-			if(this.parentComp.equals(proposedComponent)) return -1;
+			if(parentComp.equals(proposedComponent)) return -1;
 			List<Connector> conns = parentComp.getSourceConnectors();
 			for(Connector c : conns) if(c.isEnvisaged()&&c.getTarget().equals(proposedComponent))return -1;
 			return 1;
@@ -218,8 +211,7 @@ public class ArcitechtualComparator implements Comparator<ICompletionProposal>{
 			IJavaElement element= cunit.getElementAt(offset);
 			parentComp = ArchitectureModel.getComponentByIJavaElement(element);
 			} catch (JavaModelException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Logger.getAnonymousLogger().warning(e.getMessage());
 			}
 		}
 		

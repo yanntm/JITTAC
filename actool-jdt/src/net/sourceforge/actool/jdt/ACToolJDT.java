@@ -3,16 +3,8 @@ package net.sourceforge.actool.jdt;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sourceforge.actool.jdt.model.JavaModelFactory;
 import net.sourceforge.actool.jdt.util.ProjectTracker;
-import net.sourceforge.actool.model.ModelManager;
-import net.sourceforge.actool.model.da.ArchitectureModel;
-
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -43,12 +35,12 @@ public class ACToolJDT extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-
-		ModelManager manager = ModelManager.getDefault();		
-		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-		IProject[] projects = root.getProjects();
-		
 		// The code below doesn't seam to be requited at the moment.
+//		ModelManager manager = ModelManager.getDefault();		
+//		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+//		IProject[] projects = root.getProjects();
+		
+		
 //		for (int i = 0; i < projects.length; ++i) {
 //			// Only process java projectList.
 //			if (!projects[i].hasNature(JavaCore.NATURE_ID))

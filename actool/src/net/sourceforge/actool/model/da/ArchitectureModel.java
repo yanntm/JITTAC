@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.logging.Logger;
 
 import net.sourceforge.actool.defaults;
 import net.sourceforge.actool.db.DBManager;
@@ -51,19 +52,15 @@ public class ArchitectureModel extends ArchitectureElement
     public static final String COMPONENTS   = "components";
 	public static final String _DELETION  = "_deletion";
 	/**
-	 * @since 0.1
+	 * @since 0.2
 	 */
 	public static final String EMAIL      = "email";
-//	public static final String NAME      = "name";
 	public static IXReferenceStringFactory xrefStringFactory= null;
     public static final IPropertyDescriptor[] propertyDescriptors = new IPropertyDescriptor[]  {
          new TextPropertyDescriptor(EMAIL, "Email")
     };
     private static Map<String,String> emailAddresses = new HashMap<String, String>();
-//    private String email=loadEmail();
-//    private static Connection dbConn;  
-//	private static Map<String, Component> components = new HashMap<String, Component>();
-	private static Map<ArchitectureModel, HashMap<String, Component>> components = new HashMap<ArchitectureModel,HashMap<String, Component>>();
+    private static Map<ArchitectureModel, HashMap<String, Component>> components = new HashMap<ArchitectureModel,HashMap<String, Component>>();
 	private  ResourceMap map=null;
 	private  ConcurrentSkipListSet<Connector> connectorList = new ConcurrentSkipListSet<Connector>();
 	private final IResource resource;
@@ -72,7 +69,6 @@ public class ArchitectureModel extends ArchitectureElement
 	private boolean initDb =true;
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
-//		email=loadEmail();
 		if(map==null)map =  new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
 		components.put(this, new HashMap<String, Component>());
 		this.properties = new ModelProperties(resource);
@@ -139,16 +135,9 @@ public class ArchitectureModel extends ArchitectureElement
     					try {
     						t.join();
     					} catch (InterruptedException e) {
-    						// TODO Auto-generated catch block
-    						e.printStackTrace();
+    						Logger.getAnonymousLogger().warning(e.getMessage());
     					}
-//	                IXReference xref = xrefs.next();
-//	                
-//	                if (mapping.matches(xref.getSource().getResource())) {              
-//	                    connector.removeXReference(xref);
-//	                    if (!mapping.getComponent().equals(connector.getTarget()))
-//	                    	addXReference(xref, mapping.getComponent(), connector.getTarget());
-//	                }
+
 	            }
 	        }
 	        
@@ -191,16 +180,9 @@ public class ArchitectureModel extends ArchitectureElement
     					try {
     						t.join();
     					} catch (InterruptedException e) {
-    						// TODO Auto-generated catch block
-    						e.printStackTrace();
+    						Logger.getAnonymousLogger().warning(e.getMessage());
     					}
-//                    IXReference xref = xrefs.next();
-//                    
-//                    if (mapping.matches(xref.getTarget().getResource())) {              
-//                        connector.removeXReference(xref);
-//                        if (!connector.getSource().equals(mapping.getComponent()))
-//                        	addXReference(xref, connector.getSource(), mapping.getComponent());
-//                    }
+
                 }
             }
 	    }
@@ -260,23 +242,9 @@ public class ArchitectureModel extends ArchitectureElement
 					try {
 						t.join();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						Logger.getAnonymousLogger().warning(e.getMessage());
 					}
-//                IXReference xref = xrefs.next();
-//                
-//                // If the x-reference does not resolve any more 
-//                // that means it was matched by the removed mapping and is un-mapped now.
-//                Component resolved = map.resolveMapping(xref.getSource().getResource());
-//                if (resolved == null || resolved.equals(connector.getTarget())) {
-//                    connector.removeXReference(xref);
-//                    addUnresolvedXReference(xref);
-//                } else if (!resolved.equals(component)) {
-//                    connector.removeXReference(xref);
-//                    
-//                    // Get connection between the components, if none exists, create one.
-//                    getConnector(resolved, connector.getTarget(), true).addXReference(xref);
-//                }
+
             }
             
             if (!connector.isEnvisaged() && !connector.hasXReferences())
@@ -330,25 +298,8 @@ public class ArchitectureModel extends ArchitectureElement
 					try {
 						t.join();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						Logger.getAnonymousLogger().warning(e.getMessage());
 					}
-            	
-            	
-//                IXReference xref = xrefs.next();
-//                
-//                // If the x-reference does not resolve any more 
-//                // that means it was matched by the removed mapping and is un-mapped now.
-//                Component resolved = map.resolveMapping(xref.getTarget().getResource());
-//                if (resolved == null || resolved.equals(connector.getSource())) {
-//                    connector.removeXReference(xref);
-//                    addUnresolvedXReference(xref);
-//                } else if (!resolved.equals(component)) {
-//                    connector.removeXReference(xref);
-//                    
-//                    // Get connection between the components, if none exists, create one.
-//                    getConnector(connector.getSource(), resolved, true).addXReference(xref);
-//                }
             }
             
             if (!connector.isEnvisaged() && !connector.hasXReferences())
@@ -576,6 +527,7 @@ public class ArchitectureModel extends ArchitectureElement
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
+					@SuppressWarnings("unchecked")
 					LinkedList<String> result= (LinkedList<String>) args[0];
 					while(rs.next())result.add(rs.getString("connector_id"));
 					return 0;
@@ -588,6 +540,7 @@ public class ArchitectureModel extends ArchitectureElement
 						@Override
 						public int invoke(ResultSet rs, Object... args) throws SQLException {
 							if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
+							@SuppressWarnings("unchecked")
 							LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
 							while(rs.next())result.add(createXref(rs.getString("xref")));
 							return 0;
@@ -599,8 +552,7 @@ public class ArchitectureModel extends ArchitectureElement
 						
 					},result);
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					Logger.getAnonymousLogger().warning(e.getMessage());
 				}
 				
 			}
@@ -632,13 +584,11 @@ public class ArchitectureModel extends ArchitectureElement
 					try {
 						t.join();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						Logger.getAnonymousLogger().warning(e.getMessage());
 					}
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.getAnonymousLogger().warning(e.getMessage());
 		}
     	System.gc();
     }
@@ -653,6 +603,9 @@ public class ArchitectureModel extends ArchitectureElement
     }
     
 
+    /**
+	 * @since 0.2
+	 */
     public void updateCommonXReference(IXReference xref) {
 		
 		// Map given java elements to model components.
@@ -740,8 +693,7 @@ public class ArchitectureModel extends ArchitectureElement
 			try {
 				DBManager.preparedUpdate("insert into "+unresolvedTableName+" values (?)",new Object[]{xrefStringFactory.toString(xref)} /*,dbConn*/);
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Logger.getAnonymousLogger().warning(e.getMessage());
 			}
 		}
 	}
@@ -761,8 +713,7 @@ public class ArchitectureModel extends ArchitectureElement
 					
 				},result);
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Logger.getAnonymousLogger().warning(e.getMessage());
 			}
     	return result[0]; 
 	}
@@ -771,14 +722,13 @@ public class ArchitectureModel extends ArchitectureElement
 		removeUnresolvedXReference(xrefStringFactory.toString(xref));
 	}
 	/**
-	 * @since 0.1
+	 * @since 0.2
 	 */
 	protected void removeUnresolvedXReference(String xref) {
 		try {
 			DBManager.preparedUpdate("delete from "+unresolvedTableName+"  where xref=?",new Object[]{xref}/*,dbConn*/);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.getAnonymousLogger().warning(e.getMessage());
 		}
 	}
     protected void reprocessUnresolvedXReferences() {
@@ -857,19 +807,15 @@ public class ArchitectureModel extends ArchitectureElement
         
     }
 
-    private String loadEmail() {
-		// TODO Auto-generated method stub
-		return "Architect@company.com";
-	}
     /**
-	 * @since 0.1
+	 * @since 0.2
 	 */
     public String getEmail(){
       	return getEmail(this.resource.getFullPath());
     }
     
     /**
-	 * @since 0.1
+	 * @since 0.2
 	 */
     public static String getEmail(IPath fullPath){
     	String result = emailAddresses.get(fullPath.toString());
@@ -884,7 +830,7 @@ public class ArchitectureModel extends ArchitectureElement
     }
 
 	/**
-	 * @since 0.1
+	 * @since 0.2
 	 */
 	public void setEmail(String value) {
 		emailAddresses.put(this.resource.getFullPath().toString(),value);
@@ -924,6 +870,7 @@ public class ArchitectureModel extends ArchitectureElement
 				@Override
 				public int invoke(ResultSet rs, Object... args) throws SQLException {
 					if(args.length!=1||!(args[0] instanceof LinkedList<?>)) return -1;
+					@SuppressWarnings("unchecked")
 					LinkedList<IXReference> result= (LinkedList<IXReference>) args[0];
 					while(rs.next()){
 						String current = rs.getString("xref");
@@ -940,8 +887,7 @@ public class ArchitectureModel extends ArchitectureElement
 				
 			},result);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.getAnonymousLogger().warning(e.getMessage());
 		}
 		return result;
 	}
@@ -963,8 +909,7 @@ public class ArchitectureModel extends ArchitectureElement
 					
 				},result);
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block 
-				e.printStackTrace();
+				Logger.getAnonymousLogger().warning(e.getMessage());
 			}
     	
     	return result[0]; 
@@ -977,13 +922,12 @@ public class ArchitectureModel extends ArchitectureElement
 			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL)"/*,  dbConn*/);
 			this.initDb =false;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.getAnonymousLogger().warning(e.getMessage());
 		}
 		
 	}
 	 /**
-	 * @since 0.1
+	 * @since 0.2
 	 */
 	public  static Component getComponentByIJavaElement(IJavaElement element){
 	    	return getComponentByFQN(getFullname(element));
@@ -1006,7 +950,7 @@ public class ArchitectureModel extends ArchitectureElement
 			return fullname;
 		}
 	/**
-	 * @since 0.1
+	 * @since 0.2
 	 */
 	public static Component getComponentByFQN(String fullname) {
 		Component result=null;

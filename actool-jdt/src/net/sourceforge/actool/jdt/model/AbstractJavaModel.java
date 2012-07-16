@@ -3,13 +3,12 @@ package net.sourceforge.actool.jdt.model;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import net.sourceforge.actool.model.ia.IXReference;
-import net.sourceforge.actool.model.ia.IXReferenceFactory;
 import net.sourceforge.actool.model.ia.IXReferenceStringFactory;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.model.ia.ImplementationModel;
 
 /**
- * @since 0.1
+ * @since 0.2
  */
 public abstract class AbstractJavaModel extends ImplementationModel implements IXReferenceStringFactory  {
 

@@ -26,7 +26,7 @@ public class ResourceMapping {
     }
     
     /**
-	 * @since 0.1
+	 * @since 0.2
 	 */
     public String getName(){
 		String result = this.resource.getLocation().toString();
@@ -44,6 +44,9 @@ public class ResourceMapping {
     	
     }
 
+	/**
+	 * @since 0.2
+	 */
 	public static String getNamspaceFromProjectPath(IPath path) {
 		String result;
 		File crawler = path.toFile();

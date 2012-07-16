@@ -1,7 +1,5 @@
 package net.sourceforge.actool.ui.actions;
 
-import java.util.Iterator;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -26,10 +24,11 @@ public class SetModelControlledProjectsAction implements IObjectActionDelegate {
 	 */
 	public void run(IAction action) {
 		if (selection instanceof IStructuredSelection) {
-			for (Iterator<?> iter = ((IStructuredSelection) selection).iterator(); iter.hasNext();) {
-				Object element = iter.next();
-				
-			}
+			//i don't think this actually dose anything so i'm commenting it out. investigate?
+//			for (Iterator<?> iter = ((IStructuredSelection) selection).iterator(); iter.hasNext();) {
+//				Object element = iter.next();
+//				
+//			}
 
 			selectProjects();
 		}

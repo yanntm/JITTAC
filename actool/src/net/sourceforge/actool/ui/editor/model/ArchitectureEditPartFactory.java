@@ -1,13 +1,10 @@
 package net.sourceforge.actool.ui.editor.model;
 
 import java.util.LinkedList;
-import java.util.List;
-
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.model.da.Connector;
 
-import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartFactory;
 

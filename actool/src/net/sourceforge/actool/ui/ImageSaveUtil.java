@@ -9,14 +9,10 @@ import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.SWTGraphics;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.LayerConstants;
 import org.eclipse.gef.editparts.LayerManager;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
-import org.eclipse.gef.editparts.ScalableRootEditPart;
-import org.eclipse.gef.ui.actions.SetActivePaletteToolAction;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.util.Assert;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -24,7 +20,6 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
 /**
  * file from http://www.eclipse.org/forums/index.php/t/64088/
@@ -36,9 +31,9 @@ public class ImageSaveUtil
 {	
 	public static boolean save(ArchitectureModelEditPart comp,  String saveFilePath, int format)
 	{			
-		Assert.isNotNull(comp, "null editorPart passed to ImageSaveUtil::save");
-		Assert.isNotNull(saveFilePath, "null saveFilePath passed to ImageSaveUtil::save");
-		
+
+		 assert(comp!=null):"null editorPart passed to ImageSaveUtil::save";
+		 assert(saveFilePath!=null):"null saveFilePath passed to ImageSaveUtil::save";
 		if( format != SWT.IMAGE_PNG && format != SWT.IMAGE_JPEG )
 			throw new IllegalArgumentException("Save format not supported");
 				
@@ -54,8 +49,8 @@ public class ImageSaveUtil
 	
 	public static boolean save(ArchitectureModelEditPart comp)
 	{
-		Assert.isNotNull(comp, "null editorPart passed to ImageSaveUtil::save");
 		
+	    assert(comp!=null):"null editorPart passed to ImageSaveUtil::save";
 		
 		String saveFilePath = getSaveFilePath(comp, -1);
 		if( saveFilePath == null ) return false;
@@ -96,7 +91,7 @@ public class ImageSaveUtil
 		 * the key LayerManager.ID ... well that is because ScalableRootEditPart manages all layers that
 		 * are hosted on a FigureCanvas. Many layers exist for doing different things */
 		ScalableFreeformRootEditPart rootEditPart= null;
-		Iterator it = comp.getRoot().getViewer().getEditPartRegistry().values().iterator();
+		Iterator<?> it = comp.getRoot().getViewer().getEditPartRegistry().values().iterator();
 		while(it.hasNext()){
 			
 			Object current = it.next();
@@ -105,7 +100,6 @@ public class ImageSaveUtil
 				break;
 			}
 		}
-//		ScalableRootEditPart rootEditPart = (ScalableRootEditPart)comp.getRoot().getViewer().getEditPartRegistry().get(LayerManager.ID);
 		IFigure rootFigure = ((LayerManager)rootEditPart).getLayer(LayerConstants.PRINTABLE_LAYERS);//rootEditPart.getFigure();
 		Rectangle rootFigureBounds = rootFigure.getBounds();		
 		
@@ -121,17 +115,14 @@ public class ImageSaveUtil
 		hScale = 350.0/rootFigureBounds.height;
 		int scale = (int) Math.round(10*Math.min(wScale,hScale));
 		Image img = new Image(null,rootFigureBounds.width*scale,rootFigureBounds.height*scale);
-//		rootFigureBounds.height
 		GC imageGC = new GC(img);
 		imageGC.setBackground(figureCanvasGC.getBackground());
 		imageGC.setForeground(figureCanvasGC.getForeground());
 		imageGC.setFont(figureCanvasGC.getFont());
 		imageGC.setLineStyle(figureCanvasGC.getLineStyle());
 		imageGC.setLineWidth(figureCanvasGC.getLineWidth());
-		imageGC.setXORMode(figureCanvasGC.getXORMode());
 		imageGC.setAntialias(SWT.ON);
 		Graphics imgGraphics = new SWTGraphics(imageGC);
-//		double aspect = rootFigureBounds.width/rootFigureBounds.height;
 		imgGraphics.scale(scale);
 		
 		/* 4. Draw rootFigure onto image. After that image will be ready for save */

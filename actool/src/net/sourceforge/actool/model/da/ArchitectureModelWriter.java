@@ -135,6 +135,9 @@ public class ArchitectureModelWriter {
             e.printStackTrace();
         }
     }
+    /**
+	 * @since 0.2
+	 */
     protected static void writeEmail(XMLStreamWriter writer, ArchitectureModel model, int level)
             throws XMLStreamException {
 

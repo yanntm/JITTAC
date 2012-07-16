@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Vector;
 
 import net.sourceforge.actool.defaults;
-import net.sourceforge.actool.model.ia.IXReferenceFactory;
 import net.sourceforge.actool.model.ia.ImplementationChangeDelta;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 
@@ -27,7 +26,7 @@ import org.eclipse.jdt.core.JavaCore;
 
 
 /**
- * @since 0.1
+ * @since 0.2
  */
 public class JavaModel extends AbstractJavaModel{
 

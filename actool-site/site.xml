@@ -12,5 +12,8 @@
    <feature url="features/net.sourceforge.actool_0.1.2.jar" id="net.sourceforge.actool" version="0.1.2">
       <category name="net.sourceforge.actool"/>
    </feature>
+   <feature url="features/net.sourceforge.actool_0.2.0.jar" id="net.sourceforge.actool" version="0.2.0">
+      <category name="net.sourceforge.actool"/>
+   </feature>
    <category-def name="net.sourceforge.actool" label="Architecture Consistency Tool"/>
 </site>
