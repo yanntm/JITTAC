@@ -44,6 +44,8 @@ public class ProblemManager extends ArchitectureModelListener {
 
     protected ProblemManager(ArchitectureModel model) {
     	this.model = model;
+    	if(getControlledProjects().length==0)
+    	setControlledProjects(ResourcesPlugin.getWorkspace().getRoot().getProjects());
     }
     
 	public static ProblemManager getInstance(ArchitectureModel model) {

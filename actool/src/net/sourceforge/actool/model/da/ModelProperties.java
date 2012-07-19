@@ -6,6 +6,8 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 
 public class ModelProperties {
 	public static final QualifiedName UNMAPPED_SEVERITY	= new QualifiedName(ACTool.PLUGIN_ID, "unmappedSeverity");
@@ -54,7 +56,12 @@ public class ModelProperties {
 	
 	protected String getProperty(QualifiedName key) {
 		try {
-			return getResource().getPersistentProperty(key);
+			String result =getResource().getPersistentProperty(key);
+			if(result==null){
+				result= new DefaultScope().getNode(ACTool.PLUGIN_ID).get(key.toString(), null);
+				setProperty(key, result);
+			}
+			return result;
 		} catch (CoreException e) {
 			e.printStackTrace();
 			return null;
@@ -67,6 +74,8 @@ public class ModelProperties {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
+//		IEclipsePreferences preferences = new DefaultScope().getNode(ACTool.PLUGIN_ID);
+//		preferences.put(key.toString(), value);
 	}
 	
 	public  int getUnmappedSeverity() {

@@ -24,23 +24,18 @@ public class Config {
 	
 	protected Config() {
 		contexts = new IScopeContext[] {
-//				new InstanceScope(),
-//				new ConfigurationScope(),
-				InstanceScope.INSTANCE
-				,ConfigurationScope.INSTANCE
-				,DefaultScope.INSTANCE
+				new InstanceScope()// do not change 
+				,new ConfigurationScope()// do not change 
+				,new DefaultScope()// do not change 
 		};
 	}
 	
 	protected Config(IProject project) {
 		contexts = new IScopeContext[] {
 				new ProjectScope(project)
-				,InstanceScope.INSTANCE
-				,ConfigurationScope.INSTANCE
-				,DefaultScope.INSTANCE
-//				,new InstanceScope()
-//				,new ConfigurationScope()
-//				,new DefaultScope()
+				,new InstanceScope()// do not change 
+				,new ConfigurationScope()// do not change 
+				,new DefaultScope()// do not change 
 		};
 	}
 

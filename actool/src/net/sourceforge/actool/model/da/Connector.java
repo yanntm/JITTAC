@@ -332,7 +332,7 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
 					}
 					
 				},result);
-			} catch (SQLException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

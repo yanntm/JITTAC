@@ -9,16 +9,16 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
 	public void initializeDefaultPreferences() {
-//		IEclipsePreferences preferences = new DefaultScope().getNode(ACTool.PLUGIN_ID);
-		IEclipsePreferences preferences = DefaultScope.INSTANCE.getNode(ACTool.PLUGIN_ID);
-		
+		// do not change 
+		IEclipsePreferences preferences = new DefaultScope().getNode(ACTool.PLUGIN_ID);
 		// General Settings
-		preferences.putBoolean(Config.AC_ENABLE, false);
+		preferences.putBoolean(Config.AC_ENABLE, true);
 		//preferences.putBoolean(Config.MODE_RETARDED, false);
 
 		// Errors/Warnings
-		preferences.put(ModelProperties.VIOLATION_SEVERITY.toString(), ModelProperties.WARNING);
+		preferences.put(ModelProperties.VIOLATION_SEVERITY.toString(), ModelProperties.INFO);
 		preferences.put(ModelProperties.UNMAPPED_SEVERITY.toString(), ModelProperties.INFO);
+		
 	}
 
 }

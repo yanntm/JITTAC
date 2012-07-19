@@ -72,7 +72,9 @@ public class ArchitectureModel extends ArchitectureElement
 		if(map==null)map =  new ResourceMap(new QualifiedName("net.sourceforge.actool.map.", Integer.toString(hashCode())));
 		components.put(this, new HashMap<String, Component>());
 		this.properties = new ModelProperties(resource);
-		unresolvedTableName = "unresolved_"+this.resource.getName().replace(".", "_");
+		IPath path = this.resource.getFullPath();
+		int count =path.segmentCount();
+		unresolvedTableName = ("unresolved_"+path.segment(count-2)+"_"+path.segment(count-1)).replace("-", "_").replace(".", "_").toUpperCase();
 		initDb();
 	}
 	
@@ -919,7 +921,7 @@ public class ArchitectureModel extends ArchitectureElement
     	if(!this.initDb)return; 
 		try {
 //			dbConn = DBManager.connect();
-			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL)"/*,  dbConn*/);
+			DBManager.preparedUpdate("CREATE TABLE if not exists "+unresolvedTableName+" (xref VARCHAR(1024) NOT NULL)");
 			this.initDb =false;
 		} catch (SQLException e) {
 			Logger.getAnonymousLogger().warning(e.getMessage());

@@ -104,11 +104,18 @@ public class ModelManager {
 		if (!file.exists())
 			return null;
 
-		String key = file.getProjectRelativePath().toPortableString();
+//		String key = file.getProjectRelativePath().toPortableString();
+		String key = file.getFullPath().toPortableString();
 		LinkedList<ImplementationModel> imodels = new LinkedList<ImplementationModel>();
 		try {
 			
 			IProject projects[] = file.getProject().getReferencedProjects();
+			if(projects.length==0){
+				ImplementationModel im = getImplementationModel(file.getProject());
+				if(im instanceof IXReferenceStringFactory && ArchitectureModel.xrefStringFactory== null)
+					ArchitectureModel.xrefStringFactory=(IXReferenceStringFactory) im;
+			}
+			else{
 			for (IProject project : projects) {
 				ImplementationModel im = getImplementationModel(project);
 				if (im != null) {
@@ -117,6 +124,7 @@ public class ModelManager {
 					if(im instanceof IXReferenceStringFactory && ArchitectureModel.xrefStringFactory== null)
 					ArchitectureModel.xrefStringFactory=(IXReferenceStringFactory) im;
 				}
+			}
 			}
 		} catch (CoreException e) {
 			e.printStackTrace();
@@ -130,7 +138,7 @@ public class ModelManager {
 			if (model == null)
 				throw new IllegalArgumentException(
 						"File does not represent a valid Architecture Model");
-			models.put(key, model);
+			
 			ResourcesPlugin.getWorkspace().addResourceChangeListener(model,
 					IResourceChangeEvent.POST_CHANGE);
 

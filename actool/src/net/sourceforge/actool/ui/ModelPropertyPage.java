@@ -189,6 +189,9 @@ public class ModelPropertyPage extends PropertyPage {
 		return projects;
 	}
 	
+	
+	
+	
 	private void setControlledProjects(IProject[] projects) {
 		projectList.setCheckedElements(projects);
 	}
@@ -199,12 +202,19 @@ public class ModelPropertyPage extends PropertyPage {
 		ProblemManager manager = getProblemManager();
 		setCombo(violationsCombo, manager.getViolationSeverity());
 		//setCombo(unmappedCombo, manager.getUnmappedSeverity());
+//		if(manager.getControlledProjects().length==0){
+//			// make sure default is maintained if no projects are selected.
+//			manager.setControlledProjects(getControlledProjects());
+//		}
 		setControlledProjects(manager.getControlledProjects());
+		
 	}
 
 	protected void performDefaults() {
 		violationsCombo.select(1);
 		//unmappedCombo.select(2);
+//		projectList.setAllChecked(true);// tick all projects by default
+		
 	}
 	
 	public boolean performOk() {		
