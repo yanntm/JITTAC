@@ -26,21 +26,6 @@
       </builder>
    </extension>
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            adaptable="true"
-            id="net.sourceforge.actool.jdt.project"
-            nameFilter="*"
-            objectClass="org.eclipse.core.resources.IProject">
-         <action
-               class="net.sourceforge.actool.jdt.ui.ToggleACCheckingAction"
-               id="net.sourceforge.actool.jdt.actions.acCheckingToggle"
-               label="Toggle Consistency checking"
-               menubarPath="net.sourceforge.actool/default">
-         </action>
-      </objectContribution>
-   </extension>
-   <extension
          point="net.sourceforge.actool.model.ia">
       <model
             class="net.sourceforge.actool.jdt.model.JavaModelFactory"
@@ -63,4 +48,65 @@
 	      <partition type="__dftl_partition_content_type"/>
 	   </javaCompletionProposalComputer>
 	 </extension>
+ <extension
+       point="org.eclipse.ui.handlers">
+    <handler
+          class="jittac.jdt.commands.DisableJavaCodeAnalysisHandler"
+          commandId="jittac.commands.disableCodeAnalysis">
+       <enabledWhen>
+          <with
+                variable="selection">
+             <iterate
+                   ifEmpty="false"
+                   operator="or">
+                <adapt
+                      type="org.eclipse.core.resources.IProject">
+                   <and>
+                      <test
+                            property="org.eclipse.core.resources.open"
+                            value="true">
+                      </test>
+                      <test
+                            property="org.eclipse.core.resources.projectNature"
+                            value="net.sourceforge.actool.jdt.ACNatureJDT">
+                      </test>
+                   </and>
+                </adapt>
+             </iterate>
+          </with>
+       </enabledWhen>
+    </handler>
+    <handler
+          class="jittac.jdt.commands.EnableJavaCodeAnalysisHandler"
+          commandId="jittac.commands.enableCodeAnalysis">
+       <enabledWhen>
+          <with
+                variable="selection">
+             <iterate
+                   ifEmpty="false"
+                   operator="or">
+                <adapt
+                      type="org.eclipse.core.resources.IProject">
+                   <and>
+                      <test
+                            property="org.eclipse.core.resources.open"
+                            value="true">
+                      </test>
+                      <test
+                            property="org.eclipse.core.resources.projectNature"
+                            value="org.eclipse.jdt.core.javanature">
+                      </test>
+                      <not>
+                         <test
+                               property="org.eclipse.core.resources.projectNature"
+                               value="net.sourceforge.actool.jdt.ACNatureJDT">
+                         </test>
+                      </not>
+                   </and>
+                </adapt>
+             </iterate>
+          </with>
+       </enabledWhen>
+    </handler>
+ </extension>
 </plugin>

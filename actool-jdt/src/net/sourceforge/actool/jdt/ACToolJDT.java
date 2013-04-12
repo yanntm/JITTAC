@@ -1,11 +1,16 @@
 package net.sourceforge.actool.jdt;
 
+import static org.eclipse.core.runtime.IStatus.ERROR;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import net.sourceforge.actool.jdt.util.ProjectTracker;
+
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.statushandlers.StatusManager;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -78,6 +83,10 @@ public class ACToolJDT extends AbstractUIPlugin {
 	 */
 	public static ACToolJDT getDefault() {
 		return plugin;
+	}
+	
+	public static void errorStatus(String message, Throwable t) {
+		StatusManager.getManager().handle(new Status(ERROR, PLUGIN_ID, message, t));
 	}
 
 }

@@ -105,22 +105,6 @@
       </wizard>
    </extension>
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            adaptable="true"
-            id="net.sourceforge.actool.menu"
-            objectClass="org.eclipse.core.resources.IResource">
-         <menu
-               id="net.sourceforge.actool"
-               label="Architecture Consistency"
-               path="additions">
-            <groupMarker
-                  name="default">
-            </groupMarker>
-         </menu>
-      </objectContribution>
-   </extension>
-   <extension
          point="org.eclipse.ui.propertyPages">
       <page
             adaptable="true"
@@ -170,6 +154,45 @@
       <markerResolutionGenerator
          markerType="net.sourceforge.actool.markers.Problem"
          class="net.sourceforge.actool.ui.editor.quickfix.ArchitecturalViolationQuickFixer"/>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+         <menu
+               id="jittac.popup"
+               label="JITTAC">
+            <command
+                  commandId="jittac.commands.enableCodeAnalysis"
+                  id="jittac.menus.enableCodeAnalysis"
+                  style="radio">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="jittac.commands.disableCodeAnalysis"
+                  id="jittac.menus.disableCodeAnalysis">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Enable code dependency analysis by JITTAC"
+            id="jittac.commands.enableCodeAnalysis"
+            name="Enable Code Analysis">
+      </command>
+      <command
+            description="Disable code dependency analysis by JITTAC"
+            id="jittac.commands.disableCodeAnalysis"
+            name="Disable Code Analysis">
+      </command>
    </extension>
    
 
