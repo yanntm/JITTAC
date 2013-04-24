@@ -5,7 +5,7 @@ import static net.sourceforge.actool.jdt.ACToolJDT.errorStatus;
 
 import java.util.Collection;
 
-import net.sourceforge.actool.jdt.ACNatureJDT;
+import jittac.jdt.JavaAC;
 
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -26,15 +26,15 @@ public class EnableJavaCodeAnalysisHandler extends BaseHandler {
         	try {
         	    if (!project.isOpen() 
         	        || !project.hasNature(JavaCore.NATURE_ID)
-        	        || project.hasNature(ACNatureJDT.NATURE_ID)) {
+        	        || project.hasNature(JavaAC.NATURE_ID)) {
         	        continue;
         	    }
 
                 IProjectDescription desc = project.getDescription();
-                desc.setNatureIds(concat(desc.getNatureIds(), ACNatureJDT.NATURE_ID));
+                desc.setNatureIds(concat(desc.getNatureIds(), JavaAC.NATURE_ID));
                 project.setDescription(desc, null);
         	} catch (CoreException e) {
-        	    errorStatus("Errora adding JITTAC nature: " + ACNatureJDT.NATURE_ID, e);
+        	    errorStatus("Errora adding JITTAC nature: " + JavaAC.NATURE_ID, e);
         	}
 		}
 

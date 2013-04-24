@@ -6,7 +6,7 @@ import static net.sourceforge.actool.jdt.ACToolJDT.errorStatus;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import net.sourceforge.actool.jdt.ACNatureJDT;
+import jittac.jdt.JavaAC;
 
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -27,7 +27,7 @@ public class DisableJavaCodeAnalysisHandler extends BaseHandler {
             try {
                 if (!project.isOpen() 
                     || !project.hasNature(JavaCore.NATURE_ID)
-                    || !project.hasNature(ACNatureJDT.NATURE_ID)) {
+                    || !project.hasNature(JavaAC.NATURE_ID)) {
                     continue;
                 }
 
@@ -35,7 +35,7 @@ public class DisableJavaCodeAnalysisHandler extends BaseHandler {
                 
                 ArrayList<String> natures = newArrayList();
                 for (String nature: desc.getNatureIds()) {
-                    if (!ACNatureJDT.NATURE_ID.equals(nature)){
+                    if (!JavaAC.NATURE_ID.equals(nature)){
                         natures.add(nature);
                     }
                 }
@@ -43,7 +43,7 @@ public class DisableJavaCodeAnalysisHandler extends BaseHandler {
                 desc.setNatureIds(natures.toArray(new String[natures.size()]));
                 project.setDescription(desc, null);
             } catch (CoreException e) {
-                errorStatus("Error removing JITTAC nature: " + ACNatureJDT.NATURE_ID, e);
+                errorStatus("Error removing JITTAC nature: " + JavaAC.NATURE_ID, e);
             }
         }
 

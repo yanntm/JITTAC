@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+  <extension id="jittac.jdt.javaacnature"
+             point="org.eclipse.core.resources.natures"
+             name="[JITTAC] Java AC Nature">
+    <runtime>
+      <run class="jittac.jdt.JavaACNature">
+      </run>
+    </runtime>
+  </extension>
+
+
    <extension
          id="net.sourceforge.actool.jdt.build.ImplementationModelBuilder"
          name="Architectural Model Builder [ACT]"
@@ -68,7 +78,7 @@
                       </test>
                       <test
                             property="org.eclipse.core.resources.projectNature"
-                            value="net.sourceforge.actool.jdt.ACNatureJDT">
+                            value="jittac.jdt.javaacnature">
                       </test>
                    </and>
                 </adapt>
@@ -99,7 +109,7 @@
                       <not>
                          <test
                                property="org.eclipse.core.resources.projectNature"
-                               value="net.sourceforge.actool.jdt.ACNatureJDT">
+                               value="jittac.jdt.javaacnature">
                          </test>
                       </not>
                    </and>
