@@ -68,6 +68,12 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
                 if (root.getKind() != K_SOURCE) {
                     continue;
                 }
+                
+                // Make sure that we do not include compilation units from other projects
+                // as these were already processed when those projects were processed.
+                if (!root.getJavaProject().equals(project)) {
+                    continue;
+                }
 
                 for (IJavaElement element: root.getChildren()) {
                     if (!(element instanceof IPackageFragment)) {
