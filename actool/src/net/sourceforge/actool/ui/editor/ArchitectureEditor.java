@@ -194,7 +194,7 @@ public class ArchitectureEditor extends GraphicalEditorWithFlyoutPalette
 		IFile file = ((IFileEditorInput) input).getFile();
 
 		
-		model = ModelManager.getDefault().getArchitectureModel(file);
+		model = ModelManager.defaultModelManager().getArchitectureModel(file);
 		setPartName(file.getName());
 	}
 

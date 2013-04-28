@@ -48,7 +48,7 @@ public class ModelPropertyPage extends PropertyPage {
 	}
 	
 	public ArchitectureModel getModel() {
-		return ModelManager.getDefault()
+		return ModelManager.defaultModelManager()
 			.getArchitectureModel((IFile) getElement().getAdapter(IFile.class));
 	}
 

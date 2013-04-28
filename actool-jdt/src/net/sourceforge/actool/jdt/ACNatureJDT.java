@@ -19,7 +19,7 @@ public class ACNatureJDT implements IProjectNature {
 	/**
 	 * ID of this project nature
 	 */
-	public static final String NATURE_ID = "net.sourceforge.actool.jdt.ACNatureJDT";
+	private static final String NATURE_ID = "net.sourceforge.actool.jdt.ACNatureJDT";
 
 	private IProject project;
 
@@ -47,7 +47,7 @@ public class ACNatureJDT implements IProjectNature {
 		project.setDescription(desc, null);
 		
 		// Add IA model to referencing projects
-		ModelManager.getDefault().ininialiseImplementationModel(project);
+		ModelManager.defaultModelManager().ininialiseImplementationModel(project);
 	}
 
 	/*

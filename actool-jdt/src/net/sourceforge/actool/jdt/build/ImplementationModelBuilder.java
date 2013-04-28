@@ -1,5 +1,7 @@
 package net.sourceforge.actool.jdt.build;
 
+import static net.sourceforge.actool.model.ModelManager.defaultModelManager;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,7 +97,7 @@ public class ImplementationModelBuilder extends IncrementalProjectBuilder {
 	class Requestor extends ASTRequestor {	
 
 		public void acceptAST(ICompilationUnit source, CompilationUnit ast) {
-			AbstractJavaModel model = ((AbstractJavaModel) ModelManager.getDefault().getImplementationModel(getProject()));
+			AbstractJavaModel model = ((AbstractJavaModel) defaultModelManager().getImplementationModel(getProject()));
 		    ModelBuilder builder = new ModelBuilder(model);
 			
 		    try {
@@ -117,7 +119,7 @@ public class ImplementationModelBuilder extends IncrementalProjectBuilder {
 	 */
 	protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
 			throws CoreException {
-		ModelManager manager = ModelManager.getDefault();
+		ModelManager manager = defaultModelManager();
 		if (!(manager.getImplementationModel(getProject()) instanceof AbstractJavaModel)) {
 			throw new IllegalStateException("AC JDT Builder run on non-Java project!");
 		}

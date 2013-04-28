@@ -44,7 +44,7 @@ public class ModelManager {
 	 * 
 	 * @return the one and only instance of model manager.
 	 */
-	public static synchronized ModelManager getDefault() {
+	public static synchronized ModelManager defaultModelManager() {
 		if (instance == null)
 			instance = new ModelManager();
 		

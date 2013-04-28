@@ -8,8 +8,17 @@
       <run class="jittac.jdt.JavaACNature">
       </run>
     </runtime>
+    <builder id="jittac.jdt.javaimbuilder">
+    </builder>
   </extension>
-
+  <extension id="jittac.jdt.javaimbuilder"
+             point="org.eclipse.core.resources.builders"
+             name="[JITTAC] Java Implementation Model Builder">
+    <builder hasNature="true">
+      <run class="jittac.jdt.builder.JavaImplementationModelBuilder">
+      </run>
+    </builder>
+  </extension>
 
    <extension
          id="net.sourceforge.actool.jdt.build.ImplementationModelBuilder"

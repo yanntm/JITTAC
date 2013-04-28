@@ -118,7 +118,7 @@ public class ACTool extends AbstractUIPlugin {
 				
 				if (obj instanceof IImplementationModelFactory)
 					// HACK: This will load the JDT plugin and the plugin will register it's factory.
-					ModelManager.getDefault().addImplementationModelFactory((IImplementationModelFactory) obj);
+					ModelManager.defaultModelManager().addImplementationModelFactory((IImplementationModelFactory) obj);
 			} catch (CoreException ex) {
 				ex.printStackTrace();
 				continue;

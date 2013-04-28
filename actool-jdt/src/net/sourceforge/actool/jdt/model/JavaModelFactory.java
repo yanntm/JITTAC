@@ -1,5 +1,6 @@
 package net.sourceforge.actool.jdt.model;
 
+import jittac.jdt.JavaAC;
 import net.sourceforge.actool.jdt.ACNatureJDT;
 import net.sourceforge.actool.model.ia.IImplementationModelFactory;
 import net.sourceforge.actool.model.ia.ImplementationModel;
@@ -15,7 +16,7 @@ public class JavaModelFactory implements
 
 	public ImplementationModel createImplementationModel(IProject project) {
 		try {
-			if (project.hasNature(ACNatureJDT.NATURE_ID))
+			if (project.hasNature(JavaAC.NATURE_ID))
 				return new JavaModelDb();
 		} catch (CoreException e) {
 			e.printStackTrace();

@@ -156,7 +156,7 @@ public class ProblemManager extends ArchitectureModelListener {
     		throw new IllegalArgumentException("Project is not open!");
 
     	
-    	ModelManager manager = ModelManager.getDefault();
+    	ModelManager manager = ModelManager.defaultModelManager();
     	IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
     	try {
    			String property = project.getPersistentProperty(MODELS_KEY);
