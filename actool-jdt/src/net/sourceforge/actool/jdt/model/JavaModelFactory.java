@@ -1,11 +1,10 @@
 package net.sourceforge.actool.jdt.model;
 
 import jittac.jdt.JavaAC;
-import net.sourceforge.actool.jdt.ACNatureJDT;
 import net.sourceforge.actool.model.ia.IImplementationModelFactory;
 import net.sourceforge.actool.model.ia.ImplementationModel;
 
-import org.eclipse.core.resources.*;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 
 /**
@@ -17,7 +16,8 @@ public class JavaModelFactory implements
 	public ImplementationModel createImplementationModel(IProject project) {
 		try {
 			if (project.hasNature(JavaAC.NATURE_ID))
-				return new JavaModelDb();
+              return new JavaModel();
+//              return new JavaModelDb();
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}

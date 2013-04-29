@@ -1,5 +1,10 @@
 package jittac.jdt.builder;
 
+import static jittac.jdt.JavaAC.error;
+import static jittac.jdt.JavaAC.warn;
+import static org.eclipse.jdt.core.IJavaElement.PACKAGE_FRAGMENT_ROOT;
+import static org.eclipse.jdt.core.IPackageFragmentRoot.K_BINARY;
+
 import java.util.Iterator;
 import java.util.Stack;
 
@@ -10,6 +15,8 @@ import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -20,6 +27,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -160,14 +168,19 @@ public class JavaASTProcessor extends ASTVisitor {
     
     @SuppressWarnings("unchecked")
     public boolean visit(MethodInvocation node) {
-        IBinding binding = node.resolveMethodBinding();
+        IMethodBinding binding = node.resolveMethodBinding();
         if (binding == null) {
             unhandledBinding(node);
             return false;
         }
-        
-        handleXReference(JavaXReference.CALL, currentBinding(),
-                         binding.getJavaElement(),node);
+
+        IJavaElement target = binding.getJavaElement();
+        if (target == null && binding.getDeclaringClass().isEnum()) {
+           // In case of enums some standard methods (like 'values()' will not resolve.
+           // Reference the enum itself then..
+           target = binding.getDeclaringClass().getJavaElement();
+        }
+        handleXReference(JavaXReference.CALL, currentBinding(), target, node);
         
         // Process the expression which give the element
         // on which the method is called. 
@@ -243,14 +256,20 @@ public class JavaASTProcessor extends ASTVisitor {
     
     @SuppressWarnings("unchecked")
     public boolean visit(SuperConstructorInvocation node) {
-        IBinding binding = node.resolveConstructorBinding();
+        IMethodBinding binding = node.resolveConstructorBinding();
         if (binding == null) {
             unhandledBinding(node);
             return false;
         }
         
-        handleXReference(JavaXReference.CALL, currentBinding(),
-                         binding.getJavaElement(), node);
+        IJavaElement target = binding.getJavaElement();
+        if (target == null 
+            && binding.isConstructor()
+            && node.arguments().size() == 0) {
+            // In case of a default constructor reference the Class itself...
+            target = binding.getDeclaringClass().getJavaElement();
+        }
+        handleXReference(JavaXReference.CALL, currentBinding(), target, node);
         
         // Process the expression which give the element
         // on which the method is called.
@@ -274,6 +293,7 @@ public class JavaASTProcessor extends ASTVisitor {
     public boolean visit(Assignment node) {
         // Get the thing we assign to...
         IBinding binding = null;
+        boolean handledLeftHand = false;
         Expression expr = node.getLeftHandSide();
         while (expr != null) {
             if (expr instanceof Name) {
@@ -297,17 +317,25 @@ public class JavaASTProcessor extends ASTVisitor {
             } else if (expr instanceof ParenthesizedExpression) {
                 expr = ((ParenthesizedExpression) expr).getExpression();
                 continue;
+            } else if (expr instanceof MethodInvocation
+                       || expr instanceof SuperMethodInvocation) {
+                expr.accept(this);
+                handledLeftHand = true;
+                break;
             }
-            
-            throw new IllegalStateException();
+
+            warn("Unable to handle left-hand side of assignment expression: {0}[''{1}'']",
+                 expr.getClass().getSimpleName(), expr.toString());
+            break;
         }
         
-        if (binding == null) {
-            unhandledBinding(node);
-            return false;
+        if (!handledLeftHand) {
+            if (binding == null) {
+                unhandledBinding(node);
+            }
+            handleXReference(JavaXReference.ASSIGNMENT, currentBinding(),
+                             binding.getJavaElement(), node);
         }
-        handleXReference(JavaXReference.ASSIGNMENT, currentBinding(),
-                         binding.getJavaElement(), node);
         
         // Process right hand side expression (value).
         node.getRightHandSide().accept(this);
@@ -365,24 +393,39 @@ public class JavaASTProcessor extends ASTVisitor {
         return true;
     }
 
-    
     public void handleXReference(int type, IJavaElement source, IJavaElement target, ASTNode node) {
         if (source == null || target == null) {
-            // TODO: Sometimes during the first build some bindings may fail to  resolve.
-            // TODO: Do something with it!
+            // TODO: Sometimes some binding may fail to resolve into java elements. Fix it!
+            error("Failed to resolve Java element for {0}[''{1}'']",
+                  node.getClass().getSimpleName(), node.toString());
             return;
         }
+        
+        // Ignore all references within the same file.
+        if (source.getResource().equals(target.getResource())) {
+            return;
+        }
+        
+        // Ignore all references to the types contained in libraries (jar or zip files)
+        try {
+            IPackageFragmentRoot root = (IPackageFragmentRoot) target.getAncestor(PACKAGE_FRAGMENT_ROOT);
+            if (root == null || root.getKind() == K_BINARY) {
+                return;
+            }
+        } catch (JavaModelException ignore) {
+        }
+
         model.addXReference(type, source, target,
                             ((CompilationUnit) node.getRoot()).getLineNumber(node.getStartPosition()),
                             node.getStartPosition(), node.getLength());
     }   
     
     private void unhandledBinding(ASTNode node) {
-        System.err.println("UNHANDLED BINDING: " + node.getClass().getSimpleName() + ": " + node.toString());
+        // TODO: System.err.println("UNHANDLED BINDING: " + node.getClass().getSimpleName() + ": " + node.toString());
     }
 
     private void unhandledNode(ASTNode node){
-        System.err.println("UNHANDLED NODE: " + node.getClass().toString());
+        // TODO: System.err.println("UNHANDLED NODE: " + node.getClass().toString());
     }
 }
 

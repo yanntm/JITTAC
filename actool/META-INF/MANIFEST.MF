@@ -18,7 +18,6 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.4.0",
 Bundle-ActivationPolicy: lazy
 Export-Package: net.sourceforge.actool,
  jittac.util,
- net.sourceforge.actool.db,
  net.sourceforge.actool.logging,
  net.sourceforge.actool.model,
  net.sourceforge.actool.model.da,

@@ -1,13 +1,16 @@
 package jittac.jdt;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.lang.String.format;
+import static java.text.MessageFormat.format;
 import static net.sourceforge.actool.jdt.ACToolJDT.PLUGIN_ID;
 import static net.sourceforge.actool.model.ModelManager.defaultModelManager;
 import static org.eclipse.core.runtime.IStatus.ERROR;
 import static org.eclipse.core.runtime.IStatus.WARNING;
 import static org.eclipse.jdt.core.JavaCore.isJavaLikeFileName;
 import static org.eclipse.ui.statushandlers.StatusManager.getManager;
+
+import java.text.MessageFormat;
+
 import net.sourceforge.actool.jdt.model.AbstractJavaModel;
 
 import org.eclipse.core.resources.IProject;
