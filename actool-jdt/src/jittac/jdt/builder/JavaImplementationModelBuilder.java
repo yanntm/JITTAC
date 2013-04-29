@@ -6,6 +6,7 @@ import static jittac.jdt.JavaAC.checkSupportedProject;
 import static jittac.jdt.JavaAC.error;
 import static jittac.jdt.JavaAC.javaIAModel;
 import static jittac.jdt.JavaAC.warn;
+import static net.sourceforge.actool.model.ModelManager.defaultModelManager;
 import static org.eclipse.core.resources.IResource.FILE;
 import static org.eclipse.core.resources.IResource.FOLDER;
 import static org.eclipse.core.resources.IResource.PROJECT;
@@ -18,7 +19,9 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import jittac.util.DummyProgressMonitor;
+import net.sourceforge.actool.jdt.ACToolJDT;
 import net.sourceforge.actool.jdt.model.AbstractJavaModel;
+import net.sourceforge.actool.jdt.util.ProjectTracker;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -77,8 +80,8 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
 
                 for (IJavaElement element: root.getChildren()) {
                     if (!(element instanceof IPackageFragment)) {
-                        warn("Ignoring element (not a package fragment) '{2}'"
-                              + " while analysing sources in '{1}' of project '{0}'.",
+                        warn("Ignoring element (not a package fragment) ''{2}''"
+                              + " while analysing sources in ''{1}'' of project ''{0}''.",
                              project.getElementName(), root.getElementName(), element.getElementName());
                         continue;
                     }
@@ -174,7 +177,7 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
 
 
         monitor.beginTask("[JITTAC] Java AST processing on project '"
-                          + project.getElementName() +"'...", 100 + 2000);
+                          + project.getElementName() +"'...", 100 + 2000 + 50);
         try {
             final ICompilationUnit[] units;
             IProgressMonitor collectionMonitor = new SubProgressMonitor(monitor, 100);
@@ -185,7 +188,7 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
             } else if (kind == FULL_BUILD) {
                 units = collectCompilationUnits(project, collectionMonitor);
             } else {
-                error("Invalid build kind ({0}) when invoking '{2}' on project '{1}'; exiting...",
+                error("Invalid build kind ({0}) when invoking ''{2}'' on project ''{1}''; exiting...",
                        kind, project.getElementName(), this.getCommand().getBuilderName());
                 return null;
             }
@@ -209,6 +212,16 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
                         new DummyProgressMonitor(processingMonitor));
             } finally {
                 processingMonitor.done();
+            }
+            
+            monitor.subTask("[JITTAC] Storing IA model for '" + project.getElementName() + "'.");
+            defaultModelManager()._storeImplementationModel(getProject());
+            monitor.worked(50);
+
+            // TODO: Move into a separate process/task.
+            ProjectTracker tracker = ACToolJDT.getDefault().getTracker(getProject());
+            if (tracker != null)  {
+                tracker.scanForUnmappedResources();
             }
         } finally {
             monitor.done();
