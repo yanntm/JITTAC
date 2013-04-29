@@ -517,7 +517,6 @@ public class ArchitectureModel extends ArchitectureElement
                 addXReference(xref);
             }
         }
-        System.gc();
     }
 
     public void updateCommonXReference(IXReference xref) {
@@ -628,7 +627,6 @@ public class ArchitectureModel extends ArchitectureElement
             removeUnresolvedXReference(xref);
         }
         iter=null;
-        System.gc();
     }
 
 	protected  Component resolveMapping(IElement element) {

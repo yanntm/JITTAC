@@ -14,21 +14,6 @@ public class XReferenceContentProvider implements IStructuredContentProvider {
         if (inputElement != null && !(inputElement instanceof Connector))
             throw new IllegalArgumentException();
         
-        Thread cleanup = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(20);
-					System.gc();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		});
-        cleanup.start();
-        
         if (inputElement != null){
             return ((Connector) inputElement).getXReferences().toArray();
         }
