@@ -33,7 +33,12 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
@@ -307,12 +312,11 @@ public class ArchitectureModel extends ArchitectureElement
             	connector.disconnect();
         } 
 	}
-
 	
-	public void attachToImplementation(ImplementationModel implementation) {
+	public void attachToImplementation(final ImplementationModel implementation) {
 		// TODO: Parse model to get existing cross references.
 		if (implementation.addImplementationChangeListener(this)){
-			implementation._updateListener(this);
+            implementation._updateListener(ArchitectureModel.this);
 		}
 	}
 
@@ -321,20 +325,55 @@ public class ArchitectureModel extends ArchitectureElement
 		implementation.removeImplementationChangeListener(this);
 	}
 	
-	public void implementationChangeEvent(ImplementationChangeDelta event) {
+   private ISchedulingRule schedulingRule = new ISchedulingRule() {
+        
+        @Override
+        public boolean isConflicting(ISchedulingRule rule) {
+            return equals(rule);
+        }
+        
+        @Override
+        public boolean contains(ISchedulingRule rule) {
+            return equals(rule);
+        }
+    };
+	
+	public void implementationChangeEvent(final ImplementationChangeDelta event) {
 
-		Iterator<IXReference> iter = event.getRemovedXReferences().iterator();
-		while (iter.hasNext())
-			removeXReference(iter.next());
-		
-		iter = event.getAddedXReferences().iterator();
-		while (iter.hasNext())
-			addXReference(iter.next());
-		iter = event.getCommonXReferences().iterator();
-		while (iter.hasNext())
-		updateCommonXReference(iter.next());
-		
-		
+        Job job = new Job("[JITTAC] Updating IA entities of '" + event.getProject().getName()
+                          + "' project for model '" + resource.getName() + "'.") {
+            protected IStatus run(IProgressMonitor monitor) {
+                monitor.beginTask("", event.getCommonXReferences().size() 
+                                     + event.getAddedXReferences().size() 
+                                     + event.getRemovedXReferences().size());
+                try {
+                    monitor.subTask("Processing removed IA entities (X-Rererences)...");
+                    for (IXReference xref: event.getRemovedXReferences()) {
+                        removeXReference(xref);
+                        monitor.worked(1);
+                    }
+                   
+                    monitor.subTask("Processing new IA entities (X-Rererences)...");
+                    for (IXReference xref: event.getAddedXReferences()) {
+                        addXReference(xref);
+                        monitor.worked(1);
+                    }
+                    
+                    monitor.subTask("Updating IA entities (X-Rererences)...");
+                    for (IXReference xref: event.getCommonXReferences()) {
+                        updateCommonXReference(xref);
+                        monitor.worked(1);
+                    }
+                } finally {
+                    monitor.done();
+                }
+                
+                return Status.OK_STATUS;
+            }
+        };
+        
+        job.setRule(schedulingRule);
+        job.schedule();
 	}
 	
 	

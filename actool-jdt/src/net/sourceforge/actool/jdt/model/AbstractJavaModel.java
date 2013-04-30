@@ -1,19 +1,22 @@
 package net.sourceforge.actool.jdt.model;
 
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
+import static com.google.common.base.Preconditions.checkNotNull;
 import net.sourceforge.actool.model.ia.IXReference;
 import net.sourceforge.actool.model.ia.IXReferenceStringFactory;
 import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.model.ia.ImplementationModel;
+
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 
 /**
  * @since 0.2
  */
 public abstract class AbstractJavaModel extends ImplementationModel implements IXReferenceStringFactory  {
 
-	public AbstractJavaModel() {
-		super();
+	public AbstractJavaModel(IJavaProject project) {
+		super(checkNotNull(project).getProject());
 	}
 
 

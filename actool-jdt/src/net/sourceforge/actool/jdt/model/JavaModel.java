@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 
 
@@ -38,8 +39,8 @@ public class JavaModel extends AbstractJavaModel{
 	Collection<String> added;				/// References added to current compilation unit.
 	Collection<String> removed;				/// References removed from current compilation unit.
 
-	public JavaModel() {
-		
+	public JavaModel(IJavaProject project) {
+		super(project);
 		
 		// Create the containers to store the references.
 		store = new HashMap<String, Collection<String>>();
@@ -120,7 +121,7 @@ public class JavaModel extends AbstractJavaModel{
 			added.addAll(store.get(key));
 		}
 		
-		listener.implementationChangeEvent(new ImplementationChangeDelta(this, new String[0], added.toArray(new String[added.size()]), new String[0]));
+		listener.implementationChangeEvent(new ImplementationChangeDelta(getProject(), this, new String[0], added.toArray(new String[added.size()]), new String[0]));
 	}
 
 	public void addXReference(int type, IJavaElement source, IJavaElement target,
@@ -160,7 +161,7 @@ public class JavaModel extends AbstractJavaModel{
 	 */
 	public void endUnit() {
 		// Fire the property change signal.
-		fireModelChange(new ImplementationChangeDelta(this,
+		fireModelChange(new ImplementationChangeDelta(getProject(), this,
 													  common.toArray(new String[common.size()]),
 													  added.toArray(new String[added.size()]),
 													  removed.toArray(new String[removed.size()])));

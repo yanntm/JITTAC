@@ -1,5 +1,6 @@
 package jittac.jdt.builder;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static jittac.jdt.JavaAC.error;
 import static jittac.jdt.JavaAC.warn;
 import static org.eclipse.jdt.core.IJavaElement.PACKAGE_FRAGMENT_ROOT;
@@ -10,9 +11,7 @@ import java.util.Stack;
 
 import net.sourceforge.actool.jdt.model.AbstractJavaModel;
 import net.sourceforge.actool.jdt.model.JavaXReference;
-import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -61,20 +60,7 @@ public class JavaASTProcessor extends ASTVisitor {
     private Stack<NodeBinding> _stack = new Stack<NodeBinding>();
 
     public JavaASTProcessor(AbstractJavaModel model) {
-        if (model != null) {
-            this.model = model;
-        } else {
-            this.model = new AbstractJavaModel() {
-                public void _store(IPath path) {}
-                public void _restore(IPath path) {}
-                public void endUnit() {}
-                public void clearUnit() {}
-                public void beginUnit(ICompilationUnit unit) {}
-                public void addXReference(int type, IJavaElement source,
-                        IJavaElement target, int line, int offset, int length) {}
-                public void _updateListener(ImplementationChangeListener listener) {}
-            };
-        }
+        this.model = checkNotNull(model);
     }
     
     protected IJavaElement currentBinding() {

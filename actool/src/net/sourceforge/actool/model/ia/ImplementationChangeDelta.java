@@ -1,8 +1,12 @@
 package net.sourceforge.actool.model.ia;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
+
+import org.eclipse.core.resources.IProject;
 
 
 
@@ -36,7 +40,7 @@ class XReferenceCollection extends AbstractCollection<IXReference> {
 	private IXReferenceFactory factory;
 	
 	public XReferenceCollection(IXReferenceFactory factory, String[] xreferences) {
-		xrefs = xreferences;
+		this.xrefs = xreferences;
 		this.factory = factory;
 	}
 	
@@ -53,21 +57,27 @@ class XReferenceCollection extends AbstractCollection<IXReference> {
 
 
 public class ImplementationChangeDelta {
+    private IProject project;
 	private IXReferenceFactory factory;
 	
 	private String[] common;
 	private String[] added;
 	private String[] removed;
 
-	public ImplementationChangeDelta(IXReferenceFactory factory, String[] common, String[] added, String[] removed) {
-		this.factory = factory;
+	public ImplementationChangeDelta(IProject project, IXReferenceFactory factory, String[] common, String[] added, String[] removed) {
+        this.project = checkNotNull(project);
+	    this.factory = factory;
 		
 		this.common = common;
 		this.added = added;
 		this.removed = removed;
 	}
-	
-	public Collection<IXReference> getAddedXReferences() {
+
+	public IProject getProject() {
+        return project;
+    }
+
+    public Collection<IXReference> getAddedXReferences() {
 		return new XReferenceCollection(factory, added);
 	}
 	public Collection<IXReference> getCommonXReferences() {
