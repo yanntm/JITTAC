@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class JavaASTHandler extends ASTRequestor {
     private static final MessageFormat progressMessageFormat
-            = new MessageFormat("[JITTAC] Processing Java AST of file {0} out of {1} ({2}): {3}");
+            = new MessageFormat("[JITTAC] Extracting Java IA of ''{2}'' project (file {0} of {1}): {3}");
 
     AbstractJavaModel model;
     IProgressMonitor monitor;

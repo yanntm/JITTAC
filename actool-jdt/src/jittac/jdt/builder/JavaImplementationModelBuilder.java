@@ -64,8 +64,8 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
 
             // Collect compilation units from all fragments (packages).
             for (IPackageFragmentRoot root: project.getAllPackageFragmentRoots()) {
-                monitor.subTask("[JITTAC] Scanning for sources (" + project.getElementName() + "): "
-                                + root.getPath().toPortableString());
+                monitor.subTask("[JITTAC] Scanning for Java sources in '" 
+                                + project.getElementName() + "' project: " + root.getPath().toPortableString());
 
                 // Only collec compilation units from actual source (java) files.
                 if (root.getKind() != K_SOURCE) {
@@ -119,8 +119,8 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
         monitor.beginTask("", 1);
         try {
             checkCancelled(monitor);
-            monitor.subTask("[JITTAC] Scanning for modified sources ("
-                            + project.getElementName() + ")");
+            monitor.subTask("[JITTAC] Scanning for modified Java sources in '"
+                            + project.getElementName() + "' project");
             delta.accept(new IResourceDeltaVisitor() {
                 @Override
                 public boolean visit(IResourceDelta delta) throws CoreException {
@@ -176,8 +176,7 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
        final String projectName = project.getElementName();
 
 
-        monitor.beginTask("[JITTAC] Java AST processing on project '"
-                          + project.getElementName() +"'...", 100 + 2000 + 50);
+        monitor.beginTask("", 100 + 2000 + 50);
         try {
             final ICompilationUnit[] units;
             IProgressMonitor collectionMonitor = new SubProgressMonitor(monitor, 100);
@@ -198,8 +197,8 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
             final IProgressMonitor processingMonitor = new SubProgressMonitor(monitor, 2000);
 
             processingMonitor.beginTask("", units.length);
-            processingMonitor.subTask("[JITTAC] Initialising Java AST processing for"
-            		         + " project '" + projectName + "'...");
+            processingMonitor.subTask("[JITTAC] Initialising Java IA extraction for '"
+                                      + projectName + "' project...");
             try {
                 ASTParser parser = ASTParser.newParser(AST.JLS4);
                 parser.setResolveBindings(true);
@@ -214,7 +213,7 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
                 processingMonitor.done();
             }
             
-            monitor.subTask("[JITTAC] Storing IA model for '" + project.getElementName() + "'.");
+            monitor.subTask("[JITTAC] Storing IA model of project '" + project.getElementName() + "'");
             defaultModelManager()._storeImplementationModel(getProject());
             monitor.worked(50);
 
