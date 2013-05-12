@@ -1,6 +1,7 @@
 package net.sourceforge.actool.model.da;
 
 import static com.google.common.collect.Collections2.transform;
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 
 import java.beans.PropertyChangeEvent;
@@ -14,9 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.logging.Logger;
 
-import net.sourceforge.actool.defaults;
 import net.sourceforge.actool.model.ResourceMap;
 import net.sourceforge.actool.model.ResourceMapping;
 import net.sourceforge.actool.model.ia.IElement;
@@ -44,6 +43,8 @@ import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 
 
@@ -74,6 +75,19 @@ public class ArchitectureModel extends ArchitectureElement
 	private final ModelProperties properties;
 	
 	private final Set<String> unresolvedXReferences = newHashSet();
+ 
+	private final ISchedulingRule schedulingRule = new ISchedulingRule() {
+        
+        @Override
+        public boolean isConflicting(ISchedulingRule rule) {
+            return equals(rule);
+        }
+        
+        @Override
+        public boolean contains(ISchedulingRule rule) {
+            return equals(rule);
+        }
+    };
 
 	public ArchitectureModel(IResource resource) {
 		this.resource = resource;
@@ -94,6 +108,10 @@ public class ArchitectureModel extends ArchitectureElement
 	    return map;
 	}
 	
+	public ISchedulingRule getSchedulingRule() {
+	    return schedulingRule;
+	}
+	
 	protected void onMappingAdded(final ResourceMapping mapping) {
 	    ResourceMapping ancestor = this.map.getAncestorMapping(mapping);
 	    
@@ -108,42 +126,12 @@ public class ArchitectureModel extends ArchitectureElement
 	            final Connector connector = conns.next();
 	 
 	            // We need to go through all X references...
-	            final Iterator<IXReference> xrefs = connector.getXReferences().iterator();
-	            LinkedList<Thread> threads = new LinkedList<Thread>();//create list of threads
-                while (xrefs.hasNext()) {
-                	threads.clear();
-                	while(threads.size()<defaults.MAX_THREADS){
-                		
-    					threads.add(new Thread(new Runnable() {
-    						
-    						@Override
-    						public void run() {
-    							IXReference xref=null;
-    						
-    							synchronized (xrefs) {
-    								if(xrefs.hasNext())
-    									xref = xrefs.next();
-    							}
-    							if(xref==null)return;                
-    							if (mapping.matches(xref.getSource().getResource())) {              
-    			                    connector.removeXReference(xref);
-    			                    if (!mapping.getComponent().equals(connector.getTarget()))
-    			                    	addXReference(xref, mapping.getComponent(), connector.getTarget());
-    			                }
-    							
-    						}
-    					}));
-        			}
-                	
-    				
-                	for(Thread t :threads)t.start();
-                	for(Thread t :threads)
-    					try {
-    						t.join();
-    					} catch (InterruptedException e) {
-    						Logger.getAnonymousLogger().warning(e.getMessage());
-    					}
-
+                for (IXReference xref: connector.getXReferences()) {
+                    if (mapping.matches(xref.getSource().getResource())) {              
+                        connector.removeXReference(xref);
+                        if (!mapping.getComponent().equals(connector.getTarget()))
+                            addXReference(xref, mapping.getComponent(), connector.getTarget());
+                    }
 	            }
 	        }
 	        
@@ -151,44 +139,12 @@ public class ArchitectureModel extends ArchitectureElement
             conns = ancestor.getComponent().getTargetConnectors().iterator();
             while (conns.hasNext()) {
                 final Connector connector = conns.next();
-     
-                // We need to go through all X references...
-                final Iterator<IXReference> xrefs = connector.getXReferences().iterator();
-                LinkedList<Thread> threads = new LinkedList<Thread>();//create list of threads
-                while (xrefs.hasNext()) {
-                	threads.clear();
-                	while(threads.size()<defaults.MAX_THREADS){
-                		
-    					threads.add(new Thread(new Runnable() {
-    						
-    						@Override
-    						public void run() {
-    							IXReference xref=null;
-    						
-    							synchronized (xrefs) {
-    								if(xrefs.hasNext())
-    									xref = xrefs.next();
-    							}
-    							if(xref==null)return;               
-    		                    if (mapping.matches(xref.getTarget().getResource())) {              
-    		                        connector.removeXReference(xref);
-    		                        if (!connector.getSource().equals(mapping.getComponent()))
-    		                        	addXReference(xref, connector.getSource(), mapping.getComponent());
-    		                    }
-    							
-    						}
-    					}));
-        			}
-                	
-    				
-                	for(Thread t :threads)t.start();
-                	for(Thread t :threads)
-    					try {
-    						t.join();
-    					} catch (InterruptedException e) {
-    						Logger.getAnonymousLogger().warning(e.getMessage());
-    					}
-
+                for (IXReference xref: connector.getXReferences()) {
+                    if (mapping.matches(xref.getTarget().getResource())) {              
+                        connector.removeXReference(xref);
+                        if (!connector.getSource().equals(mapping.getComponent()))
+                            addXReference(xref, connector.getSource(), mapping.getComponent());
+                    }
                 }
             }
 	    }
@@ -208,48 +164,19 @@ public class ArchitectureModel extends ArchitectureElement
             final Connector connector = conns.next();
            
             // We need to go through all X references...
-            final Iterator<IXReference> xrefs = connector.getXReferences().iterator();
-            LinkedList<Thread> threads = new LinkedList<Thread>();
-            while (xrefs.hasNext()) {
-            	threads.clear();
-            	while(threads.size()<defaults.MAX_THREADS){
-            		
-					threads.add(new Thread(new Runnable() {
-						
-						@Override
-						public void run() {
-							IXReference xref=null;
-						
-							synchronized (xrefs) {
-								if(xrefs.hasNext())
-									xref = xrefs.next();
-							}
-			                if(xref==null)return;
-			                // If the x-reference does not resolve any more 
-			                // that means it was matched by the removed mapping and is un-mapped now.
-			                Component resolved = map.resolveMapping(xref.getSource().getResource());
-			                if (resolved == null || resolved.equals(connector.getTarget())) {
-			                    connector.removeXReference(xref);
-			                    addUnresolvedXReference(xref);
-			                } else if (!resolved.equals(component)) {
-			                    connector.removeXReference(xref);
-			                    
-			                    // Get connection between the components, if none exists, create one.
-			                    getConnector(resolved, connector.getTarget(), true).addXReference(xref);
-			                }
-							
-						}
-					}));
-    			}
-            	
-				
-            	for(Thread t :threads)t.start();
-            	for(Thread t :threads)
-					try {
-						t.join();
-					} catch (InterruptedException e) {
-						Logger.getAnonymousLogger().warning(e.getMessage());
-					}
+            for (IXReference xref: connector.getXReferences()) {
+                // If the x-reference does not resolve any more 
+                // that means it was matched by the removed mapping and is un-mapped now.
+                Component resolved = map.resolveMapping(xref.getSource().getResource());
+                if (resolved == null || resolved.equals(connector.getTarget())) {
+                    connector.removeXReference(xref);
+                    addUnresolvedXReference(xref);
+                } else if (!resolved.equals(component)) {
+                    connector.removeXReference(xref);
+
+                    // Get connection between the components, if none exists, create one.
+                    getConnector(resolved, connector.getTarget(), true).addXReference(xref);
+                }
 
             }
             
@@ -263,49 +190,21 @@ public class ArchitectureModel extends ArchitectureElement
             final Connector connector = conns.next();
             
             // We need to go through all X references...
-            final Iterator<IXReference> xrefs = connector.getXReferences().iterator();
-            LinkedList<Thread> threads = new LinkedList<Thread>();
-            while (xrefs.hasNext()) {
-            	threads.clear();
-				while(threads.size()<defaults.MAX_THREADS){
-            		
-					threads.add(new Thread(new Runnable() {
-						
-						@Override
-						public void run() {
-							IXReference xref=null;
-						
-							synchronized (xrefs) {
-								if(xrefs.hasNext())
-									xref = xrefs.next();
-							}
-			                if(xref==null)return;
-			                
-			                // If the x-reference does not resolve any more 
-			                // that means it was matched by the removed mapping and is un-mapped now.
-			                Component resolved = map.resolveMapping(xref.getTarget().getResource());
-			                if (resolved == null || resolved.equals(connector.getSource())) {
-			                    connector.removeXReference(xref);
-			                    addUnresolvedXReference(xref);
-			                } else if (!resolved.equals(component)) {
-			                    connector.removeXReference(xref);
-			                    
-			                    // Get connection between the components, if none exists, create one.
-			                    getConnector(connector.getSource(), resolved, true).addXReference(xref);
-			                }
-							
-						}
-					}));
-    			}
-            	
-				
-            	for(Thread t :threads)t.start();
-            	for(Thread t :threads)
-					try {
-						t.join();
-					} catch (InterruptedException e) {
-						Logger.getAnonymousLogger().warning(e.getMessage());
-					}
+            for (IXReference xref: connector.getXReferences()) {
+
+                // If the x-reference does not resolve any more 
+                // that means it was matched by the removed mapping and is un-mapped now.
+                Component resolved = map.resolveMapping(xref.getTarget().getResource());
+                if (resolved == null || resolved.equals(connector.getSource())) {
+                    connector.removeXReference(xref);
+                    addUnresolvedXReference(xref);
+                } else if (!resolved.equals(component)) {
+                    connector.removeXReference(xref);
+
+                    // Get connection between the components, if none exists, create one.
+                    getConnector(connector.getSource(), resolved, true).addXReference(xref);
+                }
+
             }
             
             if (!connector.isEnvisaged() && !connector.hasXReferences())
@@ -324,19 +223,6 @@ public class ArchitectureModel extends ArchitectureElement
 		// TODO: Remove all cross references from this model.
 		implementation.removeImplementationChangeListener(this);
 	}
-	
-   private ISchedulingRule schedulingRule = new ISchedulingRule() {
-        
-        @Override
-        public boolean isConflicting(ISchedulingRule rule) {
-            return equals(rule);
-        }
-        
-        @Override
-        public boolean contains(ISchedulingRule rule) {
-            return equals(rule);
-        }
-    };
 	
 	public void implementationChangeEvent(final ImplementationChangeDelta event) {
 
@@ -651,12 +537,9 @@ public class ArchitectureModel extends ArchitectureElement
 		unresolvedXReferences.remove(xref);
 	}
 
-    protected void reprocessUnresolvedXReferences() {
-        Iterator<IXReference> iter = retriveUnresolvedXrefs().iterator();
-        
-        while (iter.hasNext()) {
-            IXReference xref = iter.next();
-            while(xref==null&& iter.hasNext())xref = iter.next();
+    protected void reprocessUnresolvedXReferences() {    
+        Collection<IXReference> unresolved = newArrayList(retriveUnresolvedXrefs());
+        for (IXReference xref: unresolved) {
             Component source = resolveMapping(xref.getSource());
             Component target = resolveMapping(xref.getTarget());
             if (source == null || target == null || source.equals(target))
@@ -665,7 +548,6 @@ public class ArchitectureModel extends ArchitectureElement
             addXReference(xref, source, target);
             removeUnresolvedXReference(xref);
         }
-        iter=null;
     }
 
 	protected  Component resolveMapping(IElement element) {
@@ -783,18 +665,14 @@ public class ArchitectureModel extends ArchitectureElement
 	}
 	
 	private Collection<IXReference> retriveUnresolvedXrefs() {
-		return transform(unresolvedXReferences, new Function<String, IXReference>() {
+		return transform(unresolvedXReferences,
+		                 new Function<String, IXReference>() {
             public IXReference apply(String input) {
                 return xrefStringFactory.createXReference(input);
             }
 		});
 	}
-	
-	
 
-	public boolean containsUndiclaredXref(IXReference xref) { 
-	    return unresolvedXReferences.contains(xrefStringFactory.toString(xref));
-    }
 
 	 /**
 	 * @since 0.2

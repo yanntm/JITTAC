@@ -49,7 +49,9 @@ public class ComponentCreateCommand extends Command {
 				getModel().addComponent(getComponent());
 				return Status.OK_STATUS;
 			}
-		};job.schedule();
+		};
+        job.setRule(model.getSchedulingRule());
+        job.schedule();
 	}
 
 	/**
@@ -62,6 +64,8 @@ public class ComponentCreateCommand extends Command {
 				getModel().removeComponent(getComponent());
 				return Status.OK_STATUS;
 			}
-		};job.schedule();
+		};
+        job.setRule(model.getSchedulingRule());
+        job.schedule();
 	}
 }

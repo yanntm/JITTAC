@@ -42,11 +42,8 @@ public class ViewExportCommand extends Command {
 				
 				 return Status.OK_STATUS;
 			}
-		};job.schedule();
-		  
-		   
-
-		
+		};
+        job.schedule();
 	}
 
 }

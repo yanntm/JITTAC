@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import net.sourceforge.actool.logging.EventLogger;
 import net.sourceforge.actool.logging.ModelEventListener;
@@ -33,7 +30,7 @@ import org.eclipse.core.runtime.QualifiedName;
 
 public class ProblemManager extends ArchitectureModelListener {
 	private final static QualifiedName MODELS_KEY = new QualifiedName(ACTool.PLUGIN_ID, "controllingModels");
-	private final static Map<IResource, ProblemManager> instances = new ConcurrentHashMap<IResource, ProblemManager>(defaults.MAX_THREADS);
+	private final static Map<IResource, ProblemManager> instances = new HashMap<IResource, ProblemManager>();
 	
 	private final ArchitectureModel model;
 	private Set<IProject> projects = new HashSet<IProject>();
@@ -330,39 +327,16 @@ public class ProblemManager extends ArchitectureModelListener {
 	}
 	
 	@Override
-	public void connectorStateChanged(final Connector connector) {
-		final Iterator<IXReference> iter = connector.getXReferences().iterator();
-		LinkedList<Thread> threads = new LinkedList<Thread>();
-		while (iter.hasNext()){
-			threads.clear();
-			while (threads.size()<defaults.MAX_THREADS){
-					threads.add(new Thread(new Runnable() {
-						@Override
-						public void run() {
-							IXReference xref= null;
-							synchronized (iter) {
-							if(iter.hasNext())
-								xref=iter.next();
-							}
-							if(xref==null)return;
-							if (connector.isEnvisaged()) {
-								connectorXReferenceRemoved(connector, xref);
-							}else{
-								connectorXReferenceAdded(connector, xref);
-							}
-						}
-					}));
-				}
-			for(Thread t : threads) t.start();
-			for(Thread t : threads)
-				try {
-					t.join();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-	}
+    public void connectorStateChanged(final Connector connector) {
+        for (IXReference xref:  connector.getXReferences()) {;
+            if (connector.isEnvisaged()) {
+                connectorXReferenceRemoved(connector, xref);
+            } else {
+                connectorXReferenceAdded(connector, xref);
+            }
+
+        }
+    }
 
 	@Override
 	public void componentMappingAdded(Component component, IResource resource) {

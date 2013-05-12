@@ -81,16 +81,9 @@ public class ComponentDeleteCommand extends Command {
 				getModel().removeComponent(getComponent());
 				return Status.OK_STATUS;
 			}
-		};job.schedule();
-//	   Thread t = new Thread(new Runnable() { equivalent but dose not add item to progrss job list
-//		
-//			@Override
-//			public void run() {
-//				getModel().removeComponent(getComponent());
-//				
-//			}
-//		});t.start();
-		
+		};
+        job.setRule(model.getSchedulingRule());
+        job.schedule();
 	}
 
 	/**
@@ -115,6 +108,8 @@ public class ComponentDeleteCommand extends Command {
 			        getComponent().addMapping(miter.next().getResource());
 			    return Status.OK_STATUS;
 			}
-		};job.schedule(); 
+		};
+        job.setRule(model.getSchedulingRule());
+        job.schedule();
 	}
 }

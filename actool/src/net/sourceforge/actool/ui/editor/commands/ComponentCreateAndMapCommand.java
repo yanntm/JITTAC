@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 
@@ -78,8 +79,9 @@ public class ComponentCreateAndMapCommand extends Command {
 				    }
 				    return Status.OK_STATUS;
 			}
-		};job.schedule();
-	 
+		};
+        job.setRule(model.getSchedulingRule());
+        job.schedule();
 	}
 
 	/**
@@ -97,8 +99,8 @@ public class ComponentCreateAndMapCommand extends Command {
 			        }
 			        return Status.OK_STATUS;
 			}
-		};job.schedule();
-		
-       
+		};
+		job.setRule(model.getSchedulingRule());
+		job.schedule();
 	}
 }
