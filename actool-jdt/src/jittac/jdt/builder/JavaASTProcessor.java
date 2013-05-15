@@ -292,7 +292,10 @@ public class JavaASTProcessor extends ASTVisitor {
                 break;
             } else if (expr instanceof SuperFieldAccess) {
                 SuperFieldAccess fa = (SuperFieldAccess) expr;
-                fa.getQualifier().accept(this);
+                Name qualifier = fa.getQualifier();
+                if (qualifier != null) {
+                    qualifier.accept(this);
+                }
                 binding = fa.resolveFieldBinding();
                 break;
             } else if (expr instanceof ArrayAccess) {
