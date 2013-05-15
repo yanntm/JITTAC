@@ -1,7 +1,12 @@
 package jittac.jdt.builder;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.newLinkedList;
+import static java.lang.Math.min;
 import static java.lang.System.arraycopy;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singleton;
 import static jittac.jdt.JavaAC.checkSupportedProject;
 import static jittac.jdt.JavaAC.error;
 import static jittac.jdt.JavaAC.javaIAModel;
@@ -16,6 +21,8 @@ import static org.eclipse.core.resources.IResourceDelta.REMOVED;
 import static org.eclipse.jdt.core.IPackageFragmentRoot.K_SOURCE;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import jittac.util.DummyProgressMonitor;
@@ -43,8 +50,13 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 
 public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
+    public static final Integer DEFAULT_MAX_BATCH_SIZE = 256;
+
     /** Unique ID of this builder.  */
     public static final String ID = "jittac.jdt.javaimbuilder";
+    
+    private int maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
+    private boolean compactPackagesOnFullBuild = true;
 
     
     protected void checkCancelled(IProgressMonitor monitor) {
@@ -53,21 +65,39 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
         }
     }
     
-    protected ICompilationUnit[] collectCompilationUnits(IJavaProject project,
-                                                         IProgressMonitor monitor)
+    protected Collection<ICompilationUnit[]> batchCompilationUnits(ICompilationUnit[] units) {
+        if (units.length > maxBatchSize) {
+            Collection<ICompilationUnit[]> batches = newLinkedList();
+
+            for (int processed = 0; processed < units.length; processed += maxBatchSize) {
+                ICompilationUnit[] batch = 
+                        new ICompilationUnit[min(units.length - processed, maxBatchSize)];
+                arraycopy(units, processed, batch, 0, batch.length);
+                batches.add(batch);
+            }
+
+            return batches;
+        } else if (units.length > 0) {
+            return singleton(units);
+        } else {
+            return emptyList();
+        }
+    }
+    
+    protected Collection<ICompilationUnit[]> collectCompilationUnits(IJavaProject project,
+                                                                     IProgressMonitor monitor)
             throws JavaModelException {
         monitor.beginTask("", project.getAllPackageFragmentRoots().length);
 
         try {
-            ArrayList<ICompilationUnit[]> packages = newArrayList();
-            int count = 0;
+            List<ICompilationUnit[]> packageBatches = newLinkedList();
 
             // Collect compilation units from all fragments (packages).
             for (IPackageFragmentRoot root: project.getAllPackageFragmentRoots()) {
                 monitor.subTask("[JITTAC] Scanning for Java sources in '" 
                                 + project.getElementName() + "' project: " + root.getPath().toPortableString());
 
-                // Only collec compilation units from actual source (java) files.
+                // Only collect compilation units from actual source (java) files.
                 if (root.getKind() != K_SOURCE) {
                     continue;
                 }
@@ -87,30 +117,47 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
                     }
                     
                     ICompilationUnit[] units = ((IPackageFragment) element).getCompilationUnits();
-                    count += units.length;
-                    packages.add(units);
+                    packageBatches.addAll(batchCompilationUnits(units));
                 }
 
                 monitor.worked(1);
                 checkCancelled(monitor);
             }
+            
     
             // Amalgamate units from all packages into a single array.
-            int position = 0;
-            ICompilationUnit[] units = new ICompilationUnit[count];
-            for (ICompilationUnit[] pacakge: packages) {
-                arraycopy(pacakge, 0, units, position, pacakge.length);
-                position += pacakge.length;
+            if (compactPackagesOnFullBuild) {
+                List<ICompilationUnit[]> batches = newLinkedList();
+                List<ICompilationUnit> batch = newArrayList();
+                
+                for (ICompilationUnit[] packageBatch: packageBatches) {
+                    // Process the units of this package,
+                    // batch them in case package is larger than maxBatchSize
+                    for (ICompilationUnit[] units: batchCompilationUnits(packageBatch)) {
+                        if (batch.size() + units.length > maxBatchSize) {
+                            batches.add(batch.toArray(new ICompilationUnit[batch.size()]));
+                            batch.clear();
+                        }
+                        batch.addAll(asList(units));
+                    }
+                }
+                
+                // Add the last batch to the list...
+                if (!batch.isEmpty()) {
+                    batches.add(batch.toArray(new ICompilationUnit[batch.size()]));
+                }
+                       
+               return batches;
             }
-    
-            return units;
+
+            return packageBatches;
         } finally {
             monitor.done();
         }
     }
 
-    protected ICompilationUnit[] collectCompilationUnits(IResourceDelta delta,
-                                                         final IProgressMonitor monitor)
+    protected Collection<ICompilationUnit[]> collectCompilationUnits(IResourceDelta delta,
+                                                                     final IProgressMonitor monitor)
             throws CoreException {
         final ArrayList<ICompilationUnit> units = newArrayList();
         final IJavaProject project = JavaCore.create(checkSupportedProject(getProject()));
@@ -166,7 +213,7 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
             monitor.done();
         }
 
-        return units.toArray(new ICompilationUnit[units.size()]);
+        return batchCompilationUnits(units.toArray(new ICompilationUnit[units.size()]));
     }
 
     @Override
@@ -178,14 +225,14 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
 
         monitor.beginTask("", 100 + 2000 + 50);
         try {
-            final ICompilationUnit[] units;
+            final Collection<ICompilationUnit[]> batches;
             IProgressMonitor collectionMonitor = new SubProgressMonitor(monitor, 100);
 
             // Collect all the compilation units that should be analysed.
             if (kind == INCREMENTAL_BUILD || kind == AUTO_BUILD) {
-                units = collectCompilationUnits(getDelta(getProject()), collectionMonitor);
+                batches = collectCompilationUnits(getDelta(getProject()), collectionMonitor);
             } else if (kind == FULL_BUILD) {
-                units = collectCompilationUnits(project, collectionMonitor);
+                batches = collectCompilationUnits(project, collectionMonitor);
             } else {
                 error("Invalid build kind ({0}) when invoking ''{2}'' on project ''{1}''; exiting...",
                        kind, project.getElementName(), this.getCommand().getBuilderName());
@@ -196,7 +243,13 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
             // Create and configure the AST parser.
             final IProgressMonitor processingMonitor = new SubProgressMonitor(monitor, 2000);
 
-            processingMonitor.beginTask("", units.length);
+            // Get total number of units to be processed.
+            int totalUnits = 0;
+            for (ICompilationUnit[] units: batches) {
+                totalUnits += units.length;
+            }
+
+            processingMonitor.beginTask("", totalUnits);
             processingMonitor.subTask("[JITTAC] Initialising Java IA extraction for '"
                                       + projectName + "' project...");
             try {
@@ -204,11 +257,14 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
                 parser.setResolveBindings(true);
                 parser.setProject(project);
                 checkCancelled(monitor);
-
+                
+                IProgressMonitor dummy = new DummyProgressMonitor(processingMonitor);
+                JavaASTHandler handler = new JavaASTHandler(javaIAModel(project), 
+                                                            totalUnits, processingMonitor);
                 // Do the actual AST processing...
-                parser.createASTs(units, new String[0], 
-                        new JavaASTHandler(javaIAModel(project), units.length, processingMonitor),
-                        new DummyProgressMonitor(processingMonitor));
+                for (ICompilationUnit[] units: batches) {
+                    parser.createASTs(units, new String[0], handler, dummy);
+                }
             } finally {
                 processingMonitor.done();
             }
