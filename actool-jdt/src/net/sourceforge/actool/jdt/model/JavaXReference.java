@@ -140,7 +140,15 @@ public class JavaXReference extends AbstractXReference {
 		  	   + SEPARATOR + getLine() + SEPARATOR + getOffset() + SEPARATOR + getLength();
 	}
 	
-	public boolean equals(Object obj) {
+	
+	
+	@Override
+    public int hashCode() {
+        return getOffset();
+    }
+
+	@Override
+    public boolean equals(Object obj) {
 	    if (!(obj instanceof JavaXReference))
 	        return false;
 	    JavaXReference other = (JavaXReference) obj;

@@ -1,5 +1,7 @@
 package net.sourceforge.actool.jdt.model;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -37,7 +39,7 @@ public class JavaModel extends AbstractJavaModel{
 	
 	Collection<String> common;				/// Unchanged references in current compilation unit.
 	Collection<String> added;				/// References added to current compilation unit.
-	Collection<String> removed;				/// References removed from current compilation unit.
+	Collection<String> current;				/// References removed from current compilation unit.
 
 	public JavaModel(IJavaProject project) {
 		super(project);
@@ -134,10 +136,11 @@ public class JavaModel extends AbstractJavaModel{
 				
 				// If the new reference was present in the old file it is a common reference,
 				// otherwise it is new and should be added. The remaining ones are removed references.
-				if (removed.remove(xref))
+				if (current.remove(xref)) {
 					common.add(xref);
-				else
+				} else {
 					added.add(xref);
+				}
 			}
 
 	/**
@@ -149,10 +152,10 @@ public class JavaModel extends AbstractJavaModel{
 		if (currentUnit != null)
 			throw new IllegalStateException("Already processing a compilation unit!");
 		currentUnit = unit;
-		removed = store.get(unit.getHandleIdentifier());
-		if (removed == null) {
-			removed = new Vector<String>();
-			store.put(unit.getHandleIdentifier(), removed);
+		current = store.get(unit.getHandleIdentifier());
+		if (current == null) {
+			current = newArrayList();
+			store.put(unit.getHandleIdentifier(), current);
 		}
 	}
 
@@ -164,12 +167,13 @@ public class JavaModel extends AbstractJavaModel{
 		fireModelChange(new ImplementationChangeDelta(getProject(), this,
 													  common.toArray(new String[common.size()]),
 													  added.toArray(new String[added.size()]),
-													  removed.toArray(new String[removed.size()])));
+													  current.toArray(new String[current.size()])));
 		
 		// Removed all references and put the new ones.// redundant remove?
-		removed.clear();
-		removed.addAll(common);
-		removed.addAll(added);
+		current.clear();
+		current.addAll(common);
+		current.addAll(added);
+		current = null;
 		
 		clearUnit();
 	}
@@ -189,7 +193,7 @@ public class JavaModel extends AbstractJavaModel{
 	public void clearUnit() {
 		added.clear();
 		common.clear();
-		removed = null;
+		current = null;
 		currentUnit = null;
 	}
 

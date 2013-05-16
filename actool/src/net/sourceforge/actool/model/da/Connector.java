@@ -115,7 +115,7 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
     
     public int getState() {
         if (isEnvisaged()) {
-            if (getXrefcount()==0)
+            if (getXReferenceCount()==0)
                 return ABSENT;
             else
                 return CONVERGENT;
@@ -138,11 +138,11 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
     }
     
     public boolean hasXReferences() {
-        return getXrefcount()>0;
+        return getXReferenceCount()>0;
     }
 
     public int getNumXReferences() {
-        return getXrefcount();
+        return getXReferenceCount();
     }
   
     public void addXReference(IXReference xref) {
@@ -161,7 +161,7 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
     }
 
 	public Collection<IXReference> getXReferences() {
-		return retriveXrefs();
+		return retriveXReferences();
     }
    
    
@@ -223,16 +223,16 @@ public class Connector extends ArchitectureElement implements Comparable<Connect
         return source.toString() + "->" + target.toString();
     }
     
-    private int getXrefcount() {
+    private int getXReferenceCount() {
         return references.size();
 	}
     
-    private Collection<IXReference> retriveXrefs() {
+    private Collection<IXReference> retriveXReferences() {
 		return ImmutableSet.copyOf(references);
 	}
     
     
-    public boolean containsXref(IXReference xref) { 
+    public boolean containsXReference(IXReference xref) { 
     	return references.contains(xref);
     }
 

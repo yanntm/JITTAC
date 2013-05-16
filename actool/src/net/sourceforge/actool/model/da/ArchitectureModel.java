@@ -459,7 +459,7 @@ public class ArchitectureModel extends ArchitectureElement
     
 	private void updateCommonXReference(IXReference xref, Component source, Component target){
 		Connector conn = getConnector(source, target, true);
-	    if(!conn.containsXref(xref)){// check if connection already exits before adding.
+	    if(!conn.containsXReference(xref)){// check if connection already exits before adding.
   		   conn.addXReference(xref);
   	   
   		   if(!connectorList.contains(conn))connectorList.add(conn);
@@ -488,7 +488,7 @@ public class ArchitectureModel extends ArchitectureElement
        Connector conn = getConnector(source, target, true);
        
        
-    	   if(!conn.containsXref(xref)){// check if connection already exits before adding.
+    	   if(!conn.containsXReference(xref)){// check if connection already exits before adding.
     		   conn.addXReference(xref);
     	   
     		   if(!connectorList.contains(conn))connectorList.add(conn);
@@ -504,7 +504,7 @@ public class ArchitectureModel extends ArchitectureElement
 	    // Check if we have a mapping for the x-reference and remove it.
 	    Connector connector =null;
 	    for(Connector c: connectorList){
-	    	if(c.containsXref(xref)){ 
+	    	if(c.containsXReference(xref)){ 
 	    		connector = c;
 	    		break;
 	    	}
