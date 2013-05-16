@@ -56,7 +56,7 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
     public static final String ID = "jittac.jdt.javaimbuilder";
     
     private int maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
-    private boolean compactPackagesOnFullBuild = true;
+    private boolean compactPackagesOnFullBuild = false;
 
     
     protected void checkCancelled(IProgressMonitor monitor) {
