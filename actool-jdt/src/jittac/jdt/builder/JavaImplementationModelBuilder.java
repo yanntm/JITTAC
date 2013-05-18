@@ -254,15 +254,15 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
                                       + projectName + "' project...");
             try {
                 ASTParser parser = ASTParser.newParser(AST.JLS4);
-                parser.setResolveBindings(true);
-                parser.setProject(project);
-                checkCancelled(monitor);
                 
                 IProgressMonitor dummy = new DummyProgressMonitor(processingMonitor);
                 JavaASTHandler handler = new JavaASTHandler(javaIAModel(project), 
                                                             totalUnits, processingMonitor);
                 // Do the actual AST processing...
                 for (ICompilationUnit[] units: batches) {
+                    checkCancelled(monitor);
+                    parser.setProject(project);
+                    parser.setResolveBindings(true);
                     parser.createASTs(units, new String[0], handler, dummy);
                 }
             } finally {
