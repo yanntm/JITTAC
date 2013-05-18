@@ -74,7 +74,9 @@ public class ResourceMap {
 		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		for (int i = 0; i < projects.length; ++i) {
 			try {
-				projects[i].accept(collector);
+			    if (projects[i].isOpen()) {
+			        projects[i].accept(collector);
+			    }
 			} catch (CoreException e) {
 				e.printStackTrace();
 			}
