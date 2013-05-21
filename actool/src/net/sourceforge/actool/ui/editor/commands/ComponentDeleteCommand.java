@@ -75,24 +75,24 @@ public class ComponentDeleteCommand extends Command {
 	 */
 	public synchronized void redo() {
 	    // Remove the component, this will also remove connectors and mappings.
-		Job job = new Job("Delete Component: "+component.getName()) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
+//		Job job = new Job("Delete Component: "+component.getName()) {
+//			@Override
+//			protected IStatus run(IProgressMonitor monitor) {
 				getModel().removeComponent(getComponent());
-				return Status.OK_STATUS;
-			}
-		};
-        job.setRule(model.getSchedulingRule());
-        job.schedule();
+//				return Status.OK_STATUS;
+//			}
+//		};
+//        job.setRule(model.getSchedulingRule());
+//        job.schedule();
 	}
 
 	/**
 	 * Undo the execution.
 	 */
 	public synchronized void undo() {
-		Job job = new Job("UnDelete Component: "+component.getName()) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
+//		Job job = new Job("UnDelete Component: "+component.getName()) {
+//			@Override
+//			protected IStatus run(IProgressMonitor monitor) {
 			    getModel().addComponent(getComponent());
 		
 			    Iterator<Connector> iter;	    
@@ -106,10 +106,10 @@ public class ComponentDeleteCommand extends Command {
 			    Iterator<ResourceMapping> miter = mappings.iterator();
 			    while (miter.hasNext())
 			        getComponent().addMapping(miter.next().getResource());
-			    return Status.OK_STATUS;
-			}
-		};
-        job.setRule(model.getSchedulingRule());
-        job.schedule();
+//			    return Status.OK_STATUS;
+//			}
+//		};
+//        job.setRule(model.getSchedulingRule());
+//        job.schedule();
 	}
 }

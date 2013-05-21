@@ -12,10 +12,6 @@ import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
@@ -68,39 +64,39 @@ public class ComponentCreateAndMapCommand extends Command {
 	 * Re-execute command.
 	 */
 	public void redo() {
-		Job job = new Job("Create And Map Component.") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
+//		Job job = new Job("Create And Map Component.") {
+//			@Override
+//			protected IStatus run(IProgressMonitor monitor) {
 				 Iterator<Component> iter = components.iterator();
 				    while (iter.hasNext()) {
 				        Component component = iter.next();
 				        model.addComponent(component);
 				        component.addMapping(mapping.get(component));
 				    }
-				    return Status.OK_STATUS;
-			}
-		};
-        job.setRule(model.getSchedulingRule());
-        job.schedule();
+//				    return Status.OK_STATUS;
+//			}
+//		};
+//        job.setRule(model.getSchedulingRule());
+//        job.schedule();
 	}
 
 	/**
 	 * Undo the execution.
 	 */
 	public void undo() {
-		Job job = new Job("UnCreate And UnMap Components.") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
+//		Job job = new Job("UnCreate And UnMap Components.") {
+//			@Override
+//			protected IStatus run(IProgressMonitor monitor) {
 				 Iterator<Component> iter = components.iterator();
 			        while (iter.hasNext()) {
 			            Component component = iter.next();
 			            component.removeMapping(mapping.get(component));
 			            model.removeComponent(component);
 			        }
-			        return Status.OK_STATUS;
-			}
-		};
-		job.setRule(model.getSchedulingRule());
-		job.schedule();
+//			        return Status.OK_STATUS;
+//			}
+//		};
+//		job.setRule(model.getSchedulingRule());
+//		job.schedule();
 	}
 }
