@@ -32,19 +32,13 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 
 
@@ -226,40 +220,40 @@ public class ArchitectureModel extends ArchitectureElement
 	
 	public void implementationChangeEvent(final ImplementationChangeDelta event) {
 
-        Job job = new Job("[JITTAC] Updating IA entities of '" + event.getProject().getName()
-                          + "' project for model '" + resource.getName() + "'.") {
-            protected IStatus run(IProgressMonitor monitor) {
-                monitor.beginTask("", event.getCommonXReferences().size() 
-                                     + event.getAddedXReferences().size() 
-                                     + event.getRemovedXReferences().size());
+//        Job job = new Job("[JITTAC] Updating IA entities of '" + event.getProject().getName()
+//                          + "' project for model '" + resource.getName() + "'.") {
+//            protected IStatus run(IProgressMonitor monitor) {
+//                monitor.beginTask("", event.getCommonXReferences().size() 
+//                                     + event.getAddedXReferences().size() 
+//                                     + event.getRemovedXReferences().size());
                 try {
-                    monitor.subTask("Processing removed IA entities (X-Rererences)...");
+//                    monitor.subTask("Processing removed IA entities (X-Rererences)...");
                     for (IXReference xref: event.getRemovedXReferences()) {
                         removeXReference(xref);
-                        monitor.worked(1);
+//                        monitor.worked(1);
                     }
                    
-                    monitor.subTask("Processing new IA entities (X-Rererences)...");
+//                    monitor.subTask("Processing new IA entities (X-Rererences)...");
                     for (IXReference xref: event.getAddedXReferences()) {
                         addXReference(xref);
-                        monitor.worked(1);
+//                        monitor.worked(1);
                     }
                     
-                    monitor.subTask("Updating IA entities (X-Rererences)...");
+//                    monitor.subTask("Updating IA entities (X-Rererences)...");
                     for (IXReference xref: event.getCommonXReferences()) {
                         updateCommonXReference(xref);
-                        monitor.worked(1);
+//                        monitor.worked(1);
                     }
                 } finally {
-                    monitor.done();
+//                    monitor.done();
                 }
                 
-                return Status.OK_STATUS;
-            }
-        };
-        
-        job.setRule(schedulingRule);
-        job.schedule();
+//                return Status.OK_STATUS;
+//            }
+//        };
+//        
+//        job.setRule(schedulingRule);
+//        job.schedule();
 	}
 	
 	
@@ -682,6 +676,9 @@ public class ArchitectureModel extends ArchitectureElement
 	    }
 
 		private static String getFullname(IJavaElement element) {
+		    if (element == null) {
+		        return "";
+		    }
 //			element.getResource()
 			Stack<String> temp = new Stack<String>();
 	    	IJavaElement packageElement = element;
