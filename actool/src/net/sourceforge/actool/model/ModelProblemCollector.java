@@ -1,4 +1,4 @@
-package net.sourceforge.actool;
+package net.sourceforge.actool.model;
 
 import net.sourceforge.actool.model.da.ArchitectureModelVisitor;
 import net.sourceforge.actool.model.da.Connector;
@@ -6,11 +6,11 @@ import net.sourceforge.actool.model.ia.IXReference;
 
 import org.eclipse.core.resources.IProject;
 
-public class ProblemCollector extends ArchitectureModelVisitor {
-	private final ProblemManager manager;
+class ModelProblemCollector extends ArchitectureModelVisitor {
+	private final ModelProblemManager manager;
 	private final IProject project;
 	
-	public ProblemCollector(ProblemManager manager, IProject project) {
+	public ModelProblemCollector(ModelProblemManager manager, IProject project) {
 		this.manager = manager;
 		this.project = project;
 	}

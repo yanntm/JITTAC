@@ -2,9 +2,14 @@ package net.sourceforge.actool.ui;
 
 //import net.sourceforge.actool.Config;
 
+import static com.google.common.collect.Sets.newHashSet;
+import static net.sourceforge.actool.model.ModelManager.modelManager;
+
 import java.util.ArrayList;
-import net.sourceforge.actool.ProblemManager;
+import java.util.Set;
+
 import net.sourceforge.actool.model.ModelManager;
+import net.sourceforge.actool.model.ModelProblemManager;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 
 import org.eclipse.core.resources.IFile;
@@ -32,7 +37,7 @@ public class ModelPropertyPage extends PropertyPage {
 
 	private static final String PROJECTS_TEXT ="Select projectList controlled by this model...";
 	private static final String VIOLATIONS_TEXT ="Report violations as:";
-	private static final String UNMAPPED_TEXT ="Report unmapped resources as:";
+//    private static final String UNMAPPED_TEXT ="Report unmapped resources as:";
 
 	private Composite contents;
 	private Combo violationsCombo;
@@ -48,12 +53,12 @@ public class ModelPropertyPage extends PropertyPage {
 	}
 	
 	public ArchitectureModel getModel() {
-		return ModelManager.defaultModelManager()
+		return ModelManager.modelManager()
 			.getArchitectureModel((IFile) getElement().getAdapter(IFile.class));
 	}
 
-	public ProblemManager getProblemManager() {
-		return ProblemManager.getInstance(getModel());
+	public ModelProblemManager getProblemManager() {
+		return ModelProblemManager.problemManager(getModel());
 	}
 
 	private void addSeparator(Composite parent) {
@@ -189,25 +194,22 @@ public class ModelPropertyPage extends PropertyPage {
 		return projects;
 	}
 	
-	
-	
-	
-	private void setControlledProjects(IProject[] projects) {
-		projectList.setCheckedElements(projects);
-	}
+    private void setControlledProjects(Set<IProject> projects) {
+        projectList.setCheckedElements(projects.toArray(new IProject[projects.size()]));
+    }
 	
 	protected void initSettings() {
 		performDefaults();
 		
-		ProblemManager manager = getProblemManager();
+		ModelProblemManager manager = getProblemManager();
 		setCombo(violationsCombo, manager.getViolationSeverity());
 		//setCombo(unmappedCombo, manager.getUnmappedSeverity());
 //		if(manager.getControlledProjects().length==0){
 //			// make sure default is maintained if no projects are selected.
 //			manager.setControlledProjects(getControlledProjects());
 //		}
-		setControlledProjects(manager.getControlledProjects());
 		
+		setControlledProjects(modelManager().getControlledProjects(getModel()));
 	}
 
 	protected void performDefaults() {
@@ -218,10 +220,11 @@ public class ModelPropertyPage extends PropertyPage {
 	}
 	
 	public boolean performOk() {		
-		ProblemManager manager = getProblemManager();
+		ModelProblemManager manager = getProblemManager();
 		manager.setViolationSeverity(getCombo(violationsCombo));
 		//manager.setUnmappedSeverity(getCombo(unmappedCombo));
-		manager.setControlledProjects(getControlledProjects());
+
+		modelManager().setControlledProjects(getModel(), newHashSet(getControlledProjects()));
 
 		return true;
 	}

@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import net.sourceforge.actool.logging.EventLogger;
 import net.sourceforge.actool.logging.WorkbenchActivityLogger;
 import net.sourceforge.actool.model.ModelManager;
+import net.sourceforge.actool.model.ModelProblemManager;
 import net.sourceforge.actool.model.ia.IImplementationModelFactory;
 
 import org.eclipse.core.resources.IProject;
@@ -68,7 +69,7 @@ public class ACTool extends AbstractUIPlugin {
 		
 		for (IProject project: ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
 			if (project.isOpen())
-				ProblemManager.initialiseProject(project);
+				ModelProblemManager.initialiseProject(project);
 		}
 	}
 
@@ -118,7 +119,7 @@ public class ACTool extends AbstractUIPlugin {
 				
 				if (obj instanceof IImplementationModelFactory)
 					// HACK: This will load the JDT plugin and the plugin will register it's factory.
-					ModelManager.defaultModelManager().addImplementationModelFactory((IImplementationModelFactory) obj);
+					ModelManager.modelManager().addImplementationModelFactory((IImplementationModelFactory) obj);
 			} catch (CoreException ex) {
 				ex.printStackTrace();
 				continue;

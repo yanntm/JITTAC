@@ -11,7 +11,7 @@ import static jittac.jdt.JavaAC.checkSupportedProject;
 import static jittac.jdt.JavaAC.error;
 import static jittac.jdt.JavaAC.javaIAModel;
 import static jittac.jdt.JavaAC.warn;
-import static net.sourceforge.actool.model.ModelManager.defaultModelManager;
+import static net.sourceforge.actool.model.ModelManager.modelManager;
 import static org.eclipse.core.resources.IResource.FILE;
 import static org.eclipse.core.resources.IResource.FOLDER;
 import static org.eclipse.core.resources.IResource.PROJECT;
@@ -270,7 +270,7 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
             }
             
             monitor.subTask("[JITTAC] Storing IA model of project '" + project.getElementName() + "'");
-            defaultModelManager()._storeImplementationModel(getProject());
+            modelManager()._storeImplementationModel(getProject());
             monitor.worked(50);
 
             // TODO: Move into a separate process/task.

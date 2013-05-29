@@ -47,7 +47,7 @@ public class ACNatureJDT implements IProjectNature {
 		project.setDescription(desc, null);
 		
 		// Add IA model to referencing projects
-		ModelManager.defaultModelManager().ininialiseImplementationModel(project);
+		ModelManager.modelManager().ininialiseImplementationModel(project);
 	}
 
 	/*

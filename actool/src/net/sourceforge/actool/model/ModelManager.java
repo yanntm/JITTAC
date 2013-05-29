@@ -1,5 +1,9 @@
 package net.sourceforge.actool.model;
 
+import static com.google.common.collect.Sets.newHashSet;
+import static java.util.Collections.emptySet;
+import static net.sourceforge.actool.model.ModelProblemManager.problemManager;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,7 +15,6 @@ import java.util.Set;
 import java.util.Vector;
 
 import net.sourceforge.actool.ACTool;
-import net.sourceforge.actool.ProblemManager;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.ArchitectureModelReader;
 import net.sourceforge.actool.model.ia.IImplementationModelFactory;
@@ -20,10 +23,13 @@ import net.sourceforge.actool.model.ia.ImplementationModel;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 
 public class ModelManager {
 	
@@ -44,10 +50,10 @@ public class ModelManager {
 	 * 
 	 * @return the one and only instance of model manager.
 	 */
-	public static synchronized ModelManager defaultModelManager() {
-		if (instance == null)
+	public static synchronized ModelManager modelManager() {
+		if (instance == null) {
 			instance = new ModelManager();
-		
+		}
 		return instance;
 	}
 	
@@ -55,6 +61,51 @@ public class ModelManager {
 		factories.add(factory);
 	}
 	
+	public Set<IProject> getControlledProjects(ArchitectureModel model) {
+	    String paths = model.getModelProperties().getControlledProjects();
+	    if (paths == null || paths.trim().equals("")) {
+	        return emptySet();
+	    }
+
+	    Set<IProject> projects = newHashSet();
+	    IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+	    for (String path: paths.split(";")) {
+	        IResource project = root.findMember(Path.fromPortableString(path));
+	        if (project != null && project instanceof IProject)
+	            projects.add((IProject) project);
+	    }
+
+	    return projects;
+	}
+    
+	public void setControlledProjects(ArchitectureModel model, Set<IProject> projects) {
+	    Set<IProject> previous = getControlledProjects(model);
+
+	    // Add model to newly added projects.
+	    for (IProject project: projects) {
+	        if (project.isOpen() && !previous.contains(project)) {
+	            problemManager(model).enableForProject(project);
+	        }
+	    }
+	    // Remove model from the removed projects.
+	    for (IProject project: previous) {
+	        if (project.isOpen() && !projects.contains(project))
+	            problemManager(model).disableForProject(project);
+	    }
+
+	    // Store the projects property.
+	    StringBuilder builder = new StringBuilder();
+	    for (IProject project: projects) {
+	        builder.append(project.getFullPath().toPortableString() + ";");
+	    }
+	    model.getModelProperties().setControlledProjects(builder.toString());
+	}
+
+	   
+    public void getControllingModels(ArchitectureModel model) {
+        
+    }
+
     static protected ArchitectureModel _loadModel(IFile file) {
         if (file == null || !file.exists())
             throw new IllegalArgumentException();
@@ -151,7 +202,9 @@ public class ModelManager {
 			// Attach all implementation models this project depends on.
 			for(ImplementationModel im :imodels) model.attachToImplementation(im);
 
-			model.addModelListener(ProblemManager.getInstance(model));
+			model.addModelListener(problemManager(model));
+			setControlledProjects(model, getControlledProjects(model));
+
 			models.put(key, model);
 		}
 

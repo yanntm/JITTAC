@@ -101,8 +101,12 @@ public class ArchitectureModel extends ArchitectureElement
 	public  ResourceMap getResourceMap() {
 	    return map;
 	}
-	
-	public ISchedulingRule getSchedulingRule() {
+
+	public ModelProperties getModelProperties() {
+        return properties;
+    }
+
+    public ISchedulingRule getSchedulingRule() {
 	    return schedulingRule;
 	}
 	

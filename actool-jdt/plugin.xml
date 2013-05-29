@@ -128,4 +128,17 @@
        </enabledWhen>
     </handler>
  </extension>
+ <extension
+       id="jittac.jdt.contentassist.architcturallyConsistentJavaProposals"
+       name="Java Proposals (Architecturally Consistent)"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <javaCompletionProposalComputer
+          activate="false"
+          categoryId="jittac.jdt.contentassist.architcturallyConsistentJavaProposals"
+          class="jittac.jdt.contentassist.ArchitecturallyConsistentJavaAllCompletionProposalComputer">
+       <partition
+             type="__dftl_partition_content_type">
+       </partition>
+    </javaCompletionProposalComputer>
+ </extension>
 </plugin>

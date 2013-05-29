@@ -3,7 +3,7 @@ package jittac.jdt;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.text.MessageFormat.format;
 import static net.sourceforge.actool.jdt.ACToolJDT.PLUGIN_ID;
-import static net.sourceforge.actool.model.ModelManager.defaultModelManager;
+import static net.sourceforge.actool.model.ModelManager.modelManager;
 import static org.eclipse.core.runtime.IStatus.ERROR;
 import static org.eclipse.core.runtime.IStatus.WARNING;
 import static org.eclipse.jdt.core.JavaCore.isJavaLikeFileName;
@@ -54,7 +54,7 @@ public class JavaAC {
     }
     
     public static AbstractJavaModel javaIAModel(IJavaProject project) {
-        return (AbstractJavaModel) defaultModelManager().getImplementationModel(project.getProject());
+        return (AbstractJavaModel) modelManager().getImplementationModel(project.getProject());
     }
 
     private static void log(int status, String message, Object... args) {

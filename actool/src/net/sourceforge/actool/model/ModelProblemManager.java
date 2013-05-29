@@ -1,15 +1,14 @@
-package net.sourceforge.actool;
+package net.sourceforge.actool.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import net.sourceforge.actool.ACTool;
+import net.sourceforge.actool.defaults;
 import net.sourceforge.actool.logging.EventLogger;
 import net.sourceforge.actool.logging.ModelEventListener;
-import net.sourceforge.actool.model.ModelManager;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.ArchitectureModelListener;
 import net.sourceforge.actool.model.da.Component;
@@ -28,9 +27,9 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
 
 
-public class ProblemManager extends ArchitectureModelListener {
+public class ModelProblemManager extends ArchitectureModelListener {
 	private final static QualifiedName MODELS_KEY = new QualifiedName(ACTool.PLUGIN_ID, "controllingModels");
-	private final static Map<IResource, ProblemManager> instances = new HashMap<IResource, ProblemManager>();
+	private final static Map<IResource, ModelProblemManager> instances = new HashMap<IResource, ModelProblemManager>();
 	
 	private final ArchitectureModel model;
 	private Set<IProject> projects = new HashSet<IProject>();
@@ -39,17 +38,15 @@ public class ProblemManager extends ArchitectureModelListener {
     private Map<String, Long> violations	= new HashMap<String, Long>();
 
 
-    protected ProblemManager(ArchitectureModel model) {
+    protected ModelProblemManager(ArchitectureModel model) {
     	this.model = model;
-    	if(getControlledProjects().length==0)
-    	setControlledProjects(ResourcesPlugin.getWorkspace().getRoot().getProjects());
     }
     
-	public static ProblemManager getInstance(ArchitectureModel model) {
+	public static ModelProblemManager problemManager(ArchitectureModel model) {
     	synchronized (instances) {
-    		ProblemManager instance = instances.get(model.getResource());
+    		ModelProblemManager instance = instances.get(model.getResource());
     		if (instance == null) {
-    			instance = new ProblemManager(model);
+    			instance = new ModelProblemManager(model);
     			instances.put(model.getResource(), instance);
     		}
     		
@@ -57,12 +54,8 @@ public class ProblemManager extends ArchitectureModelListener {
     	}
     }
     
-    protected ArchitectureModel getModel() {
-    	return model;
-    }
-    
-    protected ModelProperties getModelProperties() {
-    	return new ModelProperties(getModel().getResource());
+    private ModelProperties getModelProperties() {
+        return model.getModelProperties();
     }
     
     protected void validateSeverity(int severity) {
@@ -105,7 +98,7 @@ public class ProblemManager extends ArchitectureModelListener {
     		for (IProject project: projects) {
 				try {
 					if (oldSeverity == -1) {
-						getModel().accept(new ProblemCollector(this, project));
+						model.accept(new ModelProblemCollector(this, project));
 					} else if (severity != -1) {
 						for (IMarker marker: project.findMarkers(defaults.MARKER_TYPE,
 																 true, IResource.DEPTH_INFINITE))
@@ -133,7 +126,7 @@ public class ProblemManager extends ArchitectureModelListener {
     	if (!projects.add(project))
     		return;
     	// This will add the errors originating from this project.
-    	getModel().accept(new ProblemCollector(this, project));
+    	model.accept(new ModelProblemCollector(this, project));
     } 
   
     protected void detachFromProject(IProject project) {
@@ -153,7 +146,7 @@ public class ProblemManager extends ArchitectureModelListener {
     		throw new IllegalArgumentException("Project is not open!");
 
     	
-    	ModelManager manager = ModelManager.defaultModelManager();
+    	ModelManager manager = ModelManager.modelManager();
     	IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
     	try {
    			String property = project.getPersistentProperty(MODELS_KEY);
@@ -172,7 +165,7 @@ public class ProblemManager extends ArchitectureModelListener {
    				
 
    				// This will crate an instance of problem manager...
-   				ProblemManager pm = getInstance(model);
+   				ModelProblemManager pm = problemManager(model);
    				pm.attachToProject(project);
    			}
    		
@@ -181,11 +174,11 @@ public class ProblemManager extends ArchitectureModelListener {
 		}
     }
     
-    private void addModelToProject(IProject project) {
+    protected void enableForProject(IProject project) {
     	if (!project.isOpen())
     		throw new IllegalArgumentException("Project is not open!");
 
-    	String element = getModel().getResource().getFullPath().toPortableString() + ";";
+    	String element = model.getResource().getFullPath().toPortableString() + ";";
     	try {
    			String property = project.getPersistentProperty(MODELS_KEY);
    			if (property != null)
@@ -200,11 +193,11 @@ public class ProblemManager extends ArchitectureModelListener {
 		}
     }
     
-    private void removeModelFromProject(IProject project) {
+    protected void disableForProject(IProject project) {
     	if (!project.isOpen())
     		throw new IllegalArgumentException("Project is not open!");
 
-    	String path = getModel().getResource().getFullPath().toPortableString();
+    	String path = model.getResource().getFullPath().toPortableString();
     	StringBuilder builder = new StringBuilder();
     	try {
    			String property = project.getPersistentProperty(MODELS_KEY);
@@ -222,44 +215,6 @@ public class ProblemManager extends ArchitectureModelListener {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-    }
-    
-    public IProject[] getControlledProjects() {
-    	String paths = getModelProperties().getControlledProjects();
-    	if (paths == null || paths.trim().equals(""))
-    		return new IProject[0];
-
-    	ArrayList<IProject> projects = new ArrayList<IProject>();
-    	IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-    	for (String path: paths.split(";")) {
-    		IResource project = root.findMember(Path.fromPortableString(path));
-    		if (project != null && project instanceof IProject)
-    			projects.add((IProject) project);
-    	}
-
-    	return projects.toArray(new IProject[projects.size()]);
-    }
-    
-    public void setControlledProjects(IProject[] projects) {
-    	Set<IProject> newSet = new HashSet<IProject>(Arrays.asList(projects));
-    	Set<IProject> oldSet = new HashSet<IProject>(Arrays.asList(getControlledProjects()));
-    	
-    	// Add model to newly added projects.
-    	for (IProject project: newSet) {
-    		if (project.isOpen() && !oldSet.contains(project))
-    			addModelToProject(project);
-    	}
-    	// Remove model from the removed projects.
-    	for (IProject project: oldSet) {
-    		if (project.isOpen() && !newSet.contains(project))
-    			removeModelFromProject(project);
-    	}
-    	
-    	// Store the projects property.
-    	StringBuilder builder = new StringBuilder();
-    	for (IProject project: projects) 
-    		builder.append(project.getFullPath().toPortableString() + ";");
-    	getModelProperties().setControlledProjects(builder.toString());
     }
     
     @Override
