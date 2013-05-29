@@ -1,5 +1,8 @@
 package net.sourceforge.actool.model;
 
+import static net.sourceforge.actool.model.ModelManager.MODELS_KEY;
+import static org.eclipse.core.runtime.Path.fromPortableString;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -28,7 +31,6 @@ import org.eclipse.core.runtime.QualifiedName;
 
 
 public class ModelProblemManager extends ArchitectureModelListener {
-	private final static QualifiedName MODELS_KEY = new QualifiedName(ACTool.PLUGIN_ID, "controllingModels");
 	private final static Map<IResource, ModelProblemManager> instances = new HashMap<IResource, ModelProblemManager>();
 	
 	private final ArchitectureModel model;
@@ -118,7 +120,7 @@ public class ModelProblemManager extends ArchitectureModelListener {
     	return getViolationSeverity() == -1;
     }
     
-    protected boolean isEnabledForProject(IProject project) {
+    protected boolean isAttachedToProject(IProject project) {
     	return projects.contains(project);
     }
     
@@ -153,7 +155,7 @@ public class ModelProblemManager extends ArchitectureModelListener {
    			if (property == null || property.trim().equals(""))
    				return;
    			for (String path: property.split(";")) {
-   				IResource resource = root.findMember(Path.fromPortableString(path));
+   				IResource resource = root.findMember(fromPortableString(path));
    				if (!(resource instanceof IFile)){
    					continue;
    				}
@@ -174,49 +176,6 @@ public class ModelProblemManager extends ArchitectureModelListener {
 		}
     }
     
-    protected void enableForProject(IProject project) {
-    	if (!project.isOpen())
-    		throw new IllegalArgumentException("Project is not open!");
-
-    	String element = model.getResource().getFullPath().toPortableString() + ";";
-    	try {
-   			String property = project.getPersistentProperty(MODELS_KEY);
-   			if (property != null)
-   				property += element;
-   			else
-   				property = element;
-   			
-   			project.setPersistentProperty(MODELS_KEY, property);
-   			attachToProject(project);
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
-    }
-    
-    protected void disableForProject(IProject project) {
-    	if (!project.isOpen())
-    		throw new IllegalArgumentException("Project is not open!");
-
-    	String path = model.getResource().getFullPath().toPortableString();
-    	StringBuilder builder = new StringBuilder();
-    	try {
-   			String property = project.getPersistentProperty(MODELS_KEY);
-   			if (property == null || property.trim().equals(""))
-   				return;
-
-   			for (String element: property.split(";")) {
-   				if (!element.equals(path))
-   					builder.append(element + ";");
-   				
-   			}
-   			
-   			project.setPersistentProperty(MODELS_KEY, builder.toString());
-   			detachFromProject(project);
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
-    }
-    
     @Override
     public void connectorXReferenceAdded(final Connector connector, final IXReference xref) {
 //    	Thread thread = new Thread(new Runnable() {
@@ -224,7 +183,7 @@ public class ModelProblemManager extends ArchitectureModelListener {
 //			@Override
 //			public void run() {
 				if (connector.isEnvisaged() || ignoreViolations()
-						|| !isEnabledForProject(xref.getSource().getResource().getProject()))
+						|| !isAttachedToProject(xref.getSource().getResource().getProject()))
 						return;
 					
 			        IResource resource = xref.getSource().getResource(); 

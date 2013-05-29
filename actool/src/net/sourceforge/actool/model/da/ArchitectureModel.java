@@ -547,10 +547,15 @@ public class ArchitectureModel extends ArchitectureElement
             removeUnresolvedXReference(xref);
         }
     }
-
+    
 	protected  Component resolveMapping(IElement element) {
-	    return getResourceMap().resolveMapping(element.getResource());
+	    return resolveMapping(element.getResource());
 	}
+
+	public Component resolveMapping(IResource resource) {
+        return getResourceMap().resolveMapping(resource);
+    }
+
 	
     public void propertyChange(PropertyChangeEvent event) {
         if (event.getSource() instanceof Component) {

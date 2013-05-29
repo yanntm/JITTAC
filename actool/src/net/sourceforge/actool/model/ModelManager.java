@@ -3,6 +3,8 @@ package net.sourceforge.actool.model;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Collections.emptySet;
 import static net.sourceforge.actool.model.ModelProblemManager.problemManager;
+import static org.eclipse.core.resources.ResourcesPlugin.getWorkspace;
+import static org.eclipse.core.runtime.Path.fromPortableString;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,9 +32,11 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.QualifiedName;
 
 public class ModelManager {
-	
+    protected final static QualifiedName MODELS_KEY = new QualifiedName(ACTool.PLUGIN_ID, "controllingModels");
+
 	/// The one and only instance of ModelManager.
 	private static ModelManager instance = null;
 	
@@ -60,37 +64,38 @@ public class ModelManager {
 	public synchronized void addImplementationModelFactory(IImplementationModelFactory factory) {
 		factories.add(factory);
 	}
-	
-	public Set<IProject> getControlledProjects(ArchitectureModel model) {
-	    String paths = model.getModelProperties().getControlledProjects();
-	    if (paths == null || paths.trim().equals("")) {
-	        return emptySet();
-	    }
 
-	    Set<IProject> projects = newHashSet();
-	    IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-	    for (String path: paths.split(";")) {
-	        IResource project = root.findMember(Path.fromPortableString(path));
-	        if (project != null && project instanceof IProject)
-	            projects.add((IProject) project);
-	    }
-
-	    return projects;
-	}
+    public Set<IProject> getControlledProjects(ArchitectureModel model) {
+        String paths = model.getModelProperties().getControlledProjects();
+        if (paths == null || paths.trim().equals("")) {
+            return emptySet();
+        }
     
+        Set<IProject> projects = newHashSet();
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+        for (String path: paths.split(";")) {
+            IResource project = root.findMember(Path.fromPortableString(path));
+            if (project != null && project instanceof IProject)
+                projects.add((IProject) project);
+        }
+    
+        return projects;
+    }
+
+
 	public void setControlledProjects(ArchitectureModel model, Set<IProject> projects) {
 	    Set<IProject> previous = getControlledProjects(model);
 
 	    // Add model to newly added projects.
 	    for (IProject project: projects) {
 	        if (project.isOpen() && !previous.contains(project)) {
-	            problemManager(model).enableForProject(project);
+	            enableModelForProject(model, project);
 	        }
 	    }
 	    // Remove model from the removed projects.
 	    for (IProject project: previous) {
 	        if (project.isOpen() && !projects.contains(project))
-	            problemManager(model).disableForProject(project);
+	            disableModelForProject(model, project);
 	    }
 
 	    // Store the projects property.
@@ -102,8 +107,72 @@ public class ModelManager {
 	}
 
 	   
-    public void getControllingModels(ArchitectureModel model) {
-        
+    public Set<ArchitectureModel> getControllingModels(IProject project) {
+        try {
+            String property  = project.getPersistentProperty(MODELS_KEY);
+            if (property == null || property.trim().equals("")) {
+                return emptySet();
+            }
+
+            Set<ArchitectureModel> models = newHashSet();
+            IWorkspaceRoot root = getWorkspace().getRoot();
+            for (String path: property.split(";")) { 
+                IResource resource = root.findMember(fromPortableString(path));
+                if (resource instanceof IFile) {
+                    ArchitectureModel model = getArchitectureModel((IFile) resource);
+                    models.add(model);
+                }
+            }
+
+            return models;
+        } catch (CoreException e) {
+            e.printStackTrace();
+            return emptySet();
+        }
+    }
+
+
+    protected void enableModelForProject(ArchitectureModel model, IProject project) {
+        if (!project.isOpen())
+            throw new IllegalArgumentException("Project is not open!");
+
+        String element = model.getResource().getFullPath().toPortableString() + ";";
+        try {
+            String property = project.getPersistentProperty(MODELS_KEY);
+            if (property != null)
+                property += element;
+            else
+                property = element;
+
+            project.setPersistentProperty(MODELS_KEY, property);
+            problemManager(model).attachToProject(project);
+        } catch (CoreException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected void disableModelForProject(ArchitectureModel model, IProject project) {
+        if (!project.isOpen())
+            throw new IllegalArgumentException("Project is not open!");
+
+        String path = model.getResource().getFullPath().toPortableString();
+        StringBuilder builder = new StringBuilder();
+        try {
+            String property = project.getPersistentProperty(MODELS_KEY);
+            if (property == null || property.trim().equals(""))
+                return;
+
+            for (String element: property.split(";")) {
+                if (!element.equals(path))  {
+                    builder.append(element + ";");
+                }
+            }
+
+            project.setPersistentProperty(MODELS_KEY, builder.toString());
+            problemManager(model).detachFromProject(project);
+        } catch (CoreException e) {
+            e.printStackTrace();
+        }
     }
 
     static protected ArchitectureModel _loadModel(IFile file) {
