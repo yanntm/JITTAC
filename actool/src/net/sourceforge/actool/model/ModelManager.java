@@ -168,6 +168,10 @@ public class ModelManager {
 			}
 			else{
 			for (IProject project : projects) {
+			    if (!project.isOpen()) {
+			        continue;
+			    }
+
 				ImplementationModel im = getImplementationModel(project);
 				if (im != null) {
 //					model.attachToImplementation(im);
