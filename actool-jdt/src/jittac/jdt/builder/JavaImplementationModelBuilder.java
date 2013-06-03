@@ -7,6 +7,7 @@ import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
+import static java.util.regex.Pattern.compile;
 import static jittac.jdt.JavaAC.checkSupportedProject;
 import static jittac.jdt.JavaAC.error;
 import static jittac.jdt.JavaAC.javaIAModel;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import jittac.util.DummyProgressMonitor;
 import net.sourceforge.actool.jdt.ACToolJDT;
@@ -57,6 +59,11 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
     
     private int maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
     private boolean compactPackagesOnFullBuild = false;
+    
+    private Pattern ignoreResources[] = new Pattern[] {
+        compile("^src/test/"),
+        compile("Test\\.java$")
+    };
 
     
     protected void checkCancelled(IProgressMonitor monitor) {
@@ -84,6 +91,29 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
         }
     }
     
+    protected boolean ignoreResource(IResource resource) {
+        String path = resource.getProjectRelativePath().toPortableString();
+        for (Pattern pattern: ignoreResources) {
+            if (pattern.matcher(path).find()) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    protected ICompilationUnit[] filterCompilationUnits(ICompilationUnit[] units) {
+        ArrayList<ICompilationUnit> filtered = new ArrayList<ICompilationUnit>(units.length);
+
+        for (ICompilationUnit unit: units) {
+            if (!ignoreResource(unit.getResource())) {
+                filtered.add(unit);
+            }
+        }
+
+        return filtered.toArray(new ICompilationUnit[filtered.size()]);
+    }
+    
     protected Collection<ICompilationUnit[]> collectCompilationUnits(IJavaProject project,
                                                                      IProgressMonitor monitor)
             throws JavaModelException {
@@ -101,10 +131,16 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
                 if (root.getKind() != K_SOURCE) {
                     continue;
                 }
+               
                 
                 // Make sure that we do not include compilation units from other projects
                 // as these were already processed when those projects were processed.
                 if (!root.getJavaProject().equals(project)) {
+                    continue;
+                }
+                
+                // Ignore resources which match given patterns.
+                if (ignoreResource(root.getResource())) {
                     continue;
                 }
 
@@ -117,7 +153,10 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
                     }
                     
                     ICompilationUnit[] units = ((IPackageFragment) element).getCompilationUnits();
-                    packageBatches.addAll(batchCompilationUnits(units));
+                    units = filterCompilationUnits(units);
+                    if (units.length > 0) {
+                        packageBatches.addAll(batchCompilationUnits(units));
+                    }
                 }
 
                 monitor.worked(1);
@@ -154,6 +193,11 @@ public class JavaImplementationModelBuilder extends IncrementalProjectBuilder {
         } finally {
             monitor.done();
         }
+    }
+    public static void main(String[] args) {
+        JavaImplementationModelBuilder builder = new JavaImplementationModelBuilder();
+        
+        System.out.println(builder.ignoreResources[0].matcher("src/test/sdf").find());
     }
 
     protected Collection<ICompilationUnit[]> collectCompilationUnits(IResourceDelta delta,
