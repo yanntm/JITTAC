@@ -51,12 +51,6 @@
             id="net.sourceforge.actool.model.ia.jdt">
       </model>
    </extension>
-	<extension point="org.eclipse.jdt.ui.javaCompletionProposalSorters">
-	 <proposalSorter
-	  id="org.eclipse.jdt.ui.ViolationSorter"
-	  name="by Architectural consistency"
-	  class="net.sourceforge.actool.jdt.proposals.ArcitechtualConsistencySorter"/>
-	</extension>
  <extension
        point="org.eclipse.ui.handlers">
     <handler
@@ -130,5 +124,18 @@
              type="__dftl_partition_content_type">
        </partition>
     </javaCompletionProposalComputer>
+ </extension>
+ <extension
+       point="org.eclipse.jdt.ui.javaCompletionProposalSorters">
+    <proposalSorter
+          class="jittac.jdt.contentassist.AlphabeticalConsistencyPropopsalSorter"
+          id="jittac.jdt.contentassist.alphabeticalConsistencyProposalSorter"
+          name="by consistency, then alphabetically">
+    </proposalSorter>
+    <proposalSorter
+          class="jittac.jdt.contentassist.ByRelevanceConsistencyPropopsalSorter"
+          id="jittac.jdt.contentassist.byRelevanceConsistencyProposalSorter"
+          name="by consistency, then by relevance">
+    </proposalSorter>
  </extension>
 </plugin>
