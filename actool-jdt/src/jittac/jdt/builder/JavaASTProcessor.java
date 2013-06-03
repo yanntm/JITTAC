@@ -12,6 +12,7 @@ import java.util.Stack;
 import net.sourceforge.actool.jdt.model.AbstractJavaModel;
 import net.sourceforge.actool.jdt.model.JavaXReference;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -27,6 +28,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -46,6 +48,9 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
  */
 public class JavaASTProcessor extends ASTVisitor {
 
+    private boolean ignoreLibraryReferences = true;
+    private boolean ignoreIntraProjectReferences = true;
+ 
     private AbstractJavaModel model = null;
 
     class NodeBinding {
@@ -81,37 +86,22 @@ public class JavaASTProcessor extends ASTVisitor {
     protected void popNodeAndBinding() {
         _stack.pop();
     }
-    
+
     public boolean visit(CompilationUnit node) {
-        // TODO: This may not have a resource associated (unlikely though)!
         IJavaElement element = node.getJavaElement();
         //IResource resource = element.getResource();
         _stack.push(new NodeBinding(node, element));
-        
-        // Delete all relations associated with given resource and start new processing.
-        // Changes will not be propagated until flushed or `endResource' is called.
-//      try {
-//          resource.deleteMarkers(TobagoBuilder.MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-//      } catch (CoreException ex) {
-//          // TODO Auto-generated catch block
-//          ex.printStackTrace();
-//      }
-        
-        //unit = resource;
+      
         model.beginUnit((ICompilationUnit) node.getJavaElement());
         
         return true;
     }
 
     public void endVisit(CompilationUnit node) {
-        // TODO: This may not have a resource associated (unlikely though)!
-        //IResource resource = (IResource) node.getJavaElement().getResource();
         popNodeAndBinding();
 
         // Finish resource processing and flush all the changes.
-        //model._endResource(resource);
         model.endUnit();
-        //unit = null;
     }
     
     public boolean visit(AnonymousClassDeclaration node) {
@@ -211,9 +201,8 @@ public class JavaASTProcessor extends ASTVisitor {
     
     @SuppressWarnings("unchecked")
     public boolean visit(ClassInstanceCreation node) {
-        
-        // TODO: This should use node.resolveConstructorBinding()!
-        IBinding binding = node.getType().resolveBinding();
+        // TODO: Investigate why resolveConstructorBinding() doesn't work.
+        ITypeBinding binding = node.getType().resolveBinding();
         if (binding == null) {
             unhandledBinding(node);
             return false;
@@ -390,18 +379,31 @@ public class JavaASTProcessor extends ASTVisitor {
             return;
         }
         
-        // Ignore all references within the same file.
-        if (source.getResource().equals(target.getResource())) {
+        IResource sourceResource = source.getResource();
+        IResource targetResource = target.getResource();
+        
+        // Ignore all references within the same resource (compilation unit).
+        if (sourceResource.equals(targetResource)) {
             return;
         }
+
+        
+        // Ignore references within ghe same project.
+        if (ignoreIntraProjectReferences && targetResource != null
+            && sourceResource.getProject().equals(targetResource.getProject())) {
+            return;
+        } 
         
         // Ignore all references to the types contained in libraries (jar or zip files)
-        try {
-            IPackageFragmentRoot root = (IPackageFragmentRoot) target.getAncestor(PACKAGE_FRAGMENT_ROOT);
-            if (root == null || root.getKind() == K_BINARY) {
-                return;
+        if (ignoreLibraryReferences) {
+            try {
+                IPackageFragmentRoot root = (IPackageFragmentRoot) target.getAncestor(PACKAGE_FRAGMENT_ROOT);
+                if (root == null || root.getKind() == K_BINARY) {
+                    return;
+                }
+            } catch (JavaModelException ex) {
+                error(ex, "Unexpected exception in AST Parser");
             }
-        } catch (JavaModelException ignore) {
         }
 
         model.addXReference(type, source, target,
@@ -410,11 +412,11 @@ public class JavaASTProcessor extends ASTVisitor {
     }   
     
     private void unhandledBinding(ASTNode node) {
-        // TODO: System.err.println("UNHANDLED BINDING: " + node.getClass().getSimpleName() + ": " + node.toString());
+        warn("Unhandled Binding ({0}): {1}", node.getClass().getSimpleName(), node.toString());
     }
 
     private void unhandledNode(ASTNode node){
-        // TODO: System.err.println("UNHANDLED NODE: " + node.getClass().toString());
+        warn("Unhandled Node: {0}",  node.toString());
     }
 }
 
