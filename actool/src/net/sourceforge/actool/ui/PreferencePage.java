@@ -1,9 +1,14 @@
 package net.sourceforge.actool.ui;
 
-import org.eclipse.jface.preference.*;
-import org.eclipse.ui.IWorkbenchPreferencePage;
+import static jittac.Preferences.IGNORE_INTRAPROJECT_REFERENCES;
+import static jittac.Preferences.IGNORE_LIBRARY_REFERENCES;
+import static jittac.Preferences.preferenceStore;
+
+import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
-import net.sourceforge.actool.ACTool;
+import org.eclipse.ui.IWorkbenchPreferencePage;
 
 /**
  * This class represents a preference page that
@@ -25,8 +30,8 @@ public class PreferencePage
 
 	public PreferencePage() {
 		super(GRID);
-		setPreferenceStore(ACTool.getDefault().getPreferenceStore());
-		setDescription("Archietcture Consistency Preference Page");
+		setPreferenceStore(preferenceStore());
+		//setDescription("Archietcture Consistency Preference Page");
 	}
 	
 	/**
@@ -35,14 +40,13 @@ public class PreferencePage
 	 * of preferences. Each field editor knows how to save and
 	 * restore itself.
 	 */
-	public void createFieldEditors() {	
+	public void createFieldEditors() {
+	    Composite parent = getFieldEditorParent();
+        addField(new BooleanFieldEditor(IGNORE_LIBRARY_REFERENCES, "Ignore &Library references", parent));
+        addField(new BooleanFieldEditor(IGNORE_INTRAPROJECT_REFERENCES, "Ignore &Intra-Project references", parent));
 		/*addField(new DirectoryFieldEditor(PreferenceConstants.P_PATH, 
 				"&Directory preference:", getFieldEditorParent()));
-		addField(
-			new BooleanFieldEditor(
-				PreferenceConstants.P_BOOLEAN,
-				"&An example of a boolean preference",
-				getFieldEditorParent()));
+		
 
 		addField(new RadioGroupFieldEditor(
 				PreferenceConstants.P_CHOICE,

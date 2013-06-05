@@ -1,6 +1,9 @@
 package jittac.jdt.builder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static jittac.Preferences.IGNORE_INTRAPROJECT_REFERENCES;
+import static jittac.Preferences.IGNORE_LIBRARY_REFERENCES;
+import static jittac.Preferences.preferenceStore;
 
 import java.text.MessageFormat;
 
@@ -24,6 +27,16 @@ public class JavaASTHandler extends ASTRequestor {
         this.monitor = checkNotNull(monitor);
         this.total = total;
     }
+    
+    protected JavaASTProcessor createJavaASTProcessor() {
+        JavaASTProcessor processor = new JavaASTProcessor(model);
+        processor.setIgnoreLibraryReferences(
+                preferenceStore().getBoolean(IGNORE_LIBRARY_REFERENCES));
+        processor.setIgnoreIntraProjectReferences(
+                preferenceStore().getBoolean(IGNORE_INTRAPROJECT_REFERENCES));
+
+        return processor;
+    }
 
     private void updateSourcePath(ICompilationUnit source) {
         Object[] arguments = new Object[] {
@@ -40,9 +53,8 @@ public class JavaASTHandler extends ASTRequestor {
     public void acceptAST(ICompilationUnit source, CompilationUnit ast) {
         updateSourcePath(source);
 
-        JavaASTProcessor processor = new JavaASTProcessor(model);
         try {
-            ast.accept(processor);
+            ast.accept(createJavaASTProcessor());
             monitor.worked(1);
         } finally {
             model.clearUnit();

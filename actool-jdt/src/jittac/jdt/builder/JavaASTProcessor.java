@@ -48,8 +48,8 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
  */
 public class JavaASTProcessor extends ASTVisitor {
 
-    private boolean ignoreLibraryReferences = true;
-    private boolean ignoreIntraProjectReferences = true;
+    private boolean ignoreLibraryReferences = false;
+    private boolean ignoreIntraProjectReferences = false;
  
     private AbstractJavaModel model = null;
 
@@ -67,7 +67,25 @@ public class JavaASTProcessor extends ASTVisitor {
     public JavaASTProcessor(AbstractJavaModel model) {
         this.model = checkNotNull(model);
     }
-    
+
+    public boolean isIgnoreLibraryReferences() {
+        return ignoreLibraryReferences;
+    }
+
+    public void setIgnoreLibraryReferences(boolean value) {
+        this.ignoreLibraryReferences = value;
+    }
+
+
+    public boolean isIgnoreIntraProjectReferences() {
+        return ignoreIntraProjectReferences;
+    }
+
+
+    public void setIgnoreIntraProjectReferences(boolean value) {
+        this.ignoreIntraProjectReferences = value;
+    }
+
     protected IJavaElement currentBinding() {
         return _stack.peek().element;
     }
