@@ -64,10 +64,9 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 		delegate = new PropertyChangeDelegate(this);
 		
 		Component component = getModel();
-		component.addPropertyChangeListener(delegate);
-		
-		if (getParent().isComponentNewlyCreated(component.getID())) {
-            getParent().clearNewlyCreatedFlag(component.getID());
+		component.addPropertyChangeListener(delegate);	
+
+		if (getParent().clearNewlyCreatedFlag(component.getID())) {
 		    performDirectEdit();
 		}
 	}
@@ -298,6 +297,12 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 	    // Set visibility.
 		visibility = _getVisibilityProperty();
 	    updateFigureVisibility(figure, visibility);
+	    
+	    Rectangle bounds = getParent().getComponentBounds(component.getID());
+	    if (bounds != null) {
+	        figure.setBounds(bounds);
+            _setLocationProperty(bounds.getTopLeft());
+	    }
 
 		return figure;
 	}

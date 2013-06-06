@@ -1,20 +1,21 @@
 package net.sourceforge.actool.ui.editor.dnd;
 
-import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.ui.editor.commands.ComponentCreateAndMapCommand;
 import net.sourceforge.actool.ui.editor.commands.ComponentMapCommand;
 import net.sourceforge.actool.ui.editor.model.ArchitectureModelEditPart;
 import net.sourceforge.actool.ui.editor.model.ComponentEditPart;
 
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
-import org.eclipse.gef.editpolicies.AbstractEditPolicy;
+import org.eclipse.gef.editpolicies.GraphicalEditPolicy;
 
 
 
-public class MapEditPolicy extends AbstractEditPolicy {
+public class MapEditPolicy extends GraphicalEditPolicy {
     public static final String MAPPING_ROLE = "mapping";
 
     @Override
@@ -24,8 +25,16 @@ public class MapEditPolicy extends AbstractEditPolicy {
                 return new ComponentMapCommand(((Component) getHost().getModel()),
                         ((MapElementeRequest) request).getResources());
             } else if (getHost() instanceof ArchitectureModelEditPart) {
-                return new ComponentCreateAndMapCommand(((ArchitectureModel) getHost().getModel()),
-                        ((MapElementeRequest) request).getResources());
+                MapElementeRequest mapreq = (MapElementeRequest) request;
+                ArchitectureModelEditPart part = (ArchitectureModelEditPart) getHost();
+                ComponentCreateAndMapCommand command 
+                        = new ComponentCreateAndMapCommand(part.getModel(), mapreq.getResources());
+                
+                Point location = mapreq.getLocation();
+                for (Component component: command.getComponents()) {
+                    part.setNewlyCreatedFlag(component.getID(), new Rectangle(location, location));                    
+                }
+                return command;
             }
         }
         

@@ -3,6 +3,7 @@ package net.sourceforge.actool.model.da;
 import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.System.currentTimeMillis;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -324,7 +325,7 @@ public class ArchitectureModel extends ArchitectureElement
     public String comuteUniqueID() {
 	    String id = "";
 	    for (int i = 0; i < 999; ++i) {
-	        id = hashCode() + "." + Integer.toString(i, 3);
+	        id = hashCode() + "/" + currentTimeMillis() + "/" + Integer.toString(i, 3);
 	        if (!hasComponent(id))
 	            break;
 	    }

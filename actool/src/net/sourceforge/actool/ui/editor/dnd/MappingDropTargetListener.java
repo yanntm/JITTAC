@@ -26,7 +26,7 @@ public class MappingDropTargetListener extends AbstractTransferDropTargetListene
   
     protected void updateTargetEditPart() {
         super.updateTargetEditPart();
-        
+
         EditPart part = getTargetEditPart();
         if (part instanceof ComponentEditPart) 
             getCurrentEvent().detail = DND.DROP_LINK;
@@ -36,8 +36,11 @@ public class MappingDropTargetListener extends AbstractTransferDropTargetListene
       
     protected void updateTargetRequest() {
         DropTargetEvent event = getCurrentEvent();
-        if (event.data != null) 
+        if (event.data != null) {
             ((MapElementeRequest) getTargetRequest())
                 .setResources((IResource[]) event.data);
+            ((MapElementeRequest) getTargetRequest())
+                .setLocation(getDropLocation());
+        }
     }
 }

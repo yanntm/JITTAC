@@ -3,14 +3,12 @@
  */
 package net.sourceforge.actool.ui.editor.model;
 
-import static com.google.common.collect.Sets.newHashSet;
-
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
@@ -38,6 +36,8 @@ import org.eclipse.gef.editpolicies.RootComponentEditPolicy;
 import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
 
+import com.google.common.collect.Maps;
+
 
 
 /**
@@ -47,18 +47,22 @@ import org.eclipse.gef.requests.CreateRequest;
 public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
                                        implements PropertyChangeListener, IViolationHighlighter {
     PropertyChangeDelegate delegate;
-    Set<String> createdComponents = newHashSet();
+    Map<String, Rectangle> createdBounds = Maps.newHashMap();
     
     protected boolean isComponentNewlyCreated(String id) {
-        return createdComponents.contains(id);
+        return createdBounds.containsKey(id);
     }
     
-    protected void setNewlyCreatedFlag(String id) {
-        createdComponents.add(id);
+    protected Rectangle getComponentBounds(String id) {
+        return createdBounds.get(id);
+    }
+    
+    public void setNewlyCreatedFlag(String id, Rectangle bounds) {
+        createdBounds.put(id, bounds);
     }
     
     protected boolean clearNewlyCreatedFlag(String id) {
-        return createdComponents.remove(id);
+        return createdBounds.remove(id) != null;
     }
 
     public void activate() {
@@ -178,11 +182,10 @@ class ModelLayoutEditPolicy extends XYLayoutEditPolicy {
     }
 
     protected Command getCreateCommand(CreateRequest request) {
-	    //Rectangle bounds = (Rectangle) getConstraintFor(request);
-	    // TODO: Pass the bounds to the EditPart.
+	    Rectangle bounds = (Rectangle) getConstraintFor(request);
 	    ComponentCreateCommand command 
 	            = new ComponentCreateCommand(getHost().getModel());
-	    getHost().setNewlyCreatedFlag(command.getComponent().getID());
+	    getHost().setNewlyCreatedFlag(command.getComponent().getID(), bounds);
 
 		return command ;
 	}

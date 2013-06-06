@@ -1,10 +1,9 @@
 package net.sourceforge.actool.ui.editor.commands;
 
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,7 +21,7 @@ import org.eclipse.jdt.ui.JavaElementLabelProvider;
 
 public class ComponentCreateAndMapCommand extends Command {
     private ArchitectureModel model;
-    private Collection<Component> components = new LinkedList<Component>();
+    private Set<Component> components = new HashSet<Component>();
     private Map<Component, IResource> mapping = new HashMap<Component, IResource>();
     
 	JavaElementLabelProvider labelProvider = new JavaElementLabelProvider();
@@ -51,6 +50,9 @@ public class ComponentCreateAndMapCommand extends Command {
 	    }
 	}
 	
+	public Set<Component> getComponents() {
+	    return components;
+	}
 
 	/**
 	 * Execute command.
