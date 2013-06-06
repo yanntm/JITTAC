@@ -131,6 +131,11 @@ public class ArchitectureModel extends ArchitectureElement
                             addXReference(xref, mapping.getComponent(), connector.getTarget());
                     }
 	            }
+                
+                if (!connector.isEnvisaged() && !connector.hasXReferences()) {
+                    connector.disconnect();
+                    conns.remove();
+                }
 	        }
 	        
 	        // And target connections then.
@@ -140,9 +145,15 @@ public class ArchitectureModel extends ArchitectureElement
                 for (IXReference xref: connector.getXReferences()) {
                     if (mapping.matches(xref.getTarget().getResource())) {              
                         connector.removeXReference(xref);
+                        
                         if (!connector.getSource().equals(mapping.getComponent()))
                             addXReference(xref, connector.getSource(), mapping.getComponent());
                     }
+                }
+                
+                if (!connector.isEnvisaged() && !connector.hasXReferences()) {
+                    connector.disconnect();
+                    conns.remove();
                 }
             }
 	    }
@@ -178,8 +189,10 @@ public class ArchitectureModel extends ArchitectureElement
 
             }
             
-            if (!connector.isEnvisaged() && !connector.hasXReferences())
-            	connector.disconnect();
+            if (!connector.isEnvisaged() && !connector.hasXReferences()) {
+                connector.disconnect();
+                conns.remove();
+            }
         }
         
         // And then target connections!
@@ -205,8 +218,10 @@ public class ArchitectureModel extends ArchitectureElement
 
             }
             
-            if (!connector.isEnvisaged() && !connector.hasXReferences())
-            	connector.disconnect();
+            if (!connector.isEnvisaged() && !connector.hasXReferences()) {
+                connector.disconnect();
+                conns.remove();
+            }
         } 
 	}
 	

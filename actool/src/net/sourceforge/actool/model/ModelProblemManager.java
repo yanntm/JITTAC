@@ -8,10 +8,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.sourceforge.actool.ACTool;
 import net.sourceforge.actool.defaults;
 import net.sourceforge.actool.logging.EventLogger;
-import net.sourceforge.actool.logging.ModelEventListener;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.ArchitectureModelListener;
 import net.sourceforge.actool.model.da.Component;
@@ -26,8 +24,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.QualifiedName;
 
 
 public class ModelProblemManager extends ArchitectureModelListener {
@@ -160,10 +156,10 @@ public class ModelProblemManager extends ArchitectureModelListener {
    					continue;
    				}
 
-   				EventLogger.getInstance().logModelInitBegin(resource);
+//   				EventLogger.getInstance().logModelInitBegin(resource);
    				ArchitectureModel model = manager.getArchitectureModel((IFile) resource);
-   				model.addModelListener(new ModelEventListener(EventLogger.getInstance()));
-   				EventLogger.getInstance().logModelInitEnd(resource);
+//   				model.addModelListener(new ModelEventListener(EventLogger.getInstance()));
+//   				EventLogger.getInstance().logModelInitEnd(resource);
    				
 
    				// This will crate an instance of problem manager...
