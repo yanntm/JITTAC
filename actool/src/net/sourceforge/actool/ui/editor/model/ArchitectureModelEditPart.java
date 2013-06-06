@@ -3,11 +3,14 @@
  */
 package net.sourceforge.actool.ui.editor.model;
 
+import static com.google.common.collect.Sets.newHashSet;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
@@ -44,28 +47,41 @@ import org.eclipse.gef.requests.CreateRequest;
 public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
                                        implements PropertyChangeListener, IViolationHighlighter {
     PropertyChangeDelegate delegate;
+    Set<String> createdComponents = newHashSet();
     
+    protected boolean isComponentNewlyCreated(String id) {
+        return createdComponents.contains(id);
+    }
+    
+    protected void setNewlyCreatedFlag(String id) {
+        createdComponents.add(id);
+    }
+    
+    protected boolean clearNewlyCreatedFlag(String id) {
+        return createdComponents.remove(id);
+    }
+
     public void activate() {
         if (isActive())
             return;
         
         super.activate();       
         delegate = new PropertyChangeDelegate(this);
-        getCastedModel().addPropertyChangeListener(delegate);
+        getModel().addPropertyChangeListener(delegate);
     }
     
     public void deactivate() {
         if (!isActive())
             return;
         
-        getCastedModel().removePropertyChangeListener(delegate);
+        getModel().removePropertyChangeListener(delegate);
         delegate = null;        
         super.deactivate();
     }
     
-    
-    public ArchitectureModel getCastedModel() {
-        return (ArchitectureModel) getModel();
+    @Override
+    public ArchitectureModel getModel() {
+        return (ArchitectureModel) super.getModel();
     }
     
     /*
@@ -103,7 +119,7 @@ public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
 	
 	
 	protected List<Component> getModelChildren() {
-		return getCastedModel().getComponents();
+		return getModel().getComponents();
 	}
 
 	
@@ -155,11 +171,20 @@ public class ArchitectureModelEditPart extends AbstractGraphicalEditPart
 
 
 class ModelLayoutEditPolicy extends XYLayoutEditPolicy {
-	
-	protected Command getCreateCommand(CreateRequest request) {
+
+	@Override
+    public ArchitectureModelEditPart getHost() {
+        return (ArchitectureModelEditPart) super.getHost();
+    }
+
+    protected Command getCreateCommand(CreateRequest request) {
 	    //Rectangle bounds = (Rectangle) getConstraintFor(request);
 	    // TODO: Pass the bounds to the EditPart.
-		return new ComponentCreateCommand(((ArchitectureModelEditPart) getHost()).getCastedModel());
+	    ComponentCreateCommand command 
+	            = new ComponentCreateCommand(getHost().getModel());
+	    getHost().setNewlyCreatedFlag(command.getComponent().getID());
+
+		return command ;
 	}
 
 	protected Command createChangeConstraintCommand(EditPart child, Object constraint) {

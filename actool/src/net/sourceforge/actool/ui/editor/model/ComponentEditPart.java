@@ -32,7 +32,6 @@ import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
-import org.eclipse.gef.RequestConstants;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 import org.eclipse.gef.editpolicies.ComponentEditPolicy;
@@ -63,7 +62,14 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 		
 		super.activate();		
 		delegate = new PropertyChangeDelegate(this);
-		getModel().addPropertyChangeListener(delegate);
+		
+		Component component = getModel();
+		component.addPropertyChangeListener(delegate);
+		
+		if (getParent().isComponentNewlyCreated(component.getID())) {
+            getParent().clearNewlyCreatedFlag(component.getID());
+		    performDirectEdit();
+		}
 	}
 	
 	public void deactivate() {
@@ -75,9 +81,14 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 		super.deactivate();
 	}
 	
-	
+	@Override
 	public Component getModel() {
 		return (Component) super.getModel();
+	}
+	
+	@Override
+	public ArchitectureModelEditPart getParent() {
+	    return (ArchitectureModelEditPart) super.getParent();
 	}
 	
 	public int getIntProperty(String key, int def) {
@@ -199,26 +210,30 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 
     @Override
     public void performRequest(Request request) {
-        if(request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-            final Label label = (Label) getFigure().getChildren().get(0);
-            
-            CellEditorLocator locator = new CellEditorLocator() {               
-                @Override
-                public void relocate(CellEditor celleditor) {
-                    Rectangle rect = label.getBounds();
-                    celleditor.getControl()
-                            .setBounds(rect.x + 4, rect.y + 4, rect.width - 8, rect.height - 8);
-                }
-            };
-            new DirectEditManager(this, TextCellEditor.class, locator) {
-                @Override
-                protected void initCellEditor() {
-                    getCellEditor().setValue(label.getText());                    
-                }
-            }.show();
+        if(request.getType() == REQ_DIRECT_EDIT) {
+            performDirectEdit();
         } else {
             super.performRequest(request);
         }
+    }
+    
+    protected void performDirectEdit() {
+        final Label label = (Label) getFigure().getChildren().get(0);
+        
+        CellEditorLocator locator = new CellEditorLocator() {               
+            @Override
+            public void relocate(CellEditor celleditor) {
+                Rectangle rect = label.getBounds();
+                celleditor.getControl()
+                        .setBounds(rect.x + 4, rect.y + 4, rect.width - 8, rect.height - 8);
+            }
+        };
+        new DirectEditManager(this, TextCellEditor.class, locator) {
+            @Override
+            protected void initCellEditor() {
+                getCellEditor().setValue(label.getText());                    
+            }
+        }.show();
     }
 
 	@Override

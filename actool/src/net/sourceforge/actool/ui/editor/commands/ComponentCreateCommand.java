@@ -23,7 +23,7 @@ public class ComponentCreateCommand extends Command {
 	    return model;
 	}
 	
-	protected Component getComponent() {
+	public Component getComponent() {
 	    return component;
 	}
 
