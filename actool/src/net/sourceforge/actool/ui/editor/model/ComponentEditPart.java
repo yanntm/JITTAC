@@ -9,6 +9,7 @@ import java.util.List;
 import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.model.da.Connector;
 import net.sourceforge.actool.ui.editor.commands.ComponentDeleteCommand;
+import net.sourceforge.actool.ui.editor.commands.ComponentRenameCommand;
 import net.sourceforge.actool.ui.editor.commands.ConnectorCreateCommand;
 import net.sourceforge.actool.ui.editor.dnd.MapEditPolicy;
 
@@ -31,13 +32,20 @@ import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
+import org.eclipse.gef.RequestConstants;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 import org.eclipse.gef.editpolicies.ComponentEditPolicy;
+import org.eclipse.gef.editpolicies.DirectEditPolicy;
 import org.eclipse.gef.editpolicies.GraphicalNodeEditPolicy;
 import org.eclipse.gef.requests.CreateConnectionRequest;
+import org.eclipse.gef.requests.DirectEditRequest;
 import org.eclipse.gef.requests.GroupRequest;
 import org.eclipse.gef.requests.ReconnectRequest;
+import org.eclipse.gef.tools.CellEditorLocator;
+import org.eclipse.gef.tools.DirectEditManager;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.TextCellEditor;
 
 
 
@@ -55,31 +63,31 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 		
 		super.activate();		
 		delegate = new PropertyChangeDelegate(this);
-		getCastedModel().addPropertyChangeListener(delegate);
+		getModel().addPropertyChangeListener(delegate);
 	}
 	
 	public void deactivate() {
 		if (!isActive())
 			return;
 		
-		getCastedModel().removePropertyChangeListener(delegate);
+		getModel().removePropertyChangeListener(delegate);
 		delegate = null;		
 		super.deactivate();
 	}
 	
 	
-	public Component getCastedModel() {
-		return (Component) getModel();
+	public Component getModel() {
+		return (Component) super.getModel();
 	}
 	
 	public int getIntProperty(String key, int def) {
-		if (!getCastedModel().hasModel())
+		if (!getModel().hasModel())
 			return def;
 
-		IResource resource = getCastedModel().getModel().getResource();
+		IResource resource = getModel().getModel().getResource();
 		
 		try {
-			String value = resource.getPersistentProperty(new QualifiedName(getCastedModel().getID(), key));
+			String value = resource.getPersistentProperty(new QualifiedName(getModel().getID(), key));
 			if (value != null) {
 				return Integer.parseInt(value);
 			}
@@ -91,10 +99,10 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 	}
 
 	public void setIntProperty(String key, int value) {
-		IResource resource = getCastedModel().getModel().getResource();
+		IResource resource = getModel().getModel().getResource();
 		
 		try {
-			resource.setPersistentProperty(new QualifiedName(getCastedModel().getID(), key), Integer.toString(value));
+			resource.setPersistentProperty(new QualifiedName(getModel().getID(), key), Integer.toString(value));
         } catch (CoreException e) {
 			e.printStackTrace();
 		}
@@ -104,7 +112,7 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 		return visibility;
 	}
 
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
 	public void setVisibility(int visibility) {
 		if (this.visibility == visibility
 		    || (visibility < INVISIBLE || visibility > FADED))
@@ -189,16 +197,38 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 		setIntProperty("visibility", visibility);
 	}
 
-	
+    @Override
+    public void performRequest(Request request) {
+        if(request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
+            final Label label = (Label) getFigure().getChildren().get(0);
+            
+            CellEditorLocator locator = new CellEditorLocator() {               
+                @Override
+                public void relocate(CellEditor celleditor) {
+                    Rectangle rect = label.getBounds();
+                    celleditor.getControl()
+                            .setBounds(rect.x + 4, rect.y + 4, rect.width - 8, rect.height - 8);
+                }
+            };
+            new DirectEditManager(this, TextCellEditor.class, locator) {
+                @Override
+                protected void initCellEditor() {
+                    getCellEditor().setValue(label.getText());                    
+                }
+            }.show();
+        } else {
+            super.performRequest(request);
+        }
+    }
+
 	@Override
 	protected void createEditPolicies() {
         installEditPolicy(MapEditPolicy.MAPPING_ROLE, new MapEditPolicy());
 	    installEditPolicy(EditPolicy.COMPONENT_ROLE, new ComponentEditPolicy() {
 	        protected Command getDeleteCommand(GroupRequest request) {
-	                return new ComponentDeleteCommand(getCastedModel());
+	                return new ComponentDeleteCommand(getModel());
 	        }
 	    });
-	    
 
 	    installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE, new GraphicalNodeEditPolicy() {
 
@@ -221,10 +251,23 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
                 return null;
             }
 	    });
+	    
+	    installEditPolicy(DirectEditPolicy.DIRECT_EDIT_ROLE, new DirectEditPolicy() {
+            
+            @Override
+            protected void showCurrentEditValue(DirectEditRequest request) {
+            }
+            
+            @Override
+            protected Command getDirectEditCommand(DirectEditRequest request) {
+                return new ComponentRenameCommand(
+                        getModel(), (String) request.getCellEditor().getValue());
+            }
+        });
 	}
 	
 	protected IFigure createFigure() {
-		Component component = getCastedModel();
+		Component component = getModel();
 		assert component != null;
 		
 		// Create the composite figure.
@@ -245,11 +288,11 @@ public class ComponentEditPart extends AbstractGraphicalEditPart
 	}
 	
 	public List<Connector> getModelSourceConnections() {
-		return getCastedModel().getSourceConnectors();
+		return getModel().getSourceConnectors();
 	}
 	
 	public List<Connector> getModelTargetConnections() {
-		return getCastedModel().getTargetConnectors();
+		return getModel().getTargetConnectors();
 	}
 
 	public void propertyChange(PropertyChangeEvent event) {

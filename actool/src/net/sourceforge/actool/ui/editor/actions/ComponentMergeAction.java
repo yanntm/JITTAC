@@ -41,7 +41,7 @@ public class ComponentMergeAction extends SelectionAction {
 		Set<Component> comps = new HashSet<Component>();
 		for (Object obj: getSelectedObjects()) {
 			if (obj instanceof ComponentEditPart)
-				comps.add(((ComponentEditPart) obj).getCastedModel());
+				comps.add(((ComponentEditPart) obj).getModel());
 			else
 				return;
 		}
