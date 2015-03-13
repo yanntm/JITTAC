@@ -11,10 +11,6 @@ import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.Component;
 import net.sourceforge.actool.model.da.Connector;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.gef.commands.Command;
 
 

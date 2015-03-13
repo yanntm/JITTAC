@@ -10,7 +10,6 @@ import java.util.Map;
 import net.sourceforge.actool.jdt.ACToolJDT;
 import net.sourceforge.actool.jdt.model.AbstractJavaModel;
 import net.sourceforge.actool.jdt.util.ProjectTracker;
-import net.sourceforge.actool.logging.EventLogger;
 import net.sourceforge.actool.model.ModelManager;
 
 import org.eclipse.core.resources.IFile;
@@ -101,9 +100,7 @@ public class ImplementationModelBuilder extends IncrementalProjectBuilder {
 		    ModelBuilder builder = new ModelBuilder(model);
 			
 		    try {
-		    	EventLogger.getInstance().logBuildBegin(source);
 				ast.accept(builder);
-		    	EventLogger.getInstance().logBuildEnd(source);
 		    } finally {
 		    	// Clear unit so next compile session can proceed!
 		    	model.clearUnit();
@@ -134,7 +131,7 @@ public class ImplementationModelBuilder extends IncrementalProjectBuilder {
 			delta.accept(collector);
 		
 		// Create and configure the parser.
-		ASTParser parser = ASTParser.newParser(AST.JLS3);
+		ASTParser parser = ASTParser.newParser(AST.JLS4);
 		parser.setProject(JavaCore.create(getProject()));
 		parser.setResolveBindings(true);
 		

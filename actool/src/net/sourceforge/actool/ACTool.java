@@ -1,10 +1,7 @@
 package net.sourceforge.actool;
 
 import java.io.File;
-import java.io.FileOutputStream;
 
-import net.sourceforge.actool.logging.EventLogger;
-import net.sourceforge.actool.logging.WorkbenchActivityLogger;
 import net.sourceforge.actool.model.ModelManager;
 import net.sourceforge.actool.model.ModelProblemManager;
 import net.sourceforge.actool.model.ia.IImplementationModelFactory;
@@ -15,8 +12,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -34,18 +29,12 @@ public class ACTool extends AbstractUIPlugin {
 
 	// The shared instance
 	private static ACTool core;
-	
-	private EventLogger logger;
-	
+
 	/**
 	 * The constructor
 	 */
 	public ACTool() {
 	}
-	
-    public static EventLogger getEventLogger() {
-    	return core.logger;
-    }
 
 	/*
 	 * (non-Javadoc)
@@ -59,14 +48,6 @@ public class ACTool extends AbstractUIPlugin {
 		File file = getStateLocation().append("event.log").toFile();
 		file.createNewFile();
 		
-		// Create and initialise logger.
-		logger = new EventLogger(Platform.getPreferencesService().getString(PLUGIN_ID, "act.uid", "000000", null),
-								 new FileOutputStream(file, true));
-		logger.logStartup();
-		
-		IWorkbench workbench = PlatformUI.getWorkbench();
-		new WorkbenchActivityLogger(logger).register(workbench);
-		
 		for (IProject project: ResourcesPlugin.getWorkspace().getRoot().getProjects()) {
 			if (project.isOpen())
 				ModelProblemManager.initialiseProject(project);
@@ -79,9 +60,6 @@ public class ACTool extends AbstractUIPlugin {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
-		logger.logShutdown();
-		logger.close();
-		
 		core = null;
 		super.stop(context);
 	}

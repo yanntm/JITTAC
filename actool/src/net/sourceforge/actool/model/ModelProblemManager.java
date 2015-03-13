@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import net.sourceforge.actool.defaults;
-import net.sourceforge.actool.logging.EventLogger;
 import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.ArchitectureModelListener;
 import net.sourceforge.actool.model.da.Component;

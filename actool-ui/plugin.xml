@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="net.sourceforge.actool.ui.editor.ArchitectureEditor"
+            contributorClass="net.sourceforge.actool.ui.editor.ArchitectureEditorActionBarContributor"
+            default="false"
+            extensions="xam"
+            icon="icons/act-icon.gif"
+            id="net.sourceforge.actool.ui.ArchitectureEditor"
+            name="Architecture Editor">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="net.sourceforge.actool.ui.views.Category"
+            class="net.sourceforge.actool.ui.views.XReferenceView"
+            id="net.sourceforge.actool.ui.views.XReferenceView"
+            name="Architectural Relations"
+            restorable="true">
+      </view>
+      <category
+            id="net.sourceforge.actool.ui.views.Category"
+            name="Architectural Views">
+      </category>
+   </extension>
+   
+   <extension point="org.eclipse.ui.views">
+         <view
+            category="net.sourceforge.actool.ui.views.Category"
+            class="net.sourceforge.actool.ui.views.XReferenceSummaryView"
+            id="net.sourceforge.actool.ui.views.XReferenceSummaryView"
+            name="Relation Summary View"
+            restorable="true">
+      </view>
+      <category
+            id="net.sourceforge.actool.ui.views.Category"
+            name="Architectural Views">
+      </category>
+   </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="net.sourceforge.actool"
+            name="Architecture Consistency">
+      </category>
+      <wizard
+            category="net.sourceforge.actool"
+            class="net.sourceforge.actool.ui.wizards.NewArchitectureModelWizard"
+            icon="icons/act-icon.gif"
+            id="net.sourceforge.actool.ui.wizards.NewArchitectureModelWizard"
+            name="Architecture Model file">
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            adaptable="true"
+            class="net.sourceforge.actool.ui.ModelPropertyPage"
+            id="net.sourceforge.actool.model.properties"
+            name="Architecture Consistency"
+            nameFilter="*.xam"
+            objectClass="org.eclipse.core.resources.IFile">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="net.sourceforge.actool.ui.PreferencePage"
+            id="net.sourceforge.actool.ui.PreferencePage"
+            name="Archiecture Consistency">
+      </page>
+   </extension>
+   <extension
+         id="ArchitecturalViolationAnnotation"
+         name="ArchitecturalViolationAnnotation"
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+         <specification annotationType="net.sourceforge.actool.ui.ArchitecturalViolationAnnotation"
+                label="Architectural Violation Annotation"
+                icon="icons/art-icon.gif"
+                overviewRulerPreferenceKey="clruler"
+                overviewRulerPreferenceValue="true"
+                colorPreferenceKey="clcolor"
+                colorPreferenceValue="165,75,165"
+                textPreferenceKey="cltext"
+                textPreferenceValue="true"
+                verticalRulerPreferenceKey="clvertical"
+                verticalRulerPreferenceValue="true"
+                textStylePreferenceKey="clstyle"
+                textStylePreferenceValue="UNDERLINE">
+		</specification> 
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+   		<type markerSeverity="0"
+        super="org.eclipse.ui.workbench.texteditor.info"
+        name="net.sourceforge.actool.ui.ArchitecturalViolationAnnotation"
+        markerType="net.sourceforge.actool.markers.Problem"/>
+         
+   </extension>
+   <extension point="org.eclipse.ui.ide.markerResolution">
+      <markerResolutionGenerator
+         markerType="net.sourceforge.actool.markers.Problem"
+         class="net.sourceforge.actool.ui.editor.quickfix.ArchitecturalViolationQuickFixer"/>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+         <menu
+               id="jittac.popup"
+               label="JITTAC">
+            <command
+                  commandId="jittac.commands.enableCodeAnalysis"
+                  id="jittac.menus.enableCodeAnalysis"
+                  style="radio">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="jittac.commands.disableCodeAnalysis"
+                  id="jittac.menus.disableCodeAnalysis">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            description="Enable code dependency analysis by JITTAC"
+            id="jittac.commands.enableCodeAnalysis"
+            name="Enable Code Analysis">
+      </command>
+      <command
+            description="Disable code dependency analysis by JITTAC"
+            id="jittac.commands.disableCodeAnalysis"
+            name="Disable Code Analysis">
+      </command>
+   </extension>
+</plugin>

@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import net.sourceforge.actool.model.ResourceMap;
@@ -35,7 +34,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
@@ -690,74 +688,5 @@ public class ArchitectureModel extends ArchitectureElement
                 return xrefStringFactory.createXReference(input);
             }
 		});
-	}
-
-
-	 /**
-	 * @since 0.2
-	 */
-	public  static Component getComponentByIJavaElement(IJavaElement element){
-	    	return getComponentByFQN(getFullname(element));
-	    }
-
-		private static String getFullname(IJavaElement element) {
-		    if (element == null) {
-		        return "";
-		    }
-//			element.getResource()
-			Stack<String> temp = new Stack<String>();
-	    	IJavaElement packageElement = element;
-	    	while(packageElement.getElementType() !=4 ) {
-	    		if(packageElement.getElementType()!=5){ 
-	    			temp.push(packageElement.getElementName());
-	    			temp.push(".");
-	    		}
-	    		packageElement=packageElement.getParent();
-	    	}
-	    	temp.push(packageElement.getElementName());
-	    	String fullname = "";
-	    	for(int i=0;i<temp.size();i++) fullname+=temp.pop();
-			return fullname;
-		}
-	/**
-	 * @since 0.2
-	 */
-	public static Component getComponentByFQN(String fullname) {
-		Component result=null;
-    	String bestMatch ="";
-    	Iterator<ArchitectureModel> it= components.keySet().iterator();
-    	LinkedList<Component> comps= new LinkedList<Component>();
-    	while(it.hasNext())comps.addAll(components.get(it.next()).values());
-    	for(Component c : comps){
-//    	for(Component c : components.values()){
-    		for(ResourceMapping rm : c.getMappings()){
-	    		String current = rm.getName();
-	    		
-	    		if(fullname.contains(current)){ 
-	    			if(isBetterMatch(fullname, bestMatch, current)) {
-	    				bestMatch=current;
-	    				if(result==null||!result.getName().contains(bestMatch)) result=c;
-	    			}
-	    		}
-    		}
-    	}
-    	    	
-    	return result;
-	}
-
-	private static boolean isBetterMatch(String fullname, String bestMatch,String current) {
-		 boolean result = true;
-		 int cLength = current.length();
-		result&=bestMatch.length()<cLength;
-		 int fLlength = fullname.length();
-		result&=cLength<=fLlength;
-		int cLastSegIndex = current.lastIndexOf(".");
-		int fLastSegIndex = fullname.lastIndexOf(".");
-		if(cLastSegIndex==fLastSegIndex){
-			String cLastSeg = current.substring(cLastSegIndex,cLength);
-			String fLastSeg = fullname.substring(fLastSegIndex,fLlength);
-			result&=cLastSeg.equals(fLastSeg);
-		}
-		return result;
 	}
 }
