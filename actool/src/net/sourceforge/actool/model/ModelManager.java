@@ -2,6 +2,7 @@ package net.sourceforge.actool.model;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Collections.emptySet;
+import static net.sourceforge.actool.ACTool.getRegisteredIAChangeListeners;
 import static net.sourceforge.actool.model.ModelProblemManager.problemManager;
 import static org.eclipse.core.resources.ResourcesPlugin.getWorkspace;
 import static org.eclipse.core.runtime.Path.fromPortableString;
@@ -21,6 +22,7 @@ import net.sourceforge.actool.model.da.ArchitectureModel;
 import net.sourceforge.actool.model.da.ArchitectureModelReader;
 import net.sourceforge.actool.model.ia.IImplementationModelFactory;
 import net.sourceforge.actool.model.ia.IXReferenceStringFactory;
+import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 import net.sourceforge.actool.model.ia.ImplementationModel;
 
 import org.eclipse.core.resources.IFile;
@@ -269,8 +271,9 @@ public class ModelManager {
 			// Attach project containing the file if implementation is
 			// available.
 			
-			if (ia != null)
+			if (ia != null) {
 				model.attachToImplementation(ia);
+			}
 
 			// Attach all implementation models this project depends on.
 			for(ImplementationModel im :imodels) model.attachToImplementation(im);
@@ -298,6 +301,13 @@ public class ModelManager {
             IPath path = project.getProject().getWorkingLocation(ACTool.PLUGIN_ID);
             path = path.append("/ia_model.sav");
             im._restore(path);
+            
+            // Attached all the registered implementation change listeners 
+            // to the newly created implementation model.
+            for (ImplementationChangeListener listener: getRegisteredIAChangeListeners()) {
+                im.addImplementationChangeListener(listener);
+                im._updateListener(listener);
+            }
             
             /*
         	// HACK: Retrieve a model from first project that depends on this implementation.
@@ -327,7 +337,6 @@ public class ModelManager {
     	for (ArchitectureModel am: models.values()) {
     		if (dependants.contains(am.getResource().getProject())){
     			am.attachToImplementation(im);
-    			
     		}
     	}
     	

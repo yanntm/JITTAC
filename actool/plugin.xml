@@ -2,6 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension-point id="net.sourceforge.actool.model.ia" name="Implementation Model" schema="schema/net.sourceforge.actool.model.ia.exsd"/>
+   <extension-point id="net.sourceforge.actool.model.ia.listener" name="Implementation Change Listener" schema="schema/net.sourceforge.actool.model.ia.listener.exsd"/>
    <extension
          id="net.sourceforge.actool.PreferencesInitializer"
          name="ACT Preferences"

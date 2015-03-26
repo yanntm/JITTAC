@@ -19,6 +19,29 @@ public class ResourceMap {
     private QualifiedName key;
     private Map<IResource, ResourceMapping> mappings = new HashMap<IResource, ResourceMapping>();
     
+    private class HasMappedChildrenVisitor implements IResourceVisitor {
+        final Component component;
+        boolean result = false;
+        
+        public HasMappedChildrenVisitor(Component component) {
+            this.component = component;
+        }
+
+        @Override
+        public boolean visit(IResource resource) throws CoreException {
+            ResourceMapping mapping = (ResourceMapping) resource.getSessionProperty(key);
+            if (mapping != null && mapping.getComponent().equals(component)) {
+                result = true;
+            }
+            
+            return !result;
+        }
+        
+        public boolean getResult() {
+            return result;
+        }
+    }
+    
     public ResourceMap(QualifiedName key) {
         this.key = key;
     }
@@ -83,6 +106,24 @@ public class ResourceMap {
 		}
     	
     	return mappings.toArray(new ResourceMapping[mappings.size()]);
+    }
+    
+    public boolean isMappedTo(IResource resource, Component component) {
+        Component mappedTo = resolveMapping(resource);
+        return mappedTo != null && mappedTo.equals(component);
+    }
+    
+    public boolean hasChildrenMappedTo(IResource resource, Component component) {
+        HasMappedChildrenVisitor visitor = new HasMappedChildrenVisitor(component);
+
+        try {
+            resource.accept(visitor);
+        } catch (CoreException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        return visitor.getResult();
     }
     
     public ResourceMapping removeMapping(IResource resource) {

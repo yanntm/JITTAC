@@ -1,10 +1,14 @@
 package net.sourceforge.actool;
 
+import static com.google.common.collect.Sets.newHashSet;
+
 import java.io.File;
+import java.util.Set;
 
 import net.sourceforge.actool.model.ModelManager;
 import net.sourceforge.actool.model.ModelProblemManager;
 import net.sourceforge.actool.model.ia.IImplementationModelFactory;
+import net.sourceforge.actool.model.ia.ImplementationChangeListener;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -26,9 +30,12 @@ public class ACTool extends AbstractUIPlugin {
 	public static final String PLUGIN_ID = "net.sourceforge.actool";
 	
 	public static final String EXTID_IA_MODEL = "net.sourceforge.actool.model.ia";
+    public static final String EXTID_IA_MODEL_LISTENER = "net.sourceforge.actool.model.ia.listener";
 
 	// The shared instance
 	private static ACTool core;
+	
+	private Set<ImplementationChangeListener> iaListeners;
 
 	/**
 	 * The constructor
@@ -103,5 +110,29 @@ public class ACTool extends AbstractUIPlugin {
 				continue;
 			}
 		}
+	}
+	
+	public static Set<ImplementationChangeListener> getRegisteredIAChangeListeners() {
+	    IConfigurationElement[] config = Platform.getExtensionRegistry()
+	            .getConfigurationElementsFor(ACTool.EXTID_IA_MODEL_LISTENER);
+	    
+	    if (core.iaListeners == null) {
+	        core.iaListeners = newHashSet();
+
+    	    for (IConfigurationElement element : config) {
+    	        try {
+    	            Object obj = element.createExecutableExtension("class");
+    
+    	            if (obj instanceof ImplementationChangeListener) {
+    	                core.iaListeners.add((ImplementationChangeListener) obj);
+    	            }
+    	        } catch (CoreException ex) {
+    	            ex.printStackTrace();
+    	            continue;
+    	        }
+    	    }
+	    }
+	    
+	    return core.iaListeners;
 	}
 }
