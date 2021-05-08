@@ -4,9 +4,10 @@ Bundle-Name: Architecture Consistency Tool for Eclipse
 Bundle-SymbolicName: net.sourceforge.actool;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: net.sourceforge.actool.ACTool
-Require-Bundle: org.eclipse.core.runtime;bundle-version="3.4.0",
+Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
- org.eclipse.gef;bundle-version="3.4.0",
+ org.eclipse.gef,
+ org.hsqldb,
  org.eclipse.jface.text,
  org.eclipse.jdt.core,
  org.eclipse.jdt.ui,
