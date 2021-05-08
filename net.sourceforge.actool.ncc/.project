@@ -2,9 +2,6 @@
 <projectDescription>
 	<name>net.sourceforge.actool.ncc</name>
 	<comment></comment>
-	<projects>
-		<project>actool</project>
-	</projects>
 	<buildSpec>
 		<buildCommand>
 			<name>org.eclipse.wst.common.project.facet.core.builder</name>
