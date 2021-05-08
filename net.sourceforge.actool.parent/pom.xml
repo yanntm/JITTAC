@@ -21,8 +21,8 @@
 		<!-- Logic + functionality plugin -->
 		<module>../net.sourceforge.actool</module>
 		<!-- ui plugin : a button to invoke the behavior -->
-		<module>../net.sourceforge.actool.ncc</module>
-		<!-- ui plugin : a button to invoke the behavior -->
+<!-- 		<module>../net.sourceforge.actool.ncc</module>
+ -->		<!-- ui plugin : a button to invoke the behavior -->
 		<module>../net.sourceforge.actool.jdt</module>
 		<!-- feature plugin : to package the functionality-->
 		<module>../net.sourceforge.actool.feature</module>
