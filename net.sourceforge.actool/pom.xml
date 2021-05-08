@@ -9,9 +9,9 @@
 	  <relativePath>../net.sourceforge.actool.parent/pom.xml</relativePath>
   </parent>
   
-    <artifactId>net.sourceforge.actool.jdt</artifactId>
+    <artifactId>net.sourceforge.actool</artifactId>
     <packaging>eclipse-plugin</packaging>
-    <name>Jittac for Java.</name>
+    <name>Jittac core.</name>
     <description>Rules that triger efficient parallel java.</description>
 
 </project>
