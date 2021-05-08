@@ -2,21 +2,20 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Architecture Consistency Tool for Java [JDT]
 Bundle-SymbolicName: net.sourceforge.actool.jdt;singleton:=true
-Bundle-Version: 0.3.99.0
+Bundle-Version: 1.0.0.qualifier
 Require-Bundle: org.eclipse.core.expressions,
  org.eclipse.core.resources,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core,
  org.eclipse.jdt.ui,
  org.eclipse.ui,
- net.sourceforge.actool;bundle-version="[0.3.99.0,0.4.0)",
- com.google.guava;bundle-version="[11.0.0,12.0.0)"
+ net.sourceforge.actool,
+ com.google.guava,
+ org.eclipse.jface.text
 Bundle-Activator: net.sourceforge.actool.jdt.ACToolJDT
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: net.sourceforge.actool.jdt,
  net.sourceforge.actool.jdt.build,
  net.sourceforge.actool.jdt.model,
  net.sourceforge.actool.jdt.util
-Import-Package: org.eclipse.jface.text,
- org.eclipse.jface.text.contentassist

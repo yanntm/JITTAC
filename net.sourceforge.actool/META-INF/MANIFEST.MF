@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Architecture Consistency Tool for Eclipse
 Bundle-SymbolicName: net.sourceforge.actool;singleton:=true
-Bundle-Version: 0.3.99.0
+Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: net.sourceforge.actool.ACTool
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.4.0",
  org.eclipse.core.resources,
@@ -14,7 +14,7 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.4.0",
  org.eclipse.ui.editors,
  org.eclipse.ui.ide,
  org.eclipse.ui.views,
- com.google.guava;bundle-version="[11.0.0,12.0.0)"
+ com.google.guava
 Bundle-ActivationPolicy: lazy
 Export-Package: jittac,
  jittac.util,
