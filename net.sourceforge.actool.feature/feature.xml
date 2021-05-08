@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="net.sourceforge.actool"
+      id="net.sourceforge.actool.feature"
       label="Architecture Consistency Tool"
       version="1.0.0.qualifier">
 
