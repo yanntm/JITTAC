@@ -26,6 +26,8 @@ jobs:
          restore-keys: ${{ runner.os }}-m2
     - name: Build with Maven
       run: cd net.sourceforge.actool.parent && mvn -T 4 -e generate-sources install && cd -
+    - name: Copy site
+      run: cp -r net.sourceforge.actool.updatesite/index.html net.sourceforge.actool.updatesite/web/ net.sourceforge.actool.updatesite/target/repository 
     - name: Deploy to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
