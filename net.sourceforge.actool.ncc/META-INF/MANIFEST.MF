@@ -11,6 +11,6 @@ Require-Bundle: org.eclipse.cdt.core,
  org.eclipse.ui.editors,
  org.eclipse.ui.views,
  org.eclipse.ui,
- net.sourceforge.actool;bundle-version="[0.1.3,0.3.0)"
+ net.sourceforge.actool
 Bundle-Activator: net.sourceforge.actool.ncc.ACToolNCC
 Bundle-ActivationPolicy: lazy

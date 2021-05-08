@@ -23,6 +23,6 @@ Export-Package: jittac,
  net.sourceforge.actool.model,
  net.sourceforge.actool.model.da,
  net.sourceforge.actool.model.ia
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: hsqldb.jar,
  .
