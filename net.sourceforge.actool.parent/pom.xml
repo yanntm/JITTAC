@@ -49,7 +49,7 @@
 		<!-- EDIT THIS ORBIT SITE FOR NEXT RELEASE : this is 2021-03  -->
 		<orbit-site>http://download.eclipse.org/tools/orbit/downloads/drops/R20210223232630/repository/</orbit-site>
 		<platform-version-name>2021-03</platform-version-name>
-		<tycho-version>2.2.0</tycho-version>
+		<tycho-version>2.3.0</tycho-version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>

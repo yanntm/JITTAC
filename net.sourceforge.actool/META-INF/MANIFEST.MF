@@ -15,7 +15,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.ide,
  org.eclipse.ui.views,
  com.google.guava,
- org.hsqldb
+ org.hsqldb.source
 Bundle-ActivationPolicy: lazy
 Export-Package: jittac,
  jittac.util,
