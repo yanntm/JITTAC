@@ -117,7 +117,8 @@ This Agreement is governed by the laws of the State of New York and the intellec
       <import plugin="org.eclipse.ui.editors" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.ide" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.views" match="greaterOrEqual"/>
-      <import plugin="net.sourceforge.actool" version="0.2.0" match="equivalent"/>
+      <import plugin="com.google.guava"/>
+      <import plugin="org.eclipse.core.expressions"/>
    </requires>
 
    <plugin
