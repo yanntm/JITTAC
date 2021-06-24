@@ -6,9 +6,9 @@
    <feature id="net.sourceforge.actool.feature">
       <category name="Contribution"/>
    </feature>
-   <category-def name="Contribution" label="Default Contribution to ITS-tools">
+   <category-def name="Contribution" label="JITTAC">
       <description>
-         This category provides a new feature for ITS-Tools.
+         This category provides JITTAC.
       </description>
    </category-def>
 </site>
