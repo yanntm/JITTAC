@@ -14,7 +14,7 @@ You may need to restart eclipse after setup, this short video presents installat
 
 https://www.youtube.com/watch?v=z4sjLsZ4Xss
 
-You should also activate the views : "Window->Show View->Other->Architectural Views" and select both "Architectural relations" and the "Raltion Summary view".
+You should also activate the views : "Window->Show View->Other->Architectural Views" and select both "Architectural relations" and the "Relation Summary view".
 
 EPL license
 
